@@ -1,0 +1,95 @@
+/*
+ * The till's own styles. No Tailwind here -- the admin frontend does not use it either, and a till is
+ * a handful of screens with unusually strict rules about size and contrast, which are easier to hold
+ * in one place than to spread across class strings.
+ *
+ * The rules those screens are judged on:
+ *   - big touch targets, because it is a cheap touch screen with the lights on
+ *   - the running total always visible and large
+ *   - keyboard-first: a good cashier never touches the mouse, and a scanner IS a keyboard
+ */
+
+:root {
+  --ink: #0f172a;
+  --ink-soft: #475569;
+  --line: #e2e8f0;
+  --bg: #f8fafc;
+  --panel: #ffffff;
+  --accent: #0f172a;
+  --good: #15803d;
+  --bad: #b91c1c;
+  --warn: #b45309;
+
+  /* Nothing tappable is smaller than this. */
+  --tap: 48px;
+
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  /* A sale must never be lost to a stray text selection drag across the basket. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Anything a person types into is selectable again -- the rule above is for the furniture, not the
+   fields. */
+input, textarea { -webkit-user-select: text; user-select: text; }
+
+button {
+  min-height: var(--tap);
+  font: inherit;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0 16px;
+}
+
+button:hover { background: #f1f5f9; }
+
+/* Visible focus, always. A keyboard-first screen with invisible focus is unusable. */
+button:focus-visible, input:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+input {
+  min-height: var(--tap);
+  font: inherit;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--ink);
+  width: 100%;
+}
+
+/*
+ * NOT SOLD ON PHONES. Selling is a counter job, and the decision is settled -- carried over from the
+ * counter sale that ran inside Inventory. Below 768 px the till hides itself and says why, rather
+ * than rendering a cramped version someone will try to trade on.
+ */
+.narrow-notice { display: none; }
+
+@media (max-width: 767px) {
+  .till { display: none !important; }
+  .narrow-notice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 32px;
+    text-align: center;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+}

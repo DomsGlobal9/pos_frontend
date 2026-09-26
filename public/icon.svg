@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="ScaleEzy POS">
+  <rect width="512" height="512" rx="96" fill="#0f172a"/>
+  <!-- A receipt with a torn foot: the thing the till hands over. -->
+  <path d="M152 108h208a16 16 0 0 1 16 16v260l-30-18-30 18-30-18-30 18-30-18-30 18-30-18-30 18V124a16 16 0 0 1 16-16z" fill="#ffffff"/>
+  <g stroke="#0f172a" stroke-width="18" stroke-linecap="round">
+    <path d="M196 176h120"/>
+    <path d="M196 228h120"/>
+    <path d="M196 280h72"/>
+  </g>
+</svg>
