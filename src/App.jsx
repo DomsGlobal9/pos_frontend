@@ -15,6 +15,7 @@ import CreditNote from './pages/CreditNote.jsx'
 import Shift from './pages/Shift.jsx'
 import DayClose from './pages/DayClose.jsx'
 import InventoryLink from './pages/InventoryLink.jsx'
+import Reports from './pages/Reports.jsx'
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -52,6 +53,8 @@ const router = createBrowserRouter([
       { path: 'day-close', element: <DayClose /> },
       // The owner's Inventory link. POS-INV-009, POS-SYNC-006.
       { path: 'inventory-link', element: <InventoryLink /> },
+      // WF-REPORTS-01. POS-RPT-001..011.
+      { path: 'reports', element: <Reports /> },
       // WF-PAY-02.
       { path: 'payment-checks', element: <PaymentChecks /> },
       {

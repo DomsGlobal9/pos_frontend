@@ -19,7 +19,7 @@ const ROWS = [
   { to: '/shift', label: 'Shift and drawer', hint: 'Open, cash in and out, close', live: true, Icon: Wallet },
   { to: '/day-close', label: 'Close the day', hint: 'Sales, payments, cash and what is still open', live: true, Icon: CalendarCheck },
   { to: '/inventory-link', label: 'Inventory link', hint: 'Items from Inventory, and stock kept in step', live: true, Icon: Boxes },
-  { to: '/reports', label: 'Reports', hint: 'Today, payment methods, day close', phase: 'Phase 9', Icon: BarChart3 },
+  { to: '/reports', label: 'Reports', hint: 'Sales, payments, GST, cash and dues', live: true, Icon: BarChart3 },
   { to: '/sync', label: 'Waiting to sync', hint: 'Anything not yet saved to the server', phase: 'Phase 11', Icon: RefreshCw },
   { to: '/settings', label: 'Settings', hint: 'Shop details, billing, discounts', phase: 'Phase 4', Icon: Settings },
   { to: '/integrations', label: 'Connections', hint: 'API, webhooks, import and export', phase: 'Phase 12', Icon: Plug }
