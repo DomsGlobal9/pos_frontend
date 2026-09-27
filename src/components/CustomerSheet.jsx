@@ -150,7 +150,7 @@ export default function CustomerSheet({ onPick, onSkip, onClose }) {
 
 const s = {
   backdrop: {
-    position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)',
+    position: 'fixed', inset: 0, background: 'rgba(16,24,14,0.4)',
     display: 'flex', alignItems: 'flex-end', justifyContent: 'center'
   },
   sheet: {

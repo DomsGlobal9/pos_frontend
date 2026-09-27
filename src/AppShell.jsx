@@ -29,11 +29,18 @@ export default function AppShell() {
 
       <div style={s.main}>
         <header style={s.header}>
-          <strong style={s.shop}>{shop?.shop?.shopName ?? 'ScaleEzy POS'}</strong>
+          <div style={s.brand}>
+            {/* On a phone the rail is gone, so the mark lives here instead. */}
+            {bottomNav && <img src="/scaleezy-mark.svg" alt="" width="26" height="26" />}
+            <div style={{ minWidth: 0 }}>
+              <strong style={s.shop}>{shop?.shop?.shopName ?? 'ScaleEzy POS'}</strong>
+              {shop?.cashier?.name && <div style={s.who}>{shop.cashier.name}</div>}
+            </div>
+          </div>
           <Connection status={status} />
         </header>
 
-        <div style={s.content}>
+        <div style={s.content} className="shell-content">
           <Outlet context={{ device, shop }} />
         </div>
       </div>
@@ -53,30 +60,34 @@ export default function AppShell() {
  */
 function Connection({ status }) {
   if (!status) {
-    return <span style={{ ...s.state, color: 'var(--ink-soft)' }}>Checking…</span>
+    return <span className="chip" style={s.state}>Checking…</span>
   }
   if (status.database !== 'up') {
     return (
-      <span style={{ ...s.state, color: 'var(--bad)' }}>
-        Saving is paused. Nothing you have entered is lost.
+      <span className="chip bad" style={s.state}>
+        <Dot color="var(--bad)" /> Saving is paused. Nothing you have entered is lost.
       </span>
     )
   }
   return (
-    <span style={{ ...s.state, color: 'var(--ink-soft)' }}>
-      {status.mode === 'standalone' ? 'All saved' : 'All saved · Inventory connected'}
+    <span className="chip good" style={s.state}>
+      <Dot color="var(--good)" /> {status.mode === 'standalone' ? 'All saved' : 'All saved · Inventory connected'}
     </span>
   )
 }
 
+const Dot = ({ color }) => <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 99, background: color, display: 'inline-block' }} />
+
 const s = {
-  page: { height: '100%', display: 'flex' },
+  page: { height: '100%', display: 'flex', background: 'var(--bg)' },
   main: { flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 },
   header: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-    padding: '10px 16px', background: 'var(--panel)', borderBottom: '1px solid var(--line)'
+    minHeight: 60, padding: '8px 20px', background: 'var(--panel)', borderBottom: '1px solid var(--line)'
   },
-  shop: { fontSize: 15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-  state: { fontSize: 12, textAlign: 'right' },
+  brand: { display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 },
+  shop: { display: 'block', fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+  who: { fontSize: 12, color: 'var(--ink-soft)' },
+  state: { fontSize: 12, textAlign: 'right', whiteSpace: 'normal' },
   content: { flex: 1, minHeight: 0, overflow: 'auto' }
 }

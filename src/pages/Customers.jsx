@@ -46,7 +46,7 @@ export function Customers() {
         </p>
       )}
 
-      <ul style={s.list}>
+      <ul style={s.list} className="card-list">
         {customers.map(customer => (
           <li key={customer.id}>
             <Link to={`/customers/${customer.id}`} style={s.row}>
@@ -118,7 +118,7 @@ export function CustomerDetail() {
       {(data.storeCreditPaise > 0 || data.creditHistory?.length > 0) && (
         <section>
           <h2 style={s.heading}>Store credit: {rupees(data.storeCreditPaise)}</h2>
-          <ul style={s.list}>
+          <ul style={s.list} className="card-list">
             {data.creditHistory.map(entry => (
               <li key={entry.id} style={s.creditRow}>
                 <span>
@@ -147,7 +147,7 @@ export function CustomerDetail() {
       <section>
         <h2 style={s.heading}>Recent bills</h2>
         {data.recent.length === 0 && <p style={s.muted}>Nothing bought yet.</p>}
-        <ul style={s.list}>
+        <ul style={s.list} className="card-list">
           {data.recent.map(sale => (
             <li key={sale.id}>
               <Link to={`/bills/${sale.id}`} style={s.row}>
@@ -183,17 +183,17 @@ const Tile = ({ label, value }) => (
 )
 
 const s = {
-  page: { padding: 16, display: 'grid', gap: 14, maxWidth: 720, alignContent: 'start' },
+  page: { padding: '20px 20px 28px', display: 'grid', gap: 14, maxWidth: 760, alignContent: 'start' },
   state: { padding: 16, display: 'grid', gap: 10, justifyItems: 'start' },
   title: { margin: 0, fontSize: 22 },
-  heading: { margin: '0 0 8px', fontSize: 14, color: 'var(--ink-soft)', fontWeight: 600 },
+  heading: { margin: '0 0 8px', fontSize: 13, color: 'var(--ink-soft)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' },
   tiles: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 },
-  tile: { border: '1px solid var(--line)', borderRadius: 12, padding: 14, background: 'var(--panel)' },
+  tile: { border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: 'var(--panel)', boxShadow: 'var(--shadow)' },
   tileValue: { fontSize: 22, fontWeight: 700, marginTop: 2 },
   note: { margin: 0, padding: 10, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 10 },
   owes: {
-    display: 'block', padding: 12, borderRadius: 10, textDecoration: 'none',
-    border: '1px solid var(--line)', color: 'var(--warn)', fontWeight: 600
+    display: 'block', padding: '14px 16px', borderRadius: 14, textDecoration: 'none',
+    background: 'var(--warn-tint)', color: 'var(--warn)', fontWeight: 700
   },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
   creditRow: {

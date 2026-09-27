@@ -86,7 +86,7 @@ export default function Shift() {
           {shift.movements.length > 0 && (
             <section>
               <h2 style={s.heading}>Cash in and out</h2>
-              <ul style={s.list}>
+              <ul style={s.list} className="card-list">
                 {shift.movements.map(m => (
                   <li key={m.id} style={s.row}>
                     <span>
@@ -105,7 +105,7 @@ export default function Shift() {
       {data.recent.length > 0 && (
         <section>
           <h2 style={s.heading}>Recent shifts</h2>
-          <ul style={s.list}>
+          <ul style={s.list} className="card-list">
             {data.recent.map(r => (
               <li key={r.id} style={s.row}>
                 <span>
@@ -345,13 +345,13 @@ function when(at) {
 }
 
 const s = {
-  page: { padding: 16, display: 'grid', gap: 14, maxWidth: 640, alignContent: 'start' },
+  page: { padding: '20px 20px 28px', display: 'grid', gap: 14, maxWidth: 760, alignContent: 'start' },
   state: { padding: 16 },
   title: { margin: 0, fontSize: 22 },
-  heading: { margin: '0 0 6px', fontSize: 14, color: 'var(--ink-soft)', fontWeight: 600 },
-  card: { display: 'grid', gap: 10, padding: 14, border: '1px solid var(--line)', borderRadius: 12, background: 'var(--panel)' },
+  heading: { margin: '0 0 6px', fontSize: 13, color: 'var(--ink-soft)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' },
+  card: { display: 'grid', gap: 10, padding: 16, border: '1px solid var(--line)', borderRadius: 14, background: 'var(--panel)', boxShadow: 'var(--shadow)' },
   warnBox: { margin: 0, padding: 12, border: '1px solid var(--line)', borderRadius: 10, color: 'var(--bad)', fontWeight: 600 },
-  figures: { display: 'grid', gap: 4, padding: 14, border: '1px solid var(--line)', borderRadius: 12 },
+  figures: { display: 'grid', gap: 4, padding: 16, border: '1px solid var(--line)', borderRadius: 14, background: 'var(--panel)', boxShadow: 'var(--shadow)' },
   line: { display: 'flex', justifyContent: 'space-between', gap: 12 },
   total: { borderTop: '1px solid var(--line)', paddingTop: 6, marginTop: 4, fontSize: 16 },
   actions: { display: 'flex', gap: 8, flexWrap: 'wrap' },
@@ -363,11 +363,11 @@ const s = {
   chip: { minHeight: 40, padding: '0 12px', fontWeight: 400 },
   chipOn: { background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' },
   backdrop: {
-    position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', display: 'flex',
+    position: 'fixed', inset: 0, background: 'rgba(16,24,14,0.45)', display: 'flex',
     alignItems: 'center', justifyContent: 'center', padding: 16, zIndex: 5
   },
   sheet: {
-    background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12, padding: 20,
+    background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 20, boxShadow: 'var(--shadow-lift)', padding: 22,
     width: 420, maxWidth: '100%', display: 'grid', gap: 12
   },
   sheetActions: { display: 'flex', gap: 8, justifyContent: 'flex-end' },

@@ -76,7 +76,7 @@ export default function Bills() {
         </p>
       )}
 
-      <ul style={s.list}>
+      <ul style={s.list} className="card-list">
         {bills.map(bill => (
           <li key={bill.id}>
             <Link to={`/bills/${bill.id}`} style={s.row}>
@@ -136,7 +136,7 @@ function stamp(at) {
 }
 
 const s = {
-  page: { padding: 16, display: 'grid', gap: 12, maxWidth: 760, alignContent: 'start' },
+  page: { padding: '20px 20px 28px', display: 'grid', gap: 14, maxWidth: 760, alignContent: 'start' },
   title: { margin: 0, fontSize: 22 },
   filters: { display: 'flex', gap: 8, flexWrap: 'wrap' },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useOutletContext } from 'react-router-dom'
+import { Receipt, ShieldCheck, History, Wallet, CalendarCheck, Boxes, BarChart3, RefreshCw, Settings, Plug, ChevronRight } from 'lucide-react'
 
 /**
  * WF-MORE-01.
@@ -12,15 +13,16 @@ import { useOutletContext } from 'react-router-dom'
  * VISIBLE REASON rather than hidden or dead, which is what the link-integrity rule allows.
  */
 const ROWS = [
-  { to: '/bills', label: 'Bills', hint: 'Find a sale, open it, print it again', live: true },
-  { to: '/payment-checks', label: 'Payments to check', hint: 'UPI and card taken without confirmation', live: true },
-  { to: '/activity', label: 'Activity', hint: 'Discounts, price changes, approvals', live: true },
-  { to: '/shift', label: 'Shift and drawer', hint: 'Open, cash in and out, close', live: true },
-  { to: '/day-close', label: 'Close the day', hint: 'Sales, payments, cash and what is still open', live: true },
-  { to: '/reports', label: 'Reports', hint: 'Today, payment methods, day close', phase: 'Phase 9' },
-  { to: '/sync', label: 'Waiting to sync', hint: 'Anything not yet saved to the server', phase: 'Phase 11' },
-  { to: '/settings', label: 'Settings', hint: 'Shop details, billing, discounts', phase: 'Phase 4' },
-  { to: '/integrations', label: 'Connections', hint: 'API, webhooks, import and export', phase: 'Phase 12' }
+  { to: '/bills', label: 'Bills', hint: 'Find a sale, open it, print it again', live: true, Icon: Receipt },
+  { to: '/payment-checks', label: 'Payments to check', hint: 'UPI and card taken without confirmation', live: true, Icon: ShieldCheck },
+  { to: '/activity', label: 'Activity', hint: 'Discounts, price changes, approvals', live: true, Icon: History },
+  { to: '/shift', label: 'Shift and drawer', hint: 'Open, cash in and out, close', live: true, Icon: Wallet },
+  { to: '/day-close', label: 'Close the day', hint: 'Sales, payments, cash and what is still open', live: true, Icon: CalendarCheck },
+  { to: '/inventory-link', label: 'Inventory link', hint: 'Items from Inventory, and stock kept in step', live: true, Icon: Boxes },
+  { to: '/reports', label: 'Reports', hint: 'Today, payment methods, day close', phase: 'Phase 9', Icon: BarChart3 },
+  { to: '/sync', label: 'Waiting to sync', hint: 'Anything not yet saved to the server', phase: 'Phase 11', Icon: RefreshCw },
+  { to: '/settings', label: 'Settings', hint: 'Shop details, billing, discounts', phase: 'Phase 4', Icon: Settings },
+  { to: '/integrations', label: 'Connections', hint: 'API, webhooks, import and export', phase: 'Phase 12', Icon: Plug }
 ]
 
 export default function More() {
@@ -30,22 +32,24 @@ export default function More() {
     <div style={s.page}>
       <h1 style={s.title}>More</h1>
 
-      <ul style={s.list}>
+      <ul style={s.list} className="card-list">
         {ROWS.map(row => (
           <li key={row.to}>
             {/* Live rows navigate. The rest are disabled WITH A VISIBLE REASON -- which the link
                 integrity rule allows, and a dead button does not. */}
             {row.live ? (
               <Link to={row.to} style={{ ...s.row, ...s.rowLive }}>
-                <div>
+                <span style={s.icon}><row.Icon size={18} aria-hidden="true" /></span>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={s.label}>{row.label}</div>
                   <div style={s.muted}>{row.hint}</div>
                 </div>
-                <span aria-hidden="true" style={s.muted}>›</span>
+                <ChevronRight size={18} aria-hidden="true" style={{ color: 'var(--ink-soft)' }} />
               </Link>
             ) : (
               <div style={s.row} aria-disabled="true">
-                <div>
+                <span style={s.icon}><row.Icon size={18} aria-hidden="true" /></span>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={s.label}>{row.label}</div>
                   <div style={s.muted}>{row.hint}</div>
                 </div>
@@ -71,8 +75,9 @@ export default function More() {
 }
 
 const s = {
-  page: { padding: 16, display: 'grid', gap: 16, maxWidth: 640, alignContent: 'start' },
+  page: { padding: '20px 20px 28px', display: 'grid', gap: 16, maxWidth: 760, alignContent: 'start' },
   title: { margin: 0, fontSize: 22 },
+  icon: { flex: 'none', display: 'grid', placeItems: 'center', width: 38, height: 38, borderRadius: 12, background: 'var(--brand-tint)', color: 'var(--brand-deep)' },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
   row: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
@@ -87,7 +92,7 @@ const s = {
     fontSize: 11, color: 'var(--ink-soft)', border: '1px solid var(--line)',
     borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap'
   },
-  shop: { border: '1px solid var(--line)', borderRadius: 12, padding: 14, background: 'var(--panel)' },
+  shop: { border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: 'var(--panel)', boxShadow: 'var(--shadow)' },
   action: {
     justifySelf: 'start', display: 'inline-flex', alignItems: 'center', minHeight: 48,
     padding: '0 18px', borderRadius: 10, textDecoration: 'none',

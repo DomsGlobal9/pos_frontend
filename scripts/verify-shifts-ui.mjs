@@ -129,7 +129,7 @@ ok('and the difference is exact', closed.includes('Exact'));
 await shot('shift-closed');
 await page.getByRole('button', { name: 'Done' }).click();
 await page.getByLabel('Opening cash').waitFor();
-ok('the closed shift is listed, with its result', (await text()).includes('Recent shifts') && (await text()).includes('Exact'));
+ok('the closed shift is listed, with its result', /recent shifts/i.test(await text()) && (await text()).includes('Exact'));
 ok('and its count is offered as the next float', (await page.getByLabel('Opening cash').inputValue()) === '2599');
 
 // ============================================================================================

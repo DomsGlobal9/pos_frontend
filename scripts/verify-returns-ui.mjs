@@ -172,7 +172,7 @@ console.log('\nthe customer card and Home');
 // ============================================================================================
 await page.goto(`${WEB}/customers/${kavya.id}`, { waitUntil: 'networkidle' });
 const cardText = await text();
-ok('her card shows store credit with where it came from', cardText.includes('Store credit:') && /Given · CN\//.test(cardText));
+ok('her card shows store credit with where it came from', /store credit:/i.test(cardText) && /Given · CN\//.test(cardText));
 ok('and where it went', /Spent · INV\//.test(cardText));
 ok('the exchanged bill is marked returned in her history', cardText.includes(`${silkBill.invoiceNo} · returned`));
 

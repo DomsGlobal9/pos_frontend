@@ -29,6 +29,12 @@ export default function NavBar({ device }) {
       style={bottom ? s.bottom : s.rail}
       aria-label="Main"
     >
+      {!bottom && (
+        <div style={s.logo} aria-hidden="true">
+          <img src="/scaleezy-mark.svg" alt="" width="30" height="30" />
+          <span style={s.logoText}>POS</span>
+        </div>
+      )}
       {TABS.map(({ to, label, Icon, end }) => (
         <NavLink
           key={to}
@@ -36,11 +42,17 @@ export default function NavBar({ device }) {
           end={end}
           style={({ isActive }) => ({
             ...(bottom ? s.tabBottom : s.tabRail),
-            ...(isActive ? s.active : null)
+            ...(isActive ? (bottom ? s.activeBottom : s.activeRail) : null)
           })}
         >
-          <Icon size={bottom ? 22 : 20} aria-hidden="true" />
-          <span style={bottom ? s.labelBottom : s.labelRail}>{label}</span>
+          {({ isActive }) => (
+            <>
+              <span style={{ ...s.iconWrap, ...(isActive && bottom ? s.iconActive : null) }}>
+                <Icon size={bottom ? 21 : 20} strokeWidth={isActive ? 2.4 : 2} aria-hidden="true" />
+              </span>
+              <span style={bottom ? s.labelBottom : s.labelRail}>{label}</span>
+            </>
+          )}
         </NavLink>
       ))}
     </nav>
@@ -52,6 +64,7 @@ const s = {
     display: 'flex',
     borderTop: '1px solid var(--line)',
     background: 'var(--panel)',
+    boxShadow: '0 -4px 16px -10px rgba(20, 30, 16, 0.15)',
     // Clear of the home indicator on a phone, so the last tab is not half under it.
     paddingBottom: 'env(safe-area-inset-bottom, 0px)'
   },
@@ -60,10 +73,14 @@ const s = {
     flexDirection: 'column',
     gap: 4,
     width: 96,
-    padding: '10px 8px',
+    padding: '14px 10px',
     borderRight: '1px solid var(--line)',
     background: 'var(--panel)'
   },
+  logo: { display: 'grid', justifyItems: 'center', gap: 2, padding: '4px 0 14px', marginBottom: 6, borderBottom: '1px solid var(--line)' },
+  logoText: { fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: 'var(--brand-deep)' },
+  iconWrap: { display: 'grid', placeItems: 'center', width: 44, height: 28, borderRadius: 999 },
+  iconActive: { background: 'var(--brand-tint-strong)' },
   tabBottom: {
     flex: 1,
     display: 'flex',
@@ -82,12 +99,13 @@ const s = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    minHeight: 60,
-    borderRadius: 10,
+    minHeight: 64,
+    borderRadius: 14,
     textDecoration: 'none',
     color: 'var(--ink-soft)'
   },
-  active: { color: 'var(--ink)', fontWeight: 700, background: 'var(--bg)' },
+  activeRail: { color: 'var(--brand-deep)', fontWeight: 700, background: 'var(--brand-tint)' },
+  activeBottom: { color: 'var(--brand-deep)', fontWeight: 700 },
   labelBottom: { fontSize: 11 },
-  labelRail: { fontSize: 11 }
+  labelRail: { fontSize: 11.5 }
 }

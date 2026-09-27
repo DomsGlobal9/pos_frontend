@@ -1,31 +1,59 @@
 /*
- * The till's own styles. No Tailwind here -- the admin frontend does not use it either, and a till is
- * a handful of screens with unusually strict rules about size and contrast, which are easier to hold
- * in one place than to spread across class strings.
+ * The till's own styles. No Tailwind here -- a till is a handful of screens with unusually strict
+ * rules about size and contrast, which are easier to hold in one place than in class strings.
  *
- * The rules those screens are judged on:
+ * THE LOOK IS SCALEEZY'S. The same two greens as the logo and the Inventory app -- deep green for
+ * anything you press, lime as the highlight -- on warm off-white, with white cards and soft
+ * shadows. A shop that uses both modules sees one product, not two.
+ *
+ * The rules the screens are judged on:
  *   - big touch targets, because it is a cheap touch screen with the lights on
  *   - the running total always visible and large
  *   - keyboard-first: a good cashier never touches the mouse, and a scanner IS a keyboard
+ *   - money in tabular figures, so columns of rupees line up
  */
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 :root {
-  --ink: #0f172a;
-  --ink-soft: #475569;
-  --line: #e2e8f0;
-  --bg: #f8fafc;
+  /* ScaleEzy brand -- the logo's two greens. */
+  --brand: #a6d92b;          /* lime: fills, highlights, never small text on white */
+  --brand-deep: #164b1e;     /* deep green: buttons, active states, readable at any size */
+  --brand-hover: #0f3a16;
+  --brand-tint: #f1f8e3;     /* lime wash behind active and selected things */
+  --brand-tint-strong: #e2f1c4;
+
+  --ink: #18181b;
+  --ink-soft: #62626d;       /* 5.6:1 on white -- captions stay readable */
+  --line: #e7e8e3;
+  --line-strong: #d6d8d1;
+  --bg: #f5f6f2;
   --panel: #ffffff;
-  --accent: #0f172a;
+  --panel-soft: #fafaf7;
+
+  /* The one accent every screen already uses for its primary button is the brand. */
+  --accent: var(--brand-deep);
+
   --good: #15803d;
+  --good-tint: #e8f6ed;
   --bad: #b91c1c;
+  --bad-tint: #fdecec;
   --warn: #b45309;
+  --warn-tint: #fdf4e3;
+
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 2px rgba(20, 30, 16, 0.04), 0 6px 20px -10px rgba(20, 30, 16, 0.12);
+  --shadow-lift: 0 2px 4px rgba(20, 30, 16, 0.05), 0 16px 40px -16px rgba(20, 30, 16, 0.22);
 
   /* Nothing tappable is smaller than this. */
   --tap: 48px;
 
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
   color: var(--ink);
   background: var(--bg);
+  -webkit-font-smoothing: antialiased;
 }
 
 * { box-sizing: border-box; }
@@ -36,52 +64,104 @@ body {
   /* A sale must never be lost to a stray text selection drag across the basket. */
   -webkit-user-select: none;
   user-select: none;
+  background: var(--bg);
 }
 
-/* Anything a person types into is selectable again -- the rule above is for the furniture, not the
-   fields. */
+/* Anything a person types into is selectable again -- the rule above is for the furniture. */
 input, textarea { -webkit-user-select: text; user-select: text; }
+
+h1 { letter-spacing: -0.02em; }
+
+a { color: var(--brand-deep); }
 
 button {
   min-height: var(--tap);
   font: inherit;
   font-weight: 600;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
   background: var(--panel);
   color: var(--ink);
   cursor: pointer;
   padding: 0 16px;
+  box-shadow: 0 1px 1px rgba(20, 30, 16, 0.04);
+  transition: background-color 120ms ease, border-color 120ms ease, transform 80ms ease, box-shadow 120ms ease;
 }
 
-button:hover { background: #f1f5f9; }
+button:hover:not(:disabled) { background: var(--panel-soft); border-color: #c5c8bf; }
+button:active:not(:disabled) { transform: translateY(1px); }
+button:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+/*
+ * Screens mark their primary action with the accent as background. That now means the brand, and
+ * this gives it a hover and a shadow without every screen restating them.
+ */
+button[style*="var(--accent)"]:hover:not(:disabled) { background: var(--brand-hover) !important; }
+button[style*="var(--accent)"] { box-shadow: 0 1px 2px rgba(22, 75, 30, 0.2), 0 6px 16px -8px rgba(22, 75, 30, 0.45); }
+
+/* Pressed states (method pickers, reason chips): lime wash rather than a heavy block. */
+button[aria-pressed="true"] {
+  background: var(--brand-tint) !important;
+  color: var(--brand-deep) !important;
+  border-color: var(--brand-deep) !important;
+}
 
 /* Visible focus, always. A keyboard-first screen with invisible focus is unusable. */
-button:focus-visible, input:focus-visible {
-  outline: 3px solid #2563eb;
+button:focus-visible, input:focus-visible, a:focus-visible, textarea:focus-visible {
+  outline: 3px solid rgba(166, 217, 43, 0.9);
   outline-offset: 2px;
 }
 
-input {
+input, textarea {
   min-height: var(--tap);
   font: inherit;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  padding: 0 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
   background: var(--panel);
   color: var(--ink);
   width: 100%;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
 }
+input:focus { border-color: var(--brand-deep); box-shadow: 0 0 0 3px rgba(166, 217, 43, 0.35); outline: none; }
+input::placeholder { color: #9a9aa3; }
+input[type="checkbox"], input[type="radio"] { width: 20px; min-height: 20px; height: 20px; accent-color: var(--brand-deep); box-shadow: none; }
+
+/* A list shown as one card: rows inside, dividers between, none after the last. */
+ul.card-list {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0 16px !important;
+  gap: 0 !important;
+  overflow: hidden;
+}
+ul.card-list:empty { display: none; }
+ul.card-list > li:last-child > *, ul.card-list > li:last-child { border-bottom: 0 !important; }
+
+/* Small status labels: Paid, Due, Ready, Late. */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap;
+  background: var(--panel-soft); color: var(--ink-soft); border: 1px solid var(--line);
+}
+.chip.good { background: var(--good-tint); color: var(--good); border-color: transparent; }
+.chip.warn { background: var(--warn-tint); color: var(--warn); border-color: transparent; }
+.chip.bad { background: var(--bad-tint); color: var(--bad); border-color: transparent; }
+.chip.brand { background: var(--brand-tint); color: var(--brand-deep); border-color: transparent; }
+
+/* The content area centres each screen and gives a wide screen room, instead of a narrow column
+   pinned to the left with half the display empty. */
+.shell-content > * { margin-left: auto; margin-right: auto; width: 100%; }
+
+/* Page titles, one style everywhere. */
+.shell-content h1 { font-size: 24px; font-weight: 700; }
 
 /*
- * PHONE, TABLET AND DESKTOP ARE ALL FIRST-CLASS.
- *
- * This file used to hide the till below 768px with the note "selling is a counter job". That rule
- * is retired -- see docs/product/CHANGELOG.md CHG-001. A salesperson walking a boutique with a
- * phone is a real customer, and the counter keeps its own speed contract (CHG-002).
- *
- * What replaces it is not "make it smaller": the shell swaps a left rail for a bottom bar, screens
- * go to one column, and the primary action stays reachable by a thumb.
+ * PHONE, TABLET AND DESKTOP ARE ALL FIRST-CLASS. (CHG-001 retired the rule that hid selling
+ * below 768px.) The shell swaps a left rail for a bottom bar, screens go to one column, and the
+ * primary action stays reachable by a thumb.
  */
 
 /* No critical horizontal scrolling on a phone. MASTER.md UX commandment 3. */
@@ -89,8 +169,12 @@ html, body { max-width: 100%; overflow-x: hidden; }
 
 @media (max-width: 767px) {
   :root {
-    /* A little larger on a phone: the finger is less accurate than a mouse and the screen is
-       usually being held one-handed. */
+    /* A little larger on a phone: the finger is less accurate than a mouse. */
     --tap: 52px;
   }
+  .shell-content h1 { font-size: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
 }

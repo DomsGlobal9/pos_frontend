@@ -114,13 +114,13 @@ function describe(need) {
 
 const s = {
   backdrop: {
-    position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)',
+    position: 'fixed', inset: 0, background: 'rgba(16,24,14,0.45)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
     // Above the payment sheet, which is still open underneath.
     zIndex: 10
   },
   panel: {
-    background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12,
+    background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 20, boxShadow: 'var(--shadow-lift)',
     padding: 20, width: 420, maxWidth: '100%', display: 'grid', gap: 14
   },
   title: { fontSize: 17 },

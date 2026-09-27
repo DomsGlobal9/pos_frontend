@@ -8,6 +8,7 @@ import PaymentPanel from '../components/PaymentPanel.jsx'
 import Receipt from '../components/Receipt.jsx'
 import VariantSheet from '../components/VariantSheet.jsx'
 import ShiftBar from '../components/ShiftBar.jsx'
+import { Search, ScanBarcode, UserPlus, User, X } from 'lucide-react'
 import CustomerSheet from '../components/CustomerSheet.jsx'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
 import KeepSheet from '../components/KeepSheet.jsx'
@@ -359,7 +360,8 @@ export default function Till() {
       <main style={{ ...s.body, ...(stacked ? s.bodyStacked : s.bodySplit) }}>
         <section style={s.left}>
           <ShiftBar counter={shop?.counters?.[0]} />
-          <form onSubmit={find}>
+          <form onSubmit={find} style={s.searchWrap}>
+            <Search size={20} style={s.searchIcon} aria-hidden="true" />
             <input
               ref={searchBox}
               autoFocus
@@ -367,11 +369,12 @@ export default function Till() {
               onChange={e => setQuery(e.target.value)}
               placeholder="Scan a barcode, or type a code or name"
               aria-label="Find an item"
+              style={s.search}
             />
           </form>
 
           {results.length > 0 && (
-            <ul style={s.results}>
+            <ul style={s.results} className="card-list">
               {results.map(item => (
                 <li key={item.id}>
                   <button style={s.result} onClick={() => chooseItem(item)}>
@@ -399,10 +402,51 @@ export default function Till() {
           )}
 
           {lines.length === 0 && results.length === 0 && (
-            <p style={s.empty}>Scan an item to start.</p>
+            <div style={s.empty}>
+              <span style={s.emptyIcon}><ScanBarcode size={30} aria-hidden="true" /></span>
+              <b style={{ fontSize: 16 }}>Scan an item to start.</b>
+              <span style={s.muted}>Or type a name or code in the box above.</span>
+            </div>
           )}
 
-          {lines.length > 0 && (
+          {/*
+            * On a phone or tablet the basket is a list of cards, one per line -- a five-column table
+            * squeezed into 390px scrolls sideways and hides the line total. At the counter it stays a
+            * table, where the columns are what a cashier scans down.
+            */}
+          {lines.length > 0 && stacked && (
+            <ul style={s.lineList} className="card-list">
+              {lines.map(line => (
+                <li key={line.id} style={s.lineRow}>
+                  <div style={s.lineTop}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={s.lineName}>{line.name}</div>
+                      <div style={s.muted}>
+                        {[line.colour, line.size].filter(Boolean).join(', ')}
+                        {line.colour || line.size ? ' · ' : ''}{line.code}
+                      </div>
+                    </div>
+                    <b style={s.lineTotal}>{rupees(lineTotal(line))}</b>
+                  </div>
+                  <div style={s.lineBottom}>
+                    <div style={s.qty}>
+                      <button style={s.qtyBtn} onClick={() => setQty(line.id, line.qty - 1)} aria-label="One less">−</button>
+                      <span style={s.qtyNum}>{line.qty}</span>
+                      <button style={s.qtyBtn} onClick={() => setQty(line.id, line.qty + 1)} aria-label="One more">+</button>
+                    </div>
+                    <button style={s.priceBtn} onClick={() => overridePrice(line.id)} aria-label={`Change the price of ${line.name}`}>
+                      {rupees(unitPrice(line))} each
+                    </button>
+                    {line.overridePricePaise && <span style={s.wasPrice}>was {rupees(line.pricePaise)}</span>}
+                    <button style={{ ...s.remove, marginLeft: 'auto' }} onClick={() => setQty(line.id, 0)} aria-label="Remove">×</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {lines.length > 0 && !stacked && (
+            <div style={s.basket}>
             <table style={s.table}>
               <thead>
                 <tr>
@@ -450,6 +494,7 @@ export default function Till() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </section>
 
@@ -459,13 +504,14 @@ export default function Till() {
                 money -- and because leaving it blank has to stay effortless. */}
             <div style={s.customer}>
               {customer ? (
-                <>
+                <span style={s.customerChip}>
+                  <User size={16} aria-hidden="true" />
                   <span style={s.customerName}>{customer.name || customer.phoneDisplay}</span>
-                  <button style={s.customerClear} onClick={() => setCustomer(null)}>Remove</button>
-                </>
+                  <button style={s.customerClear} onClick={() => setCustomer(null)} aria-label="Remove customer"><X size={15} /></button>
+                </span>
               ) : (
                 <button style={s.customerAdd} onClick={() => setAskingCustomer(true)}>
-                  + Add customer
+                  <UserPlus size={16} aria-hidden="true" /> Add customer
                 </button>
               )}
             </div>
@@ -614,60 +660,86 @@ const s = {
   page: { height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 },
   body: { flex: 1, display: 'grid', minHeight: 0 },
   // Counter: basket and totals side by side, total always in view.
-  bodySplit: { gridTemplateColumns: 'minmax(0, 1fr) 300px' },
+  bodySplit: { gridTemplateColumns: 'minmax(0, 1fr) 340px' },
   // Phone and tablet: one column, totals pinned under it.
   bodyStacked: { gridTemplateRows: 'minmax(0, 1fr) auto' },
-  left: { padding: 16, overflow: 'auto', minWidth: 0 },
-  right: { background: 'var(--panel)', padding: 16, display: 'flex' },
+  left: { padding: 20, overflow: 'auto', minWidth: 0, display: 'grid', gap: 14, alignContent: 'start' },
+  right: { background: 'var(--panel)', padding: 20, display: 'flex' },
   rightSplit: {
     borderLeft: '1px solid var(--line)',
-    flexDirection: 'column', justifyContent: 'space-between'
+    flexDirection: 'column', justifyContent: 'space-between',
+    boxShadow: '-8px 0 24px -20px rgba(20, 30, 16, 0.25)'
   },
   rightStacked: {
     borderTop: '1px solid var(--line)',
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-    paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))'
+    padding: '12px 16px',
+    paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+    boxShadow: '0 -8px 24px -18px rgba(20, 30, 16, 0.3)'
   },
-  empty: { color: 'var(--ink-soft)', marginTop: 24 },
-  results: { listStyle: 'none', margin: '10px 0 0', padding: 0, display: 'grid', gap: 6 },
+  searchWrap: { position: 'relative' },
+  searchIcon: { position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-soft)', pointerEvents: 'none' },
+  search: { minHeight: 56, paddingLeft: 48, fontSize: 17, borderRadius: 16, boxShadow: 'var(--shadow)' },
+  empty: {
+    display: 'grid', justifyItems: 'center', gap: 6, textAlign: 'center', padding: '48px 16px',
+    color: 'var(--ink)', background: 'var(--panel)', borderRadius: 'var(--radius)', border: '1px dashed var(--line-strong)'
+  },
+  emptyIcon: { display: 'grid', placeItems: 'center', width: 60, height: 60, borderRadius: 18, background: 'var(--brand-tint)', color: 'var(--brand-deep)', marginBottom: 6 },
+  results: { listStyle: 'none', margin: 0, padding: 0, display: 'grid' },
   result: {
-    width: '100%', display: 'flex', alignItems: 'center',
-    textAlign: 'left', fontWeight: 400, gap: 12, minHeight: 60
+    width: '100%', display: 'flex', alignItems: 'center', border: 'none', boxShadow: 'none', borderRadius: 0,
+    borderBottom: '1px solid var(--line)', background: 'transparent',
+    textAlign: 'left', fontWeight: 400, gap: 14, minHeight: 68, padding: '8px 0'
   },
-  resultText: { display: 'grid', flex: 1, minWidth: 0 },
+  resultText: { display: 'grid', flex: 1, minWidth: 0, gap: 2, fontWeight: 600 },
   resultRight: { display: 'grid', justifyItems: 'end', gap: 2 },
-  thumb: { width: 40, height: 40, borderRadius: 6, flex: '0 0 auto', objectFit: 'cover' },
+  thumb: { width: 48, height: 48, borderRadius: 12, flex: '0 0 auto', objectFit: 'cover' },
   noImage: { background: 'var(--bg)', border: '1px solid var(--line)' },
-  table: { width: '100%', borderCollapse: 'collapse', marginTop: 14 },
-  th: { textAlign: 'left', fontSize: 12, color: 'var(--ink-soft)', padding: '6px 8px', borderBottom: '1px solid var(--line)' },
-  thRight: { textAlign: 'right', fontSize: 12, color: 'var(--ink-soft)', padding: '6px 8px', borderBottom: '1px solid var(--line)' },
-  td: { padding: '8px', borderBottom: '1px solid var(--line)', verticalAlign: 'middle' },
-  tdRight: { padding: '8px', borderBottom: '1px solid var(--line)', textAlign: 'right', verticalAlign: 'middle' },
-  muted: { color: 'var(--ink-soft)', fontSize: 12 },
-  qty: { display: 'flex', alignItems: 'center', gap: 4 },
-  qtyBtn: { minHeight: 36, minWidth: 36, padding: 0, fontSize: 18, lineHeight: 1 },
-  qtyNum: { minWidth: 28, textAlign: 'center', fontWeight: 600 },
-  remove: { minHeight: 36, minWidth: 36, padding: 0, fontSize: 18, lineHeight: 1, border: 'none', background: 'none', color: 'var(--ink-soft)' },
+  lineList: { listStyle: 'none', margin: 0, padding: 0, display: 'grid' },
+  lineRow: { display: 'grid', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--line)' },
+  lineTop: { display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' },
+  lineName: { fontWeight: 700, fontSize: 15 },
+  lineTotal: { fontSize: 16, whiteSpace: 'nowrap' },
+  lineBottom: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
+  basket: { background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', padding: '4px 12px', overflowX: 'auto' },
+  table: { width: '100%', borderCollapse: 'collapse' },
+  th: { textAlign: 'left', fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--ink-soft)', padding: '10px 8px', borderBottom: '1px solid var(--line)' },
+  thRight: { textAlign: 'right', fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--ink-soft)', padding: '10px 8px', borderBottom: '1px solid var(--line)' },
+  td: { padding: '10px 8px', borderBottom: '1px solid var(--line)', verticalAlign: 'middle', fontWeight: 600 },
+  tdRight: { padding: '10px 8px', borderBottom: '1px solid var(--line)', textAlign: 'right', verticalAlign: 'middle' },
+  muted: { color: 'var(--ink-soft)', fontSize: 12.5, fontWeight: 400 },
+  qty: { display: 'inline-flex', alignItems: 'center', gap: 2, background: 'var(--panel-soft)', border: '1px solid var(--line)', borderRadius: 12, padding: 2 },
+  qtyBtn: { minHeight: 34, minWidth: 34, padding: 0, fontSize: 18, lineHeight: 1, border: 'none', boxShadow: 'none', background: 'transparent', borderRadius: 10 },
+  qtyNum: { minWidth: 28, textAlign: 'center', fontWeight: 700 },
+  remove: { minHeight: 34, minWidth: 34, padding: 0, fontSize: 18, lineHeight: 1, border: 'none', boxShadow: 'none', background: 'none', color: 'var(--ink-soft)' },
   moreBackdrop: {
-    position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)',
+    position: 'fixed', inset: 0, background: 'rgba(16, 24, 14, 0.4)',
     display: 'flex', alignItems: 'flex-end', justifyContent: 'center'
   },
   moreSheet: {
-    background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: '12px 12px 0 0',
-    padding: 16, width: 420, maxWidth: '100%', display: 'grid', gap: 8,
-    paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))'
+    background: 'var(--panel)', borderRadius: '20px 20px 0 0', boxShadow: 'var(--shadow-lift)',
+    padding: 18, width: 440, maxWidth: '100%', display: 'grid', gap: 8,
+    paddingBottom: 'calc(18px + env(safe-area-inset-bottom, 0px))'
   },
   clearBtn: { color: 'var(--bad)' },
   priceBtn: {
-    minHeight: 36, padding: '0 8px', border: '1px dashed var(--line)', background: 'none',
-    fontWeight: 400, fontSize: 'inherit'
+    minHeight: 34, padding: '0 8px', border: '1px dashed var(--line-strong)', background: 'none', boxShadow: 'none',
+    fontWeight: 500, fontSize: 'inherit'
   },
   wasPrice: { fontSize: 11, color: 'var(--ink-soft)', textDecoration: 'line-through' },
-  customer: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' },
-  customerName: { fontWeight: 600, fontSize: 14 },
-  customerClear: { minHeight: 32, padding: '0 8px', fontSize: 12, fontWeight: 400 },
-  customerAdd: { minHeight: 40, padding: '0 12px', fontSize: 14, fontWeight: 400 },
-  totalLabel: { fontSize: 13, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: 0.4 },
-  totalValue: { fontSize: 40, fontWeight: 700, lineHeight: 1.1 },
-  complete: { minHeight: 54, fontSize: 16, background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' }
+  customer: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flexWrap: 'wrap' },
+  customerChip: {
+    display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 4px 4px 12px', borderRadius: 999,
+    background: 'var(--brand-tint)', color: 'var(--brand-deep)'
+  },
+  customerName: { fontWeight: 700, fontSize: 14 },
+  customerClear: { minHeight: 30, minWidth: 30, padding: 0, borderRadius: 999, border: 'none', boxShadow: 'none', background: 'transparent', color: 'var(--brand-deep)', display: 'grid', placeItems: 'center' },
+  customerAdd: { minHeight: 40, padding: '0 14px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 999 },
+  totalLabel: { fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.08em' },
+  totalValue: { fontSize: 44, fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.02em' },
+  complete: {
+    minHeight: 58, fontSize: 17, fontWeight: 800, borderRadius: 16,
+    background: 'var(--brand)', color: 'var(--brand-deep)', borderColor: 'var(--brand)',
+    boxShadow: '0 1px 2px rgba(22,75,30,0.15), 0 10px 24px -12px rgba(110,150,20,0.8)'
+  }
 }

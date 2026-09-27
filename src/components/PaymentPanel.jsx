@@ -303,13 +303,13 @@ function notesAbove(amountPaise) {
 
 const s = {
   backdrop: {
-    position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)',
+    position: 'fixed', inset: 0, background: 'rgba(16,24,14,0.4)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
     // Long splits on a short phone must still reach the Complete button.
     overflow: 'auto'
   },
   panel: {
-    background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12,
+    background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 20, boxShadow: 'var(--shadow-lift)',
     padding: 20, width: 430, maxWidth: '100%', maxHeight: '100%', overflow: 'auto',
     display: 'grid', gap: 12, alignContent: 'start'
   },

@@ -160,17 +160,17 @@ const Line = ({ label, value, strong, muted }) => (
 )
 
 const s = {
-  page: { padding: 16, display: 'grid', gap: 14, maxWidth: 640, alignContent: 'start' },
+  page: { padding: '20px 20px 28px', display: 'grid', gap: 14, maxWidth: 760, alignContent: 'start' },
   title: { margin: 0, fontSize: 22 },
   label: { display: 'grid', gap: 6, fontSize: 13, color: 'var(--ink-soft)', maxWidth: 220 },
-  heading: { margin: '0 0 4px', fontSize: 14, color: 'var(--ink-soft)', fontWeight: 600 },
-  block: { display: 'grid', gap: 4, padding: 14, border: '1px solid var(--line)', borderRadius: 12 },
+  heading: { margin: '0 0 4px', fontSize: 13, color: 'var(--ink-soft)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' },
+  block: { display: 'grid', gap: 4, padding: 16, border: '1px solid var(--line)', borderRadius: 14, background: 'var(--panel)', boxShadow: 'var(--shadow)' },
   line: { display: 'flex', justifyContent: 'space-between', gap: 12 },
   strong: { fontWeight: 700, borderTop: '1px solid var(--line)', paddingTop: 6, marginTop: 2 },
   soft: { color: 'var(--ink-soft)', fontSize: 13 },
-  attention: { display: 'grid', gap: 6, padding: 12, border: '1px solid var(--line)', borderRadius: 10 },
+  attention: { display: 'grid', gap: 8, padding: '14px 16px', borderRadius: 14, background: 'var(--warn-tint)' },
   warnLink: { color: 'var(--warn)', fontWeight: 600, textDecoration: 'none' },
-  closed: { margin: 0, padding: 12, border: '1px solid var(--line)', borderRadius: 10, background: 'var(--panel)' },
+  closed: { margin: 0, padding: '14px 16px', borderRadius: 14, background: 'var(--brand-tint)', color: 'var(--brand-deep)' },
   warn: { margin: 0, color: 'var(--warn)', fontSize: 14 },
   primary: { background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)', minHeight: 48 },
   muted: { color: 'var(--ink-soft)', fontSize: 13, margin: 0 },

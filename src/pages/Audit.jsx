@@ -28,7 +28,11 @@ const LABEL = {
   'shift.count_mismatch': "Drawer count didn't match",
   'cash.in': 'Cash in',
   'cash.out': 'Cash out',
-  'day.closed': 'Day closed'
+  'day.closed': 'Day closed',
+  'inventory.connected': 'Connected to Inventory',
+  'inventory.disconnected': 'Disconnected from Inventory',
+  'inventory.retried': 'Inventory sending retried',
+  'inventory.catalogue_synced': 'Items refreshed from Inventory'
 }
 
 export default function Audit() {
@@ -45,7 +49,7 @@ export default function Audit() {
         <p style={s.muted}>Nothing to show yet.</p>
       )}
 
-      <ul style={s.list}>
+      <ul style={s.list} className="card-list">
         {(data ?? []).map(row => {
           const d = row.detail ?? {}
           return (
@@ -70,7 +74,7 @@ export default function Audit() {
 }
 
 const s = {
-  page: { padding: 16, display: 'grid', gap: 10, maxWidth: 760, alignContent: 'start' },
+  page: { padding: '20px 20px 28px', display: 'grid', gap: 14, maxWidth: 760, alignContent: 'start' },
   title: { margin: 0, fontSize: 22 },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
   row: { display: 'grid', gap: 2, padding: '10px 0', borderBottom: '1px solid var(--line)' },

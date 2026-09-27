@@ -14,6 +14,7 @@ import ReturnFlow from './pages/ReturnFlow.jsx'
 import CreditNote from './pages/CreditNote.jsx'
 import Shift from './pages/Shift.jsx'
 import DayClose from './pages/DayClose.jsx'
+import InventoryLink from './pages/InventoryLink.jsx'
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -49,6 +50,8 @@ const router = createBrowserRouter([
       // WF-SHIFT-01 (with WF-CASH-01 as its sheet) and WF-DAY-01.
       { path: 'shift', element: <Shift /> },
       { path: 'day-close', element: <DayClose /> },
+      // The owner's Inventory link. POS-INV-009, POS-SYNC-006.
+      { path: 'inventory-link', element: <InventoryLink /> },
       // WF-PAY-02.
       { path: 'payment-checks', element: <PaymentChecks /> },
       {

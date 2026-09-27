@@ -73,11 +73,11 @@ export default function KeepSheet({ customer, onNext, onCancel }) {
 
 const s = {
   backdrop: {
-    position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)',
+    position: 'fixed', inset: 0, background: 'rgba(16,24,14,0.4)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16
   },
   panel: {
-    background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12,
+    background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 20, boxShadow: 'var(--shadow-lift)',
     padding: 20, width: 430, maxWidth: '100%', display: 'grid', gap: 14
   },
   title: { fontSize: 17 },

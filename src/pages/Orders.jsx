@@ -73,7 +73,7 @@ export function Orders() {
         </p>
       )}
 
-      <ul style={s.list}>
+      <ul style={s.list} className="card-list">
         {orders.map(order => (
           <li key={order.id}>
             <Link to={`/orders/${order.id}`} style={s.row}>
@@ -85,14 +85,17 @@ export function Orders() {
                 </div>
                 <div style={s.muted}>{order.invoiceNo}</div>
               </div>
+              {/* Two facts, two tags: money, and where the goods are. A date goes red once it has passed. */}
               <div style={s.right}>
-                {order.owedPaise > 0
-                  ? <div style={s.owed}>{rupees(order.owedPaise)} due</div>
-                  : <div style={s.muted}>Paid</div>}
-                <div style={s.muted}>{WHERE[order.fulfilment]}</div>
+                <div style={s.tags}>
+                  {order.owedPaise > 0
+                    ? <span className="chip warn">{rupees(order.owedPaise)} due</span>
+                    : <span className="chip good">Paid</span>}
+                  <span className={`chip${order.fulfilment === 'READY' ? ' brand' : ''}`}>{WHERE[order.fulfilment]}</span>
+                </div>
                 {order.promisedAt && order.fulfilment !== 'HANDED_OVER' && (
                   <div style={order.overdue ? s.late : s.muted}>
-                    {order.overdue ? 'Late · ' : ''}{when(order.promisedAt)}
+                    {order.overdue ? 'Late · ' : 'Collect '}{when(order.promisedAt)}
                   </div>
                 )}
               </div>
@@ -277,7 +280,7 @@ function when(at) {
 }
 
 const s = {
-  page: { padding: 16, display: 'grid', gap: 12, maxWidth: 760, alignContent: 'start' },
+  page: { padding: '20px 20px 28px', display: 'grid', gap: 14, maxWidth: 860, alignContent: 'start' },
   state: { padding: 16, display: 'grid', gap: 10, justifyItems: 'start' },
   title: { margin: 0, fontSize: 22 },
   tabs: { display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 },
@@ -285,11 +288,12 @@ const s = {
   tabOn: { background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
   row: {
-    display: 'flex', justifyContent: 'space-between', gap: 12, minHeight: 64,
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, minHeight: 64,
     padding: '10px 0', borderBottom: '1px solid var(--line)', textDecoration: 'none', color: 'var(--ink)'
   },
   main: { minWidth: 0 },
-  right: { textAlign: 'right', whiteSpace: 'nowrap' },
+  right: { textAlign: 'right', whiteSpace: 'nowrap', display: 'grid', gap: 6, justifyItems: 'end' },
+  tags: { display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' },
   owed: { color: 'var(--warn)', fontWeight: 700 },
   late: { color: 'var(--bad)', fontSize: 12, fontWeight: 600 },
   panel: { padding: '12px 16px 0', display: 'grid', gap: 12, maxWidth: 760 },

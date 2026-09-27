@@ -244,6 +244,39 @@ export async function closeTheDay(date, body = {}) {
   return data.data
 }
 
+// ---- The Inventory link. Owner-only apart from reading and refreshing items. ---------------------
+
+export async function loadInventoryLink() {
+  const { data } = await api.get('/inventory-link')
+  return data.data
+}
+
+export async function connectInventory(body) {
+  const { data } = await api.post('/inventory-link/connect', body)
+  return data.data
+}
+
+export async function disconnectInventory() {
+  const { data } = await api.post('/inventory-link/disconnect')
+  return data.data
+}
+
+export async function retryInventory() {
+  const { data } = await api.post('/inventory-link/retry')
+  return data.data
+}
+
+export async function syncInventoryItems() {
+  // Can take a while for a big catalogue; longer than the till's usual ten seconds.
+  const { data } = await api.post('/inventory-link/sync-catalogue', {}, { timeout: 120_000 })
+  return data.data
+}
+
+export async function setInventoryWhenDown(whenDown) {
+  const { data } = await api.post('/inventory-link/when-down', { whenDown })
+  return data.data
+}
+
 export async function loadSale(id) {
   const { data } = await api.get(`/sales/${id}`)
   return data.data

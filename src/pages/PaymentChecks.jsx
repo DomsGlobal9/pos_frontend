@@ -61,7 +61,7 @@ export default function PaymentChecks() {
         <p style={s.muted}>Nothing to check. Every payment is confirmed.</p>
       )}
 
-      <ul style={s.list}>
+      <ul style={s.list} className="card-list">
         {payments.map(payment => (
           <li key={payment.id} style={s.row}>
             <div style={s.detail}>
@@ -98,7 +98,7 @@ export default function PaymentChecks() {
 }
 
 const s = {
-  page: { padding: 16, display: 'grid', gap: 12, maxWidth: 720, alignContent: 'start' },
+  page: { padding: '20px 20px 28px', display: 'grid', gap: 14, maxWidth: 760, alignContent: 'start' },
   title: { margin: 0, fontSize: 22 },
   intro: { margin: 0, lineHeight: 1.6, fontSize: 14, color: 'var(--ink-soft)' },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },

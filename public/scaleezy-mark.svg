@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Scaleezy">
+  <title>Scaleezy</title>
+  <!--
+    The Scaleezy S, drawn rather than exported.
+
+    An SVG because a favicon is asked for at half a dozen sizes (16, 32, 48, 180, 192, 512) and
+    one path answers all of them. A PNG has to be exported per size, and the 16px one is where
+    a mark like this loses its counters and turns to mud.
+
+    The two greens are split by a hard gradient stop rather than by two shapes, so the diagonal
+    stays exact at any size and there is no seam to hairline between them.
+  -->
+  <defs>
+    <linearGradient id="s" x1="0.18" y1="0.1" x2="0.82" y2="0.9">
+      <stop offset="49.9%" stop-color="#A6D92B"/>
+      <stop offset="50%" stop-color="#164B1E"/>
+    </linearGradient>
+  </defs>
+
+  <!--
+    No tile behind it: the S alone, on a transparent background, as large as the square allows.
+    The mark spans 140-372 across and 130-382 down around the centre (stroke included), 252 tall,
+    so 1.96 fills 494 of the 512 with the ends clear of the edge.
+  -->
+  <g transform="translate(256 256) scale(1.96) translate(-256 -256)">
+    <path
+      d="M348 168 H222 a44 44 0 0 0 0 88 h68 a44 44 0 0 1 0 88 H164"
+      fill="none"
+      stroke="url(#s)"
+      stroke-width="76"
+      stroke-linecap="butt"
+      stroke-linejoin="round"
+    />
+  </g>
+</svg>

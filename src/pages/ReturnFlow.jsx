@@ -274,7 +274,7 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
           <h2 style={s.heading}>Coming back</h2>
           <button type="button" onClick={takeEverything} style={s.small}>All of it</button>
         </div>
-        <ul style={s.list}>
+        <ul style={s.list} className="card-list">
           {info.lines.map(line => {
             const qty = pick[line.saleLineId] ?? 0
             const none = line.remainingQty === 0
@@ -333,7 +333,7 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
             <button type="submit">Find</button>
           </form>
           {results.length > 0 && (
-            <ul style={s.list}>
+            <ul style={s.list} className="card-list">
               {results.map(item => (
                 <li key={item.id}>
                   <button type="button" style={s.result} onClick={() => choose(item)}>
@@ -349,7 +349,7 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
               ))}
             </ul>
           )}
-          <ul style={s.list}>
+          <ul style={s.list} className="card-list">
             {newLines.map(l => (
               <li key={l.id} style={s.line}>
                 <div style={s.lineText}>
@@ -429,10 +429,10 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
 }
 
 const s = {
-  page: { padding: 16, display: 'grid', gap: 14, maxWidth: 720, alignContent: 'start', paddingBottom: 96 },
+  page: { padding: '20px 20px 28px', display: 'grid', gap: 14, maxWidth: 760, alignContent: 'start', paddingBottom: 96 },
   state: { padding: 16, display: 'grid', gap: 10, justifyItems: 'start' },
   title: { margin: 0, fontSize: 22 },
-  heading: { margin: 0, fontSize: 14, color: 'var(--ink-soft)', fontWeight: 600 },
+  heading: { margin: 0, fontSize: 13, color: 'var(--ink-soft)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' },
   headRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   section: { display: 'grid', gap: 8 },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
