@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useOutletContext } from 'react-router-dom'
-import { Receipt, ShieldCheck, History, Wallet, CalendarCheck, Boxes, BarChart3, RefreshCw, Settings, Plug, ChevronRight } from 'lucide-react'
+import { Receipt, ShieldCheck, History, Wallet, CalendarCheck, Boxes, BarChart3, RefreshCw, Settings, Plug, ChevronRight, Monitor } from 'lucide-react'
 
 /**
  * WF-MORE-01.
@@ -21,7 +21,8 @@ const ROWS = [
   { to: '/inventory-link', label: 'Inventory link', hint: 'Items from Inventory, and stock kept in step', live: true, Icon: Boxes },
   { to: '/reports', label: 'Reports', hint: 'Sales, payments, GST, cash and dues', live: true, Icon: BarChart3 },
   { to: '/sync', label: 'Waiting to sync', hint: 'Anything not yet saved to the server', phase: 'Phase 11', Icon: RefreshCw },
-  { to: '/settings', label: 'Settings', hint: 'Shop details, billing, discounts', phase: 'Phase 4', Icon: Settings },
+  { to: '/settings', label: 'Settings', hint: 'UPI QR, Inventory link, devices', live: true, Icon: Settings },
+  { to: '/devices', label: 'Devices', hint: 'Every screen the till runs on', live: true, Icon: Monitor },
   { to: '/integrations', label: 'Connections', hint: 'API, webhooks, import and export', phase: 'Phase 12', Icon: Plug }
 ]
 

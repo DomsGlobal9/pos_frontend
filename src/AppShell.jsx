@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { health, loadShop } from './lib/api.js'
 import { useDevice, isTouchFirst } from './lib/useMedia.js'
 import NavBar from './components/NavBar.jsx'
+import { useEffect } from 'react'
+import { checkIn } from './lib/device.js'
 
 /**
  * The shell every screen sits in. POS-CORE-001.
@@ -22,6 +24,13 @@ export default function AppShell() {
 
   const { data: status } = useQuery({ queryKey: ['health'], queryFn: health, refetchInterval: 30_000 })
   const { data: shop } = useQuery({ queryKey: ['shop'], queryFn: loadShop, staleTime: Infinity })
+
+  // This device checks in when the till opens and every minute after. Never blocks anything.
+  useEffect(() => {
+    checkIn()
+    const t = setInterval(checkIn, 60_000)
+    return () => clearInterval(t)
+  }, [])
 
   return (
     <div style={{ ...s.page, flexDirection: bottomNav ? 'column' : 'row' }}>

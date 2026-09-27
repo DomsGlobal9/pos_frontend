@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { loadSends } from '../lib/api.js'
 import { loadBill, messageFor, rupees } from '../lib/api.js'
 import Receipt from '../components/Receipt.jsx'
 import { Undo2, Repeat } from 'lucide-react'
@@ -26,6 +27,11 @@ export default function BillDetail() {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['bill', id],
     queryFn: () => loadBill(id)
+  })
+  const { data: sends } = useQuery({
+    queryKey: ['sends', id],
+    queryFn: () => loadSends(id),
+    enabled: !!data?.customer
   })
 
   if (isLoading) {
@@ -79,6 +85,18 @@ export default function BillDetail() {
           </ul>
         )}
 
+        {/* POS-RCPT-006. What was sent to the customer, and how far it got. */}
+        {sends?.length > 0 && (
+          <div style={s.sends}>
+            {sends.map(x => (
+              <span key={x.id} className={`chip${x.status === 'FAILED' || x.status === 'EXPIRED' ? ' bad' : x.status === 'DELIVERED' || x.status === 'READ' ? ' good' : ''}`}
+                title={x.failReason ?? ''}>
+                WhatsApp to {x.to} · {SEND[x.status] ?? x.status}
+              </span>
+            ))}
+          </div>
+        )}
+
         {data.exchangedFrom && (
           <Link to={`/returns/${data.exchangedFrom.returnId}`} style={s.back}>
             Exchange against {data.exchangedFrom.originalInvoiceNo} ({data.exchangedFrom.creditNoteNo}) →
@@ -91,7 +109,10 @@ export default function BillDetail() {
   )
 }
 
+const SEND = { SENDING: 'sending', QUEUED: 'on its way', SENT: 'sent', DELIVERED: 'delivered', READ: 'read', FAILED: 'not sent', EXPIRED: 'not sent' }
+
 const s = {
+  sends: { display: 'flex', gap: 6, flexWrap: 'wrap' },
   state: { padding: 16, display: 'grid', gap: 12, justifyItems: 'start' },
   crumb: {
     padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,

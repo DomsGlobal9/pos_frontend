@@ -14,7 +14,12 @@ import { VitePWA } from 'vite-plugin-pwa'
  * Port 5175 because Inventory admin (5173) and two other local configs already claim 5173-5174,
  * and all of them are open at once during the cut-over.
  */
+import pkg from './package.json' with { type: 'json' }
+
 export default defineConfig({
+  // The version a device reports in its check-in (POS-DEV-004), so the owner can see which till is
+  // still on an old build.
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   plugins: [
     react(),
     VitePWA({

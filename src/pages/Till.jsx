@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { searchItems, completeSale, parkBill, messageFor, rupees } from '../lib/api.js'
@@ -8,7 +8,10 @@ import PaymentPanel from '../components/PaymentPanel.jsx'
 import Receipt from '../components/Receipt.jsx'
 import VariantSheet from '../components/VariantSheet.jsx'
 import ShiftBar from '../components/ShiftBar.jsx'
-import { Search, ScanBarcode, UserPlus, User, X } from 'lucide-react'
+import { Search, ScanBarcode, UserPlus, User, X, Camera } from 'lucide-react'
+// Loaded only when the camera is opened: the barcode reader is large, and the sell screen's own
+// load is on the path of every sale.
+const CameraScan = lazy(() => import('../components/CameraScan.jsx'))
 import CustomerSheet from '../components/CustomerSheet.jsx'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
 import KeepSheet from '../components/KeepSheet.jsx'
@@ -133,9 +136,13 @@ export default function Till() {
     refocus()
   }
 
-  async function find(event) {
-    event.preventDefault()
-    const q = query.trim()
+  // POS-SELL-004. Only offered where there is a camera to open.
+  const [scanning, setScanning] = useState(false)
+  const canCamera = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
+
+  async function find(event, typed) {
+    event?.preventDefault?.()
+    const q = (typed ?? query).trim()
     if (!q) return
     setBusy(true)
     try {
@@ -369,9 +376,22 @@ export default function Till() {
               onChange={e => setQuery(e.target.value)}
               placeholder="Scan a barcode, or type a code or name"
               aria-label="Find an item"
-              style={s.search}
+              style={{ ...s.search, ...(canCamera ? { paddingRight: 60 } : null) }}
             />
+            {canCamera && (
+              <button type="button" style={s.cameraBtn} onClick={() => setScanning(true)} aria-label="Scan with camera">
+                <Camera size={20} />
+              </button>
+            )}
           </form>
+          {scanning && (
+            <Suspense fallback={null}>
+              <CameraScan
+                onClose={() => { setScanning(false); refocus() }}
+                onCode={(code) => { setScanning(false); setQuery(code); find(null, code) }}
+              />
+            </Suspense>
+          )}
 
           {results.length > 0 && (
             <ul style={s.results} className="card-list">
@@ -556,6 +576,7 @@ export default function Till() {
           totalPaise={totals.totalPaise}
           enabledMethods={shop?.shop?.enabledPaymentMethods}
           creditPaise={customer?.storeCreditPaise ?? 0}
+          upi={{ upiId: shop?.shop?.upiId, name: shop?.shop?.shopName, note: 'Bill at the counter' }}
           onCancel={() => { setPaying(false); refocus() }}
           onConfirm={takePayment}
         />
@@ -596,6 +617,7 @@ export default function Till() {
           totalPaise={totals.totalPaise}
           enabledMethods={shop?.shop?.enabledPaymentMethods}
           creditPaise={customer?.storeCreditPaise ?? 0}
+          upi={{ upiId: shop?.shop?.upiId, name: shop?.shop?.shopName, note: 'Bill at the counter' }}
           onCancel={() => { setKeeping(null); refocus() }}
           onConfirm={takePayment}
         />
@@ -678,6 +700,10 @@ const s = {
     boxShadow: '0 -8px 24px -18px rgba(20, 30, 16, 0.3)'
   },
   searchWrap: { position: 'relative' },
+  cameraBtn: {
+    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', minHeight: 42, minWidth: 42, padding: 0,
+    display: 'grid', placeItems: 'center', borderRadius: 12, border: 'none', boxShadow: 'none', background: 'var(--brand-tint)', color: 'var(--brand-deep)'
+  },
   searchIcon: { position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-soft)', pointerEvents: 'none' },
   search: { minHeight: 56, paddingLeft: 48, fontSize: 17, borderRadius: 16, boxShadow: 'var(--shadow)' },
   empty: {

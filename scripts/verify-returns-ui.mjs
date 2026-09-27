@@ -108,9 +108,9 @@ await page.getByLabel('Manager PIN').fill('2468');
 await page.getByRole('button', { name: 'Approve' }).click();
 
 await page.waitForURL(/\/returns\//);
-await page.getByText('CREDIT NOTE').waitFor();
+await page.getByText('CREDIT NOTE', { exact: true }).waitFor();
 const note = await text();
-ok('the credit note says what settled the new bill', note.includes('Put towards the new bill') && note.includes('₹12,999'));
+ok('the credit note says what settled the new bill', note.includes('Put towards the new bill') && note.includes('₹12,999'), note.slice(0, 900));
 ok('and links to the new bill', /New bill INV\/\d{4}-\d{2}\/\d+ →/.test(note));
 await shot('credit-note-desktop');
 

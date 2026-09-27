@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { rupees, markPrinted, messageFor } from '../lib/api.js'
+import QRCode from 'qrcode'
+import { useQueryClient } from '@tanstack/react-query'
+import { FileDown, MessageCircle, Printer } from 'lucide-react'
+import { rupees, markPrinted, messageFor, sendReceiptWhatsApp } from '../lib/api.js'
+import { newOnceKey } from '../lib/basket.js'
+import { checkIn, paperWidthMm } from '../lib/device.js'
 
 /**
  * The 80 mm receipt, printed from the browser.
@@ -26,7 +31,11 @@ import { rupees, markPrinted, messageFor } from '../lib/api.js'
  * DUPLICATE across the top. Two identical-looking copies of one invoice is how the same saree gets
  * returned twice, and how a shop loses track of which one the accountant has.
  */
-export default function Receipt({ sale, onDone }) {
+/**
+ * `publicView`: the customer's own digital receipt (/r/:token). No print counting, no sending -- it
+ * is their copy, opened from the QR on the paper. `pdfHref` is where its PDF comes from.
+ */
+export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
   // Which copy is in the printer's hand right now. Null until Print is pressed.
   const [copyNumber, setCopyNumber] = useState(null)
   const [printing, setPrinting] = useState(false)
@@ -53,12 +62,48 @@ export default function Receipt({ sale, onDone }) {
    * A failure to count does NOT block the print. A shop with a customer waiting needs the paper
    * more than we need the tally.
    */
+  const queryClient = useQueryClient()
+  const [sending, setSending] = useState(false)
+  const [qr, setQr] = useState(null)
+
+  // The QR the paper carries: this bill's own address. POS-RCPT-009.
+  useEffect(() => {
+    let live = true
+    if (sale.receiptUrl) {
+      QRCode.toDataURL(sale.receiptUrl, { margin: 0, width: 220, errorCorrectionLevel: 'M' })
+        .then(url => { if (live) setQr(url) })
+        .catch(() => setQr(null))
+    }
+    return () => { live = false }
+  }, [sale.receiptUrl])
+
+  /**
+   * POS-RCPT-006. One press, one message, to the bill's own customer -- the server decides who.
+   * A failure is said plainly and changes nothing on the bill.
+   */
+  async function sendWhatsApp() {
+    if (sending) return
+    setSending(true)
+    try {
+      const { send } = await sendReceiptWhatsApp(sale.id, newOnceKey())
+      toast.success(`Sent to ${send.to} on WhatsApp.`)
+    } catch (error) {
+      toast.error(messageFor(error))
+    } finally {
+      setSending(false)
+      queryClient.invalidateQueries({ queryKey: ['sends', sale.id] })
+    }
+  }
+
   async function print() {
+    if (publicView) { window.print(); return }
     if (printing) return
     setPrinting(true)
     try {
       const { copyNumber: n } = await markPrinted(sale.id)
       setCopyNumber(n)
+      // POS-DEV-002: the device knows when it last printed.
+      checkIn({ printed: true })
       // Let the banner render before the print dialog freezes the page.
       await new Promise(resolve => setTimeout(resolve, 60))
     } catch (error) {
@@ -98,10 +143,20 @@ export default function Receipt({ sale, onDone }) {
             {(sale.printCount ?? 0) > 0 && ` · printed ${sale.printCount} ${sale.printCount === 1 ? 'time' : 'times'}`}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={print} disabled={printing}>
-            {printing ? 'Preparing…' : (sale.printCount ?? 0) > 0 ? 'Print again' : 'Print'}
+        <div style={s.tools}>
+          <button onClick={print} disabled={printing} style={s.tool}>
+            <Printer size={16} aria-hidden="true" />
+            {printing ? 'Preparing…' : publicView ? 'Print' : (sale.printCount ?? 0) > 0 ? 'Print again' : 'Print'}
           </button>
+          <a href={pdfHref ?? `/api/v1/bills/${sale.id}/receipt.pdf`} target="_blank" rel="noreferrer" style={s.toolLink}>
+            <FileDown size={16} aria-hidden="true" /> PDF
+          </a>
+          {!publicView && sale.customer && (
+            <button onClick={sendWhatsApp} disabled={sending} style={s.tool}>
+              <MessageCircle size={16} aria-hidden="true" />
+              {sending ? 'Sending…' : 'WhatsApp'}
+            </button>
+          )}
           {onDone && <button style={s.next} onClick={onDone}>Next sale</button>}
         </div>
       </div>
@@ -236,6 +291,14 @@ export default function Receipt({ sale, onDone }) {
             <div style={s.centre}>{shop.receiptFooter}</div>
           </>
         )}
+
+        {/* POS-RCPT-009. The customer scans this for the bill online -- and its PDF. */}
+        {qr && (
+          <div style={s.qrBlock}>
+            <img src={qr} alt="QR code for this bill online" style={s.qr} />
+            <div style={s.muted}>Scan for this bill online</div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -243,13 +306,14 @@ export default function Receipt({ sale, onDone }) {
 
 const Rule = () => <div style={{ borderTop: '1px dashed #999', margin: '6px 0' }} />
 
+// The paper width is the device's (POS-DEV-002): 80 mm unless a manager set this device to 58 mm.
 const PRINT_CSS = `
 @media print {
-  @page { size: 80mm auto; margin: 0; }
+  @page { size: ${paperWidthMm()}mm auto; margin: 0; }
   body { background: #fff; }
   .no-print { display: none !important; }
   .receipt {
-    width: 80mm; margin: 0; padding: 4mm 3mm;
+    width: ${paperWidthMm()}mm; margin: 0; padding: 4mm 3mm;
     border: none; box-shadow: none; font-size: 11px;
   }
   /* The till hides itself below 768px on screen. Printing is not a narrow screen, so that rule
@@ -261,6 +325,14 @@ const PRINT_CSS = `
 const METHOD = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', EXCHANGE: 'Exchange credit' }
 
 const s = {
+  tools: { display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' },
+  tool: { display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44 },
+  toolLink: {
+    display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 44, padding: '0 16px', borderRadius: 12,
+    border: '1px solid var(--line-strong)', background: 'var(--panel)', color: 'var(--ink)', fontWeight: 600, textDecoration: 'none'
+  },
+  qrBlock: { display: 'grid', justifyItems: 'center', gap: 4, marginTop: 10 },
+  qr: { width: 110, height: 110, imageRendering: 'pixelated' },
   page: { height: '100%', overflow: 'auto', background: 'var(--bg)' },
   bar: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',

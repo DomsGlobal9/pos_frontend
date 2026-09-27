@@ -283,6 +283,40 @@ export async function loadReport({ from, to } = {}) {
   return data.data
 }
 
+// ---- Digital receipts, UPI QR, devices. Phase 10. ------------------------------------------
+
+/** POS-RCPT-006. One press, one message, to the bill's own customer. */
+export async function sendReceiptWhatsApp(saleId, onceKey) {
+  const { data } = await api.post(`/bills/${saleId}/send`, { onceKey, channel: 'WHATSAPP' }, { timeout: 30_000 })
+  return data.data
+}
+
+export async function loadSends(saleId) {
+  const { data } = await api.get(`/bills/${saleId}/sends`)
+  return data.data
+}
+
+/** The customer's own copy, by the token on the paper. No sign-in. */
+export async function loadPublicReceipt(token) {
+  const { data } = await api.get(`/public/receipts/${token}`)
+  return data.data
+}
+
+export async function setShopUpi(upiId) {
+  const { data } = await api.put('/shop/upi', { upiId })
+  return data.data
+}
+
+export async function loadDevices() {
+  const { data } = await api.get('/devices')
+  return data.data
+}
+
+export async function updateDevice(id, body) {
+  const { data } = await api.patch(`/devices/${id}`, body)
+  return data.data
+}
+
 export async function loadSale(id) {
   const { data } = await api.get(`/sales/${id}`)
   return data.data

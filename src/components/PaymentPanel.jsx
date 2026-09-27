@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { rupees } from '../lib/api.js'
+import UpiQr from './UpiQr.jsx'
 
 /**
  * WF-PAY-01. POS-PAY-001..010.
@@ -35,7 +36,7 @@ const COPY = {
   COLLECT: { heading: 'Owed', confirm: 'Take payment', remaining: 'Still owed after this' }
 }
 
-export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT', creditPaise = 0, heading }) {
+export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT', creditPaise = 0, heading, upi }) {
   // POS-PAY-016. Store credit is offered only when this customer has some. The server takes it
   // from their live balance, so this figure is a guide and the server has the last word.
   const methods = [
@@ -175,6 +176,11 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
                   </div>
                 )}
               </>
+            )}
+
+            {/* POS-PAY-012. With the shop's UPI ID set, a QR for exactly this row's amount. */}
+            {row.method === 'UPI' && upi?.upiId && !row.unconfirmed && (
+              <UpiQr upiId={upi.upiId} name={upi.name} amountPaise={toPaise(row.amount) ?? 0} note={upi.note} />
             )}
 
             {row.method === 'CREDIT' && (

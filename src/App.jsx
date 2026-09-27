@@ -16,6 +16,9 @@ import Shift from './pages/Shift.jsx'
 import DayClose from './pages/DayClose.jsx'
 import InventoryLink from './pages/InventoryLink.jsx'
 import Reports from './pages/Reports.jsx'
+import PublicReceipt from './pages/PublicReceipt.jsx'
+import Settings from './pages/Settings.jsx'
+import Devices from './pages/Devices.jsx'
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -25,6 +28,8 @@ import Reports from './pages/Reports.jsx'
  * adapts rather than refusing.
  */
 const router = createBrowserRouter([
+  // The customer's digital receipt, outside the till: no navigation, no sign-in. POS-RCPT-009.
+  { path: '/r/:token', element: <PublicReceipt /> },
   {
     path: '/',
     element: <AppShell />,
@@ -55,6 +60,9 @@ const router = createBrowserRouter([
       { path: 'inventory-link', element: <InventoryLink /> },
       // WF-REPORTS-01. POS-RPT-001..011.
       { path: 'reports', element: <Reports /> },
+      // POS-PAY-012 (UPI ID), and WF-DEVICES-01. POS-DEV-001..004.
+      { path: 'settings', element: <Settings /> },
+      { path: 'devices', element: <Devices /> },
       // WF-PAY-02.
       { path: 'payment-checks', element: <PaymentChecks /> },
       {
