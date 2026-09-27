@@ -61,6 +61,8 @@ export default function InventoryLink() {
           <Row label="Status" value={connected ? 'Connected' : 'Disconnected'} />
           <Row label="Key" value={`${data.keyPrefix}…`} />
           <Row label="Waiting to send" value={String(data.waiting)} />
+          {/* Taken in by Inventory, which applies them a few seconds later. */}
+          <Row label="Being applied in Inventory" value={String(data.settling ?? 0)} />
           <Row label="Last sent" value={data.lastDeliveredAt ? new Date(data.lastDeliveredAt).toLocaleString('en-IN') : 'Nothing yet'} />
           {data.lastError && !data.blocked && <p style={s.warn}>{data.lastError} It will try again by itself.</p>}
           <Row label="Items last refreshed" value={data.catalogueSyncedAt ? new Date(data.catalogueSyncedAt).toLocaleString('en-IN') : 'Never'} />
