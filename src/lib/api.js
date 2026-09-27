@@ -334,3 +334,40 @@ export function rupees(paise) {
   })
   return `${negative ? '-' : ''}₹${text}`
 }
+
+// ---- Connections: keys, webhooks, import, export. WF-INTEGRATIONS-01.
+const got = (p) => p.then(r => r.data.data)
+export const loadApiKeys = () => got(api.get('/connections/api-keys'))
+export const createApiKey = (body) => got(api.post('/connections/api-keys', body))
+export const revokeApiKey = (id) => got(api.post(`/connections/api-keys/${id}/revoke`))
+export const loadWebhooks = () => got(api.get('/connections/webhooks'))
+export const createWebhook = (body) => got(api.post('/connections/webhooks', body))
+export const updateWebhook = (id, body) => got(api.patch(`/connections/webhooks/${id}`, body))
+export const removeWebhook = (id) => got(api.delete(`/connections/webhooks/${id}`))
+export const testWebhook = (id) => got(api.post(`/connections/webhooks/${id}/test`, {}, { timeout: 20_000 }))
+export const loadDeliveries = (id) => got(api.get(`/connections/webhooks/${id}/deliveries`))
+export const resendDelivery = (id) => got(api.post(`/connections/deliveries/${id}/resend`))
+export const importItems = (file, commit) => got(api.post('/connections/items/import', { file, commit }, { timeout: 120_000 }))
+
+/** Fetch a file from the server and hand it to the browser as a download. */
+export async function download(path, params, filename) {
+  let res
+  try {
+    res = await api.get(path, { params, responseType: 'blob', timeout: 120_000 })
+  } catch (error) {
+    // A refusal arrives as a blob too; read the sentence out of it so the screen can show it.
+    const blob = error?.response?.data
+    if (blob instanceof Blob) {
+      try { error.response.data = JSON.parse(await blob.text()) } catch { /* not JSON */ }
+    }
+    throw error
+  }
+  const url = URL.createObjectURL(res.data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 5000)
+}

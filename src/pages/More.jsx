@@ -23,7 +23,7 @@ const ROWS = [
   { to: '/sync', label: 'Waiting to sync', hint: 'Sales kept on this till while the internet was down', live: true, Icon: RefreshCw },
   { to: '/settings', label: 'Settings', hint: 'UPI QR, Inventory link, devices', live: true, Icon: Settings },
   { to: '/devices', label: 'Devices', hint: 'Every screen the till runs on', live: true, Icon: Monitor },
-  { to: '/integrations', label: 'Connections', hint: 'API, webhooks, import and export', phase: 'Phase 12', Icon: Plug }
+  { to: '/connections', label: 'Connections', hint: 'Your other software, Excel import, sales for the accountant', live: true, Icon: Plug }
 ]
 
 export default function More() {
