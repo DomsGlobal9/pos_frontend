@@ -1,4 +1,5 @@
 import { api } from './api.js'
+import { pendingSummary } from './outbox.js'
 
 /**
  * This device, as the till knows it. POS-DEV-001..004.
@@ -55,6 +56,8 @@ export async function checkIn({ printed = false } = {}) {
       appVersion: typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : undefined,
       userAgent: navigator.userAgent.slice(0, 300),
       capabilities: capabilities(),
+      // What this till is holding that the server has not got. The day close adds these up.
+      pending: pendingSummary(),
       ...(printed ? { printed: true } : {})
     })
     const d = data?.data

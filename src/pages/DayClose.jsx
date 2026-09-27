@@ -89,6 +89,15 @@ export default function DayClose() {
             </p>
           )}
 
+          {/* Closed already, and a till is still holding sales: they arrive after the close. POS-DAY-004. */}
+          {data.closed && data.isToday && data.live?.pendingSync > 0 && (
+            <section style={s.attention}>
+              <Link to="/sync" style={s.warnLink}>
+                {data.live.pendingSync} sale{data.live.pendingSync === 1 ? ' is' : 's are'} still waiting to send from a till. They will show under "since closing" once sent →
+              </Link>
+            </section>
+          )}
+
           {/* Things that need someone, before the figures. */}
           {!data.closed && (data.openShifts.length > 0 || f.paymentsToCheck > 0 || f.pendingSync > 0) && (
             <section style={s.attention}>
@@ -102,7 +111,13 @@ export default function DayClose() {
               {f.paymentsToCheck > 0 && (
                 <div><Link to="/payment-checks" style={s.warnLink}>{f.paymentsToCheck} payment{f.paymentsToCheck === 1 ? '' : 's'} still to check →</Link></div>
               )}
-              {f.pendingSync > 0 && <div style={s.warnLink}>{f.pendingSync} bill{f.pendingSync === 1 ? '' : 's'} not yet synced</div>}
+              {f.pendingSync > 0 && (
+                <div>
+                  <Link to="/sync" style={s.warnLink}>
+                    {f.pendingSync} sale{f.pendingSync === 1 ? ' is' : 's are'} still waiting to send from a till. They are not in these figures yet →
+                  </Link>
+                </div>
+              )}
             </section>
           )}
 

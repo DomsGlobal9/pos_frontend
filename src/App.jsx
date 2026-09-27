@@ -19,6 +19,7 @@ import Reports from './pages/Reports.jsx'
 import PublicReceipt from './pages/PublicReceipt.jsx'
 import Settings from './pages/Settings.jsx'
 import Devices from './pages/Devices.jsx'
+import Sync from './pages/Sync.jsx'
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -63,6 +64,8 @@ const router = createBrowserRouter([
       // POS-PAY-012 (UPI ID), and WF-DEVICES-01. POS-DEV-001..004.
       { path: 'settings', element: <Settings /> },
       { path: 'devices', element: <Devices /> },
+      // WF-SYNC-01. POS-SYNC-003, -004.
+      { path: 'sync', element: <Sync /> },
       // WF-PAY-02.
       { path: 'payment-checks', element: <PaymentChecks /> },
       {

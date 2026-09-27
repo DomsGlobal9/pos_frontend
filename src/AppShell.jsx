@@ -1,10 +1,12 @@
-import { Outlet } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { Outlet, Link } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import { health, loadShop } from './lib/api.js'
 import { useDevice, isTouchFirst } from './lib/useMedia.js'
 import NavBar from './components/NavBar.jsx'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { checkIn } from './lib/device.js'
+import { useOutbox, flush, outboxItems } from './lib/outbox.js'
 
 /**
  * The shell every screen sits in. POS-CORE-001.
@@ -22,7 +24,12 @@ export default function AppShell() {
   const device = useDevice()
   const bottomNav = isTouchFirst(device)
 
-  const { data: status } = useQuery({ queryKey: ['health'], queryFn: health, refetchInterval: 30_000 })
+  const queryClient = useQueryClient()
+  const { items: waiting } = useOutbox()
+  const { data: status, isError: unreachable, refetch: recheck } = useQuery({
+    queryKey: ['health'], queryFn: health, refetchInterval: 30_000, retry: false
+  })
+  const [online, setOnline] = useState(() => navigator.onLine)
   const { data: shop } = useQuery({ queryKey: ['shop'], queryFn: loadShop, staleTime: Infinity })
 
   // This device checks in when the till opens and every minute after. Never blocks anything.
@@ -31,6 +38,39 @@ export default function AppShell() {
     const t = setInterval(checkIn, 60_000)
     return () => clearInterval(t)
   }, [])
+
+  /*
+   * Send what this till is holding. POS-SYNC-005.
+   *
+   * When the till opens, every fifteen seconds, and the moment the browser says the line is back.
+   * flush() runs one at a time however many of these fire together, and sending the same sale twice
+   * is safe -- the server answers the second with the first bill.
+   */
+  useEffect(() => {
+    let alive = true
+    const send = async () => {
+      if (!outboxItems().some(i => i.state === 'waiting')) return
+      const went = await flush()
+      // Tell the server what is still here -- sent, or refused and needing a look -- straight away,
+      // not at the next minute's check-in: the day close reads it.
+      checkIn()
+      if (!alive || went === 0) return
+      queryClient.invalidateQueries()
+      toast.success(went === 1 ? '1 waiting sale sent.' : `${went} waiting sales sent.`)
+    }
+    const up = () => { setOnline(true); recheck(); send() }
+    const down = () => { setOnline(false); recheck() }
+    send()
+    const t = setInterval(send, 15_000)
+    window.addEventListener('online', up)
+    window.addEventListener('offline', down)
+    return () => {
+      alive = false
+      clearInterval(t)
+      window.removeEventListener('online', up)
+      window.removeEventListener('offline', down)
+    }
+  }, [queryClient, recheck])
 
   return (
     <div style={{ ...s.page, flexDirection: bottomNav ? 'column' : 'row' }}>
@@ -46,7 +86,7 @@ export default function AppShell() {
               {shop?.cashier?.name && <div style={s.who}>{shop.cashier.name}</div>}
             </div>
           </div>
-          <Connection status={status} />
+          <Connection status={status} offline={!online || unreachable} waiting={waiting.length} />
         </header>
 
         <div style={s.content} className="shell-content">
@@ -67,7 +107,21 @@ export default function AppShell() {
  * "ECONNREFUSED" -- and it distinguishes the server being unreachable from the server being up
  * with a database problem, because those need different people to fix them.
  */
-function Connection({ status }) {
+function Connection({ status, offline, waiting }) {
+  // Sales on this till that the server has not got. POS-SYNC-003: never "All saved" while any are.
+  const held = waiting > 0 && (
+    <Link to="/sync" className="chip warn" style={s.state}>
+      <Dot color="var(--warn)" /> {waiting === 1 ? '1 sale' : `${waiting} sales`} waiting to send
+    </Link>
+  )
+  if (offline) {
+    return held || (
+      <span className="chip bad" style={s.state}>
+        <Dot color="var(--bad)" /> No connection. Sales are kept on this till.
+      </span>
+    )
+  }
+  if (held) return held
   if (!status) {
     return <span className="chip" style={s.state}>Checking…</span>
   }

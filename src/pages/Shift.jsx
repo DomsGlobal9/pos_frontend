@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useOutletContext, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { loadShift, openShift, moveCash, closeShift, rupees, messageFor } from '../lib/api.js'
 import { newOnceKey } from '../lib/basket.js'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
+import { useOutbox } from '../lib/outbox.js'
 
 /**
  * WF-SHIFT-01 and WF-CASH-01. POS-SHIFT-001..009.
@@ -262,6 +263,8 @@ function CloseSheet({ shiftId, onDone, onCancel }) {
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState(null)
   const box = useRef(null)
+  // Cash sales kept on this till are not in the figure the till expects until they are sent.
+  const { items: waiting } = useOutbox()
   useEffect(() => { box.current?.focus() }, [])
 
   const paise = toPaise(amount)
@@ -300,6 +303,12 @@ function CloseSheet({ shiftId, onDone, onCancel }) {
       <form style={s.sheet} onSubmit={submit}>
         <b style={{ fontSize: 17 }}>Count the drawer</b>
         <p style={{ ...s.muted, margin: 0 }}>Count every note and coin, then type the total. The till tells you what it expected after.</p>
+        {waiting.length > 0 && (
+          <p style={{ margin: 0, padding: '8px 10px', borderRadius: 10, background: 'var(--warn-tint)', color: 'var(--warn)', fontSize: 14 }}>
+            {waiting.length === 1 ? '1 sale on this till has' : `${waiting.length} sales on this till have`} not been sent yet, so the
+            till will expect less cash than is in the drawer. <Link to="/sync" style={{ color: 'inherit', fontWeight: 700 }}>Send them first</Link>.
+          </p>
+        )}
         <label style={s.label}>
           Counted
           <input ref={box} inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} aria-label="Counted cash" />

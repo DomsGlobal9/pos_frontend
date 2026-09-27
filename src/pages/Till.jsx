@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useOutletContext, useLocation, useNavigate, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { searchItems, completeSale, parkBill, messageFor, rupees } from '../lib/api.js'
 import { isTouchFirst } from '../lib/useMedia.js'
 import { basketTotals, lineTotal, unitPrice, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
+import { addToOutbox, isNetworkFailure, outboxItems } from '../lib/outbox.js'
+import { checkIn } from '../lib/device.js'
 import PaymentPanel from '../components/PaymentPanel.jsx'
 import Receipt from '../components/Receipt.jsx'
 import VariantSheet from '../components/VariantSheet.jsx'
@@ -46,6 +48,8 @@ export default function Till() {
   const [busy, setBusy] = useState(false)
   const [paying, setPaying] = useState(false)
   const [receipt, setReceipt] = useState(null)
+  // A sale kept on this till because the line was down when Complete was pressed. POS-OFF-002.
+  const [savedOffline, setSavedOffline] = useState(null)
   // The colour/size picker, when a search result turns out to have siblings. WF-PRODUCT-01.
   const [picking, setPicking] = useState(null)
   /*
@@ -93,6 +97,18 @@ export default function Till() {
   const stacked = isTouchFirst(device)
 
   const totals = basketTotals(lines, billDiscountPaise)
+
+  // Brought back from the Sync screen ("Open in till"): the basket as it was, with its own key.
+  const location = useLocation()
+  const navigate = useNavigate()
+  useEffect(() => {
+    const payload = location.state?.restore
+    if (payload) {
+      restore(payload)
+      navigate('/sell', { replace: true, state: null })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state])
 
   // Saved together. A reload mid-sale keeps the same key, so resubmitting the same basket
   // replays instead of charging twice.
@@ -245,27 +261,28 @@ export default function Till() {
       toast.error('This till has no counter set up yet.')
       return
     }
+    const body = {
+      onceKey,
+      counterId,
+      lines: lines.map(l => ({
+        itemId: l.id,
+        qty: l.qty,
+        ...(l.overridePricePaise ? { overridePricePaise: l.overridePricePaise } : {})
+      })),
+      ...(customer ? { customerId: customer.id } : {}),
+      ...(billDiscountPaise ? { billDiscountPaise } : {}),
+      ...(managerApproval ? { approval: managerApproval } : {}),
+      ...(keeping?.step === 'payment'
+        ? {
+            kind: 'KEPT',
+            ...(keeping.promisedAt ? { promisedAt: keeping.promisedAt } : {}),
+            ...(keeping.note ? { note: keeping.note } : {})
+          }
+        : {}),
+      payments
+    }
     try {
-      const result = await completeSale({
-        onceKey,
-        counterId,
-        lines: lines.map(l => ({
-          itemId: l.id,
-          qty: l.qty,
-          ...(l.overridePricePaise ? { overridePricePaise: l.overridePricePaise } : {})
-        })),
-        ...(customer ? { customerId: customer.id } : {}),
-        ...(billDiscountPaise ? { billDiscountPaise } : {}),
-        ...(managerApproval ? { approval: managerApproval } : {}),
-        ...(keeping?.step === 'payment'
-          ? {
-              kind: 'KEPT',
-              ...(keeping.promisedAt ? { promisedAt: keeping.promisedAt } : {}),
-              ...(keeping.note ? { note: keeping.note } : {})
-            }
-          : {}),
-        payments
-      })
+      const result = await completeSale(body)
       setApproval(null)
       setKeeping(null)
       // Cleared HERE, on save -- not in startAgain. A cashier who walks away after handing
@@ -277,6 +294,21 @@ export default function Till() {
       if (result.replayed) toast('That bill was already saved. Showing it again.')
     } catch (error) {
       const details = error?.response?.data?.details
+
+      /*
+       * The line is down -- no reply at all, or a gateway that could not reach the server. POS-OFF-002.
+       *
+       * The customer has paid and is standing there. Keep the sale on this till, exactly as it was
+       * sent and with the same once-key, and send it when the line is back: the server numbers it
+       * then. If this attempt did arrive and only the reply was lost, sending it again gets that
+       * same bill back -- never a second one.
+       *
+       * Not when a manager's PIN is in the request: a PIN is never written to this device's storage.
+       */
+      if (isNetworkFailure(error) && !managerApproval) {
+        keepOnDevice(body, payments)
+        return
+      }
 
       /*
        * Somebody needs to say yes. Open the approval sheet ON TOP of the payment sheet, holding the
@@ -299,6 +331,35 @@ export default function Till() {
       // completed sale, and must never cost the cashier the basket.
       toast.error(messageFor(error))
     }
+  }
+
+  /** POS-OFF-002. Put the sale in this till's outbox and clear the counter for the next customer. */
+  function keepOnDevice(body, payments) {
+    addToOutbox({
+      onceKey,
+      body: { ...body, madeOfflineAt: new Date().toISOString() },
+      restore: {
+        lines,
+        ...(customer ? { customer } : {}),
+        ...(billDiscountPaise ? { billDiscountPaise } : {}),
+        onceKey
+      },
+      summary: {
+        totalPaise: totals.totalPaise,
+        pieces: lines.reduce((n, l) => n + l.qty, 0),
+        first: lines[0]?.name ?? 'Sale',
+        more: Math.max(0, lines.length - 1),
+        customerName: customer?.name ?? null,
+        paidBy: [...new Set(payments.map(p => p.method))],
+        kept: keeping?.step === 'payment'
+      }
+    })
+    clearDraft()
+    setApproval(null)
+    setKeeping(null)
+    setPaying(false)
+    setSavedOffline({ totalPaise: totals.totalPaise, waiting: outboxItems().length })
+    checkIn()
   }
 
   async function approve(managerApproval) {
@@ -361,6 +422,15 @@ export default function Till() {
   }
 
   if (receipt) return <Receipt sale={receipt} onDone={startAgain} />
+  if (savedOffline) {
+    return (
+      <SavedOnDevice
+        totalPaise={savedOffline.totalPaise}
+        waiting={savedOffline.waiting}
+        onDone={() => { setSavedOffline(null); startAgain() }}
+      />
+    )
+  }
 
   return (
     <div style={s.page}>
@@ -768,4 +838,46 @@ const s = {
     background: 'var(--brand)', color: 'var(--brand-deep)', borderColor: 'var(--brand)',
     boxShadow: '0 1px 2px rgba(22,75,30,0.15), 0 10px 24px -12px rgba(110,150,20,0.8)'
   }
+}
+
+/**
+ * The sale is safe on this till; the bill number comes when it is sent. POS-OFF-002, POS-SYNC-003.
+ *
+ * Said plainly, because the cashier has to tell the customer something: they have paid, the sale
+ * is not lost, and a receipt can be sent or printed from Bills once the number exists.
+ */
+function SavedOnDevice({ totalPaise, waiting, onDone }) {
+  return (
+    <div style={so.page}>
+      <div style={so.card} role="status">
+        <span className="chip warn" style={{ justifySelf: 'center' }}>No connection</span>
+        <h1 style={so.title}>Sale saved on this till</h1>
+        <div style={so.total}>{rupees(totalPaise)}</div>
+        <p style={so.text}>
+          The internet is down, so the bill number comes when the sale is sent. That happens on its own
+          as soon as the connection is back — nothing to do.
+        </p>
+        <p style={so.muted}>
+          {waiting === 1 ? '1 sale is' : `${waiting} sales are`} waiting to send.
+          The receipt can be printed or sent from Bills once it has its number.
+        </p>
+        <button style={so.btn} onClick={onDone} autoFocus>Next sale</button>
+        <Link to="/sync" style={so.link}>See what is waiting</Link>
+      </div>
+    </div>
+  )
+}
+
+const so = {
+  page: { minHeight: '100%', display: 'grid', placeItems: 'center', padding: 20 },
+  card: {
+    width: '100%', maxWidth: 440, display: 'grid', gap: 12, textAlign: 'center', padding: '28px 24px',
+    background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)'
+  },
+  title: { margin: 0, fontSize: 22 },
+  total: { fontSize: 32, fontWeight: 800, letterSpacing: '-0.02em' },
+  text: { margin: 0, color: 'var(--ink)', lineHeight: 1.5 },
+  muted: { margin: 0, color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.5 },
+  btn: { minHeight: 'var(--tap)', fontSize: 16, fontWeight: 700, background: 'var(--accent)', color: '#fff', border: '1px solid var(--accent)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' },
+  link: { color: 'var(--accent)', fontWeight: 600, fontSize: 14 }
 }
