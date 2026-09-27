@@ -193,6 +193,29 @@ export default function Receipt({ sale, onDone }) {
           </div>
         )}
 
+        {/*
+          * A kept order's receipt is also the customer's claim ticket: what is being done, when to
+          * come, and what they still owe. They will bring this back to collect.
+          */}
+        {sale.kind === 'KEPT' && (
+          <>
+            <Rule />
+            <div style={s.centre}><b>KEPT FOR COLLECTION</b></div>
+            {sale.note && <div>{sale.note}</div>}
+            {sale.promisedAt && (
+              <div style={s.line}>
+                <span>Collect on</span>
+                <span>{new Date(sale.promisedAt).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+              </div>
+            )}
+            {sale.owedPaise > 0 && (
+              <div style={{ ...s.line, fontWeight: 700 }}>
+                <span>Balance due</span><span>{rupees(sale.owedPaise)}</span>
+              </div>
+            )}
+          </>
+        )}
+
         {sale.savedPaise > 0 && (
           <>
             <Rule />

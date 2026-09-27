@@ -107,6 +107,13 @@ export function CustomerDetail() {
         <Tile label="Spent here" value={rupees(data.lifetimeSpentPaise)} />
       </div>
 
+      {/* POS-CUST-011. Only when there is something -- a zero here is noise on every card. */}
+      {data.owedPaise > 0 && (
+        <Link to="/orders" style={s.owes}>
+          Owes {rupees(data.owedPaise)} on kept orders →
+        </Link>
+      )}
+
       {data.note && <p style={s.note}>{data.note}</p>}
 
       <div style={s.muted}>
@@ -155,6 +162,10 @@ const s = {
   tile: { border: '1px solid var(--line)', borderRadius: 12, padding: 14, background: 'var(--panel)' },
   tileValue: { fontSize: 22, fontWeight: 700, marginTop: 2 },
   note: { margin: 0, padding: 10, background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 10 },
+  owes: {
+    display: 'block', padding: 12, borderRadius: 10, textDecoration: 'none',
+    border: '1px solid var(--line)', color: 'var(--warn)', fontWeight: 600
+  },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
   row: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,

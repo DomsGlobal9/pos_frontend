@@ -9,6 +9,7 @@ import BillDetail from './pages/BillDetail.jsx'
 import PaymentChecks from './pages/PaymentChecks.jsx'
 import { Customers, CustomerDetail } from './pages/Customers.jsx'
 import Audit from './pages/Audit.jsx'
+import { Orders, OrderDetail } from './pages/Orders.jsx'
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -24,16 +25,9 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'sell', element: <Till /> },
-      {
-        path: 'orders',
-        element: (
-          <Placeholder
-            title="Orders"
-            does="Everything a customer is waiting for: goods kept for them, money still due, and orders ready to collect."
-            arriving="Being built now. Until then, completed sales appear on Home."
-          />
-        )
-      },
+      // WF-ORDERS-01 and WF-ORDER-02.
+      { path: 'orders', element: <Orders /> },
+      { path: 'orders/:id', element: <OrderDetail /> },
       // WF-CUSTOMERS-01 and WF-CUSTOMER-02.
       { path: 'customers', element: <Customers /> },
       { path: 'customers/:id', element: <CustomerDetail /> },

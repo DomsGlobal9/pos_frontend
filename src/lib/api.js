@@ -89,6 +89,51 @@ export async function loadCustomer(id) {
   return data.data
 }
 
+/** WF-ORDERS-01. tab is ALL, WAITING, READY, DUE or COMPLETE. */
+export async function loadOrders(tab = 'ALL', q = '') {
+  const { data } = await api.get('/orders', { params: { tab, ...(q ? { q } : {}) } })
+  return data.data
+}
+
+/** POS-ORD-012. Idempotent on onceKey. */
+export async function collectOnOrder(id, body) {
+  const { data } = await api.post(`/orders/${id}/collect`, body)
+  return data.data
+}
+
+export async function markOrderReady(id) {
+  const { data } = await api.post(`/orders/${id}/ready`)
+  return data.data
+}
+
+/** POS-ORD-013/014. acceptDue is the explicit "hand over with money owed". */
+export async function handOverOrder(id, acceptDue = false) {
+  const { data } = await api.post(`/orders/${id}/hand-over`, acceptDue ? { acceptDue: true } : {})
+  return data.data
+}
+
+/** WF-HELD-01. */
+export async function loadHeldBills() {
+  const { data } = await api.get('/held-bills')
+  return data.data
+}
+
+export async function parkBill(body) {
+  const { data } = await api.post('/held-bills', body)
+  return data.data
+}
+
+/** One person gets it; everyone else is told it has gone. */
+export async function recallBill(id) {
+  const { data } = await api.post(`/held-bills/${id}/recall`)
+  return data.data
+}
+
+export async function discardHeldBill(id) {
+  const { data } = await api.delete(`/held-bills/${id}`)
+  return data.data
+}
+
 /** POS-CORE-010. Owner and managers only; the server refuses anyone else in plain words. */
 export async function loadAudit() {
   const { data } = await api.get('/admin/audit')

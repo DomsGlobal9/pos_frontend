@@ -49,6 +49,25 @@ export default function Home() {
         </div>
       </section>
 
+      {/*
+        * POS-HOME-004. Three different reasons to look at Orders, said separately, because "5
+        * orders need attention" tells a shop owner nothing about what to DO: phone the ready ones,
+        * chase the late ones, collect what is owed. Only the lines with something in them show.
+        */}
+      {data?.orders && (data.orders.readyToCollect + data.orders.overdue + data.orders.dueCount) > 0 && (
+        <Link to="/orders" style={s.attention}>
+          {data.orders.readyToCollect > 0 && (
+            <div>{data.orders.readyToCollect} ready to collect</div>
+          )}
+          {data.orders.overdue > 0 && (
+            <div style={s.late}>{data.orders.overdue} past their collection date</div>
+          )}
+          {data.orders.dueCount > 0 && (
+            <div>{data.orders.dueCount} {data.orders.dueCount === 1 ? 'customer owes' : 'orders owe'} {rupees(data.orders.duePaise)}</div>
+          )}
+        </Link>
+      )}
+
       {/* The one primary action. Sticky at the bottom on a phone is handled by the shell's
           scrolling content area; here it simply comes first in reading order after the figures. */}
       <Link to="/sell" style={s.primary}>
@@ -109,6 +128,11 @@ const s = {
     background: 'var(--accent)', color: '#fff', fontWeight: 700, fontSize: 17
   },
   heading: { margin: '0 0 8px', fontSize: 14, color: 'var(--ink-soft)', fontWeight: 600 },
+  attention: {
+    display: 'grid', gap: 4, padding: 14, borderRadius: 12, textDecoration: 'none',
+    color: 'var(--ink)', border: '1px solid var(--line)', background: 'var(--panel)', fontSize: 14
+  },
+  late: { color: 'var(--bad)' },
   feed: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
   row: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,

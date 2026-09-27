@@ -17,16 +17,31 @@ import { rupees } from '../lib/api.js'
  * right there.
  *
  * The remaining figure drives everything. It starts as the whole bill, each row eats into it, and
- * Complete stays disabled until it is exactly zero -- the server checks the same thing, so this is
- * a courtesy rather than the control.
+ * Complete stays disabled until it is right -- the server checks the same thing, so this is a
+ * courtesy rather than the control.
+ *
+ * THREE MODES, matching the server's:
+ *
+ *   EXACT    a normal sale: the whole bill, to the paisa
+ *   ADVANCE  keeping goods for a customer: anything from nothing up to the bill (POS-ORD-002)
+ *   COLLECT  money coming in later against a kept order: something, never more than is owed
  */
 const LABELS = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card' }
 
-export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm }) {
+const COPY = {
+  EXACT: { heading: 'To pay', confirm: 'Complete sale', remaining: 'Still to pay' },
+  ADVANCE: { heading: 'Bill', confirm: 'Keep for customer', remaining: 'Balance they will owe' },
+  COLLECT: { heading: 'Owed', confirm: 'Take payment', remaining: 'Still owed after this' }
+}
+
+export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT' }) {
   const methods = (enabledMethods?.length ? enabledMethods : ['CASH', 'UPI', 'CARD'])
     .filter(m => LABELS[m])
+  const copy = COPY[mode] ?? COPY.EXACT
 
-  const [rows, setRows] = useState(() => [blank(methods[0] ?? 'CASH', totalPaise)])
+  // An advance starts EMPTY -- the cashier types what the customer is paying now. Defaulting it to
+  // the whole bill would make a kept order silently fully paid whenever nobody noticed the field.
+  const [rows, setRows] = useState(() => [blank(methods[0] ?? 'CASH', mode === 'ADVANCE' ? 0 : totalPaise)])
   const [saving, setSaving] = useState(false)
   const firstBox = useRef(null)
 
@@ -35,8 +50,17 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
   const allocated = rows.reduce((sum, r) => sum + (toPaise(r.amount) ?? 0), 0)
   const remaining = totalPaise - allocated
 
-  const problems = useMemo(() => rows.map(rowProblem), [rows])
-  const canComplete = remaining === 0 && problems.every(p => !p) && !saving
+  // In ADVANCE mode a row left completely empty is simply "nothing paid now", not a mistake.
+  const counted = mode === 'ADVANCE' ? rows.filter(r => String(r.amount ?? '').trim() !== '') : rows
+  const problems = useMemo(() => rows.map(row => (
+    mode === 'ADVANCE' && String(row.amount ?? '').trim() === '' ? null : rowProblem(row)
+  )), [rows, mode])
+
+  const amountsFit =
+    mode === 'EXACT' ? remaining === 0
+    : mode === 'ADVANCE' ? remaining >= 0
+    : allocated > 0 && remaining >= 0
+  const canComplete = amountsFit && problems.every(p => !p) && !saving
 
   const update = (index, patch) =>
     setRows(current => current.map((row, i) => (i === index ? { ...row, ...patch } : row)))
@@ -56,7 +80,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
     if (!canComplete) return
     setSaving(true)
     try {
-      await onConfirm(rows.map(toPayment))
+      await onConfirm(counted.map(toPayment))
     } finally {
       // Stays open on failure, with everything typed still there. A save that failed must never
       // look like a sale that happened.
@@ -68,9 +92,15 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
     <div style={s.backdrop} role="dialog" aria-label="Take payment">
       <form style={s.panel} onSubmit={confirm}>
         <div style={s.row}>
-          <span>To pay</span>
+          <span>{copy.heading}</span>
           <b style={s.big}>{rupees(totalPaise)}</b>
         </div>
+        {mode === 'ADVANCE' && (
+          <p style={s.muted}>
+            Take whatever they are paying now — nothing is fine too. The rest is collected when they
+            come for it.
+          </p>
+        )}
 
         {rows.map((row, index) => (
           <div key={index} style={s.block}>
@@ -173,7 +203,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
 
         {remaining !== 0 && (
           <div style={{ ...s.row, ...s.remaining }}>
-            <span>{remaining > 0 ? 'Still to pay' : 'Over by'}</span>
+            <span>{remaining > 0 ? copy.remaining : 'Over by'}</span>
             <b>{rupees(Math.abs(remaining))}</b>
           </div>
         )}
@@ -185,7 +215,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
         <div style={s.actions}>
           <button type="button" onClick={onCancel}>Back</button>
           <button type="submit" style={s.confirm} disabled={!canComplete}>
-            {saving ? 'Saving…' : `Complete sale`}
+            {saving ? 'Saving…' : copy.confirm}
           </button>
         </div>
       </form>

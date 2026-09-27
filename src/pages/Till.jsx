@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { searchItems, completeSale, messageFor, rupees } from '../lib/api.js'
+import { searchItems, completeSale, parkBill, messageFor, rupees } from '../lib/api.js'
 import { isTouchFirst } from '../lib/useMedia.js'
 import { basketTotals, lineTotal, unitPrice, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
 import PaymentPanel from '../components/PaymentPanel.jsx'
@@ -9,6 +9,8 @@ import Receipt from '../components/Receipt.jsx'
 import VariantSheet from '../components/VariantSheet.jsx'
 import CustomerSheet from '../components/CustomerSheet.jsx'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
+import KeepSheet from '../components/KeepSheet.jsx'
+import HeldSheet from '../components/HeldSheet.jsx'
 
 /**
  * The sell screen.
@@ -62,6 +64,22 @@ export default function Till() {
   // The in-place approval. Holds the payments the cashier already entered, so approving does not
   // mean entering them again.
   const [approval, setApproval] = useState(null)
+
+  /*
+   * Keeping the goods for a customer. POS-ORD-001.
+   *
+   *   null                       an ordinary sale
+   *   { step: 'details' }        asking when they will collect and what needs doing
+   *   { step: 'payment', ... }   taking the advance
+   *
+   * Read by takePayment on every attempt -- including a retry after a manager approves -- so a kept
+   * order stays a kept order all the way through, however many sheets it passes over.
+   */
+  const [keeping, setKeeping] = useState(null)
+  // Pressed Keep with no customer yet: pick one first, then carry on to the details.
+  const [keepAfterCustomer, setKeepAfterCustomer] = useState(false)
+  const [showHeld, setShowHeld] = useState(false)
+  const [showMore, setShowMore] = useState(false)
   const searchBox = useRef(null)
 
   // The shell already loads these and shows connection state in the header; asking again here
@@ -201,6 +219,8 @@ export default function Till() {
     setCustomer(null)
     setBillDiscountPaise(0)
     setApproval(null)
+    setKeeping(null)
+    setKeepAfterCustomer(false)
     // A NEW key for the next basket. Reusing it would make the next sale look like a replay of the
     // last one and hand the cashier back the wrong bill.
     setOnceKey(newOnceKey())
@@ -228,9 +248,17 @@ export default function Till() {
         ...(customer ? { customerId: customer.id } : {}),
         ...(billDiscountPaise ? { billDiscountPaise } : {}),
         ...(managerApproval ? { approval: managerApproval } : {}),
+        ...(keeping?.step === 'payment'
+          ? {
+              kind: 'KEPT',
+              ...(keeping.promisedAt ? { promisedAt: keeping.promisedAt } : {}),
+              ...(keeping.note ? { note: keeping.note } : {})
+            }
+          : {}),
         payments
       })
       setApproval(null)
+      setKeeping(null)
       // Cleared HERE, on save -- not in startAgain. A cashier who walks away after handing
       // over the bill, or whose browser reloads before they press Next sale, must not come back
       // to a basket that has already been paid for.
@@ -267,6 +295,60 @@ export default function Till() {
   async function approve(managerApproval) {
     setApproval(a => ({ ...a, busy: true, error: null }))
     await takePayment(approval.payments, managerApproval)
+  }
+
+  /** POS-ORD-001. A kept order needs to know who it is for, so ask first if nobody is on the bill. */
+  function startKeeping() {
+    setShowMore(false)
+    if (!customer) {
+      setKeepAfterCustomer(true)
+      setAskingCustomer(true)
+      return
+    }
+    setKeeping({ step: 'details' })
+  }
+
+  /**
+   * POS-SELL-019. Put this basket down and start a fresh one.
+   *
+   * The parked basket keeps ITS once-key; the till gets a NEW one for whatever comes next. If
+   * Complete was pressed and timed out before the cashier panicked and parked, recalling it with
+   * the same key means a second press replays the sale that may exist rather than making another.
+   */
+  async function parkCurrent() {
+    setShowMore(false)
+    const counterId = shop?.counters?.[0]?.id
+    if (!counterId) {
+      toast.error('This till has no counter set up yet.')
+      return
+    }
+    try {
+      const held = await parkBill({
+        counterId,
+        payload: {
+          lines,
+          ...(customer ? { customer } : {}),
+          ...(billDiscountPaise ? { billDiscountPaise } : {}),
+          onceKey
+        }
+      })
+      toast.success(`Parked as "${held.label}".`)
+      startAgain()
+    } catch (error) {
+      toast.error(messageFor(error))
+      refocus()
+    }
+  }
+
+  /** POS-SELL-020. The basket comes back exactly as it was put down -- key and all. */
+  function restore(payload) {
+    setLines(Array.isArray(payload?.lines) ? payload.lines : [])
+    setCustomer(payload?.customer ?? null)
+    setBillDiscountPaise(payload?.billDiscountPaise ?? 0)
+    setOnceKey(payload?.onceKey || newOnceKey())
+    setShowHeld(false)
+    toast.success('Bill brought back.')
+    refocus()
   }
 
   if (receipt) return <Receipt sale={receipt} onDone={startAgain} />
@@ -404,14 +486,12 @@ export default function Till() {
           </div>
 
           <div style={{ display: 'grid', gap: 8 }}>
-            {lines.length > 0 && (
-              <button onClick={askDiscount}>
-                {totals.discountPaise > 0 ? 'Change discount' : 'Discount'}
-              </button>
-            )}
-            {lines.length > 0 && (
-              <button onClick={startAgain}>Clear bill</button>
-            )}
+            {/*
+              * ONE primary action, and everything else behind More. On a phone this panel is a
+              * single bar under the basket, and five secondary buttons round "Take payment" is the
+              * opposite of MASTER's one-obvious-action rule.
+              */}
+            <button onClick={() => setShowMore(true)}>More</button>
             <button
               style={s.complete}
               disabled={lines.length === 0 || busy}
@@ -432,6 +512,53 @@ export default function Till() {
         />
       )}
 
+      {showMore && (
+        <div style={s.moreBackdrop} role="dialog" aria-label="More actions" onClick={() => { setShowMore(false); refocus() }}>
+          <div style={s.moreSheet} onClick={e => e.stopPropagation()}>
+            {lines.length > 0 && (
+              <button onClick={() => { setShowMore(false); askDiscount() }}>
+                {totals.discountPaise > 0 ? 'Change discount' : 'Discount'}
+              </button>
+            )}
+            {lines.length > 0 && (
+              <button onClick={startKeeping}>Keep for customer</button>
+            )}
+            {lines.length > 0 && <button onClick={parkCurrent}>Park this bill</button>}
+            <button onClick={() => { setShowMore(false); setShowHeld(true) }}>Parked bills</button>
+            {lines.length > 0 && (
+              <button onClick={() => { setShowMore(false); startAgain() }} style={s.clearBtn}>Clear bill</button>
+            )}
+            <button onClick={() => { setShowMore(false); refocus() }}>Close</button>
+          </div>
+        </div>
+      )}
+
+      {keeping?.step === 'details' && (
+        <KeepSheet
+          customer={customer}
+          onNext={(details) => setKeeping({ step: 'payment', ...details })}
+          onCancel={() => { setKeeping(null); refocus() }}
+        />
+      )}
+
+      {keeping?.step === 'payment' && (
+        <PaymentPanel
+          mode="ADVANCE"
+          totalPaise={totals.totalPaise}
+          enabledMethods={shop?.shop?.enabledPaymentMethods}
+          onCancel={() => { setKeeping(null); refocus() }}
+          onConfirm={takePayment}
+        />
+      )}
+
+      {showHeld && (
+        <HeldSheet
+          basketIsEmpty={lines.length === 0}
+          onRecalled={restore}
+          onClose={() => { setShowHeld(false); refocus() }}
+        />
+      )}
+
       {approval && (
         <ApprovalSheet
           need={approval.need}
@@ -444,9 +571,18 @@ export default function Till() {
 
       {askingCustomer && (
         <CustomerSheet
-          onPick={(c) => { setCustomer(c); setAskingCustomer(false); refocus() }}
-          onSkip={() => { setAskingCustomer(false); refocus() }}
-          onClose={() => { setAskingCustomer(false); refocus() }}
+          onPick={(c) => {
+            setCustomer(c)
+            setAskingCustomer(false)
+            if (keepAfterCustomer) {
+              setKeepAfterCustomer(false)
+              setKeeping({ step: 'details' })
+            } else {
+              refocus()
+            }
+          }}
+          onSkip={() => { setAskingCustomer(false); setKeepAfterCustomer(false); refocus() }}
+          onClose={() => { setAskingCustomer(false); setKeepAfterCustomer(false); refocus() }}
         />
       )}
 
@@ -508,6 +644,16 @@ const s = {
   qtyBtn: { minHeight: 36, minWidth: 36, padding: 0, fontSize: 18, lineHeight: 1 },
   qtyNum: { minWidth: 28, textAlign: 'center', fontWeight: 600 },
   remove: { minHeight: 36, minWidth: 36, padding: 0, fontSize: 18, lineHeight: 1, border: 'none', background: 'none', color: 'var(--ink-soft)' },
+  moreBackdrop: {
+    position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)',
+    display: 'flex', alignItems: 'flex-end', justifyContent: 'center'
+  },
+  moreSheet: {
+    background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: '12px 12px 0 0',
+    padding: 16, width: 420, maxWidth: '100%', display: 'grid', gap: 8,
+    paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))'
+  },
+  clearBtn: { color: 'var(--bad)' },
   priceBtn: {
     minHeight: 36, padding: '0 8px', border: '1px dashed var(--line)', background: 'none',
     fontWeight: 400, fontSize: 'inherit'
