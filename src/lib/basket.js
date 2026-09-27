@@ -21,16 +21,33 @@
 
 const KEY = 'pos.basket.v2'
 
+/** The price this line is actually being sold at: the override when there is one, the tag otherwise. */
+export const unitPrice = (line) => line.overridePricePaise ?? line.pricePaise
+
 export function lineTotal(line) {
-  return line.pricePaise * line.qty
+  return unitPrice(line) * line.qty
 }
 
-export function basketTotals(lines) {
+/**
+ * What the bill comes to, for the screen.
+ *
+ * Mirrors the server's order of operations -- tags (or overrides), then the bill discount, then
+ * rounding to whole rupees -- so the figure the cashier asks the customer for is the figure the
+ * server will charge. If they ever disagree the server refuses with the exact difference, which
+ * is the safety net, not the plan.
+ */
+export function basketTotals(lines, billDiscountPaise = 0) {
   const subtotal = lines.reduce((sum, l) => sum + lineTotal(l), 0)
-  // Rounded to whole rupees, matching the server's NEAREST_RUPEE default.
-  const whole = Math.floor(subtotal / 100) * 100
-  const total = subtotal - whole >= 50 ? whole + 100 : whole
-  return { subtotalPaise: subtotal, roundOffPaise: total - subtotal, totalPaise: total }
+  const discount = Math.min(Math.max(0, billDiscountPaise), subtotal)
+  const beforeRounding = subtotal - discount
+  const whole = Math.floor(beforeRounding / 100) * 100
+  const total = beforeRounding - whole >= 50 ? whole + 100 : whole
+  return {
+    subtotalPaise: subtotal,
+    discountPaise: discount,
+    roundOffPaise: total - beforeRounding,
+    totalPaise: total
+  }
 }
 
 /**

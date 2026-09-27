@@ -89,6 +89,12 @@ export async function loadCustomer(id) {
   return data.data
 }
 
+/** POS-CORE-010. Owner and managers only; the server refuses anyone else in plain words. */
+export async function loadAudit() {
+  const { data } = await api.get('/admin/audit')
+  return data.data
+}
+
 /** POS-PAY-011. Payments nobody has confirmed against the bank yet. */
 export async function loadAwaitingCheck() {
   const { data } = await api.get('/payments/awaiting-check')

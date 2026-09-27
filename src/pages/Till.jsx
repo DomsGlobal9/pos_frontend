@@ -3,11 +3,12 @@ import { useOutletContext } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { searchItems, completeSale, messageFor, rupees } from '../lib/api.js'
 import { isTouchFirst } from '../lib/useMedia.js'
-import { basketTotals, lineTotal, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
+import { basketTotals, lineTotal, unitPrice, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
 import PaymentPanel from '../components/PaymentPanel.jsx'
 import Receipt from '../components/Receipt.jsx'
 import VariantSheet from '../components/VariantSheet.jsx'
 import CustomerSheet from '../components/CustomerSheet.jsx'
+import ApprovalSheet from '../components/ApprovalSheet.jsx'
 
 /**
  * The sell screen.
@@ -48,6 +49,19 @@ export default function Till() {
    */
   const [customer, setCustomer] = useState(null)
   const [askingCustomer, setAskingCustomer] = useState(false)
+
+  /*
+   * Money off the whole bill, in paise. POS-SELL-015.
+   *
+   * Within the shop's limit a cashier gives it on their own. Over it, the server answers
+   * APPROVAL_REQUIRED and the approval sheet opens on top of everything -- basket, payment and
+   * customer all stay where they are.
+   */
+  const [billDiscountPaise, setBillDiscountPaise] = useState(0)
+
+  // The in-place approval. Holds the payments the cashier already entered, so approving does not
+  // mean entering them again.
+  const [approval, setApproval] = useState(null)
   const searchBox = useRef(null)
 
   // The shell already loads these and shows connection state in the header; asking again here
@@ -55,7 +69,7 @@ export default function Till() {
   const { device, shop } = useOutletContext() ?? {}
   const stacked = isTouchFirst(device)
 
-  const totals = basketTotals(lines)
+  const totals = basketTotals(lines, billDiscountPaise)
 
   // Saved together. A reload mid-sale keeps the same key, so resubmitting the same basket
   // replays instead of charging twice.
@@ -126,6 +140,57 @@ export default function Till() {
     }
   }
 
+  /**
+   * Sell one line at a different price. POS-SELL-017.
+   *
+   * The screen lets anyone TRY; the server decides who may. A cashier who changes a price gets the
+   * approval sheet when they take payment, exactly as for a big discount -- so there is one rule,
+   * enforced in one place, and a cashier cannot get round it by using an older till.
+   */
+  function overridePrice(id) {
+    const line = lines.find(l => l.id === id)
+    if (!line) return
+    const typed = window.prompt(
+      `Sell ${line.name} at a different price? The tag says ${rupees(line.pricePaise)}.`,
+      String(unitPrice(line) / 100)
+    )
+    if (typed === null) { refocus(); return }
+    const value = Math.round(Number(typed) * 100)
+    if (!Number.isFinite(value) || value <= 0) {
+      toast.error('That is not a price.')
+      refocus()
+      return
+    }
+    setLines(current => current.map(l => (
+      l.id === id
+        ? { ...l, overridePricePaise: value === l.pricePaise ? undefined : value }
+        : l
+    )))
+    refocus()
+  }
+
+  function askDiscount() {
+    const typed = window.prompt(
+      'Money off the whole bill, in rupees. End with % for a percentage.',
+      billDiscountPaise ? String(billDiscountPaise / 100) : ''
+    )
+    if (typed === null) { refocus(); return }
+    const text = typed.trim()
+    if (!text) { setBillDiscountPaise(0); refocus(); return }
+    const isPercent = text.endsWith('%')
+    const number = Number(text.replace('%', ''))
+    if (!Number.isFinite(number) || number < 0) {
+      toast.error('That is not an amount.')
+      refocus()
+      return
+    }
+    const paise = isPercent
+      ? Math.round(totals.subtotalPaise * number / 100)
+      : Math.round(number * 100)
+    setBillDiscountPaise(Math.min(paise, totals.subtotalPaise))
+    refocus()
+  }
+
   const setQty = (id, qty) =>
     setLines(current => qty <= 0
       ? current.filter(l => l.id !== id)
@@ -134,6 +199,8 @@ export default function Till() {
   function startAgain() {
     setLines([])
     setCustomer(null)
+    setBillDiscountPaise(0)
+    setApproval(null)
     // A NEW key for the next basket. Reusing it would make the next sale look like a replay of the
     // last one and hand the cashier back the wrong bill.
     setOnceKey(newOnceKey())
@@ -143,7 +210,7 @@ export default function Till() {
     refocus()
   }
 
-  async function takePayment(payments) {
+  async function takePayment(payments, managerApproval) {
     const counterId = shop?.counters?.[0]?.id
     if (!counterId) {
       toast.error('This till has no counter set up yet.')
@@ -153,10 +220,17 @@ export default function Till() {
       const result = await completeSale({
         onceKey,
         counterId,
-        lines: lines.map(l => ({ itemId: l.id, qty: l.qty })),
+        lines: lines.map(l => ({
+          itemId: l.id,
+          qty: l.qty,
+          ...(l.overridePricePaise ? { overridePricePaise: l.overridePricePaise } : {})
+        })),
         ...(customer ? { customerId: customer.id } : {}),
+        ...(billDiscountPaise ? { billDiscountPaise } : {}),
+        ...(managerApproval ? { approval: managerApproval } : {}),
         payments
       })
+      setApproval(null)
       // Cleared HERE, on save -- not in startAgain. A cashier who walks away after handing
       // over the bill, or whose browser reloads before they press Next sale, must not come back
       // to a basket that has already been paid for.
@@ -165,10 +239,34 @@ export default function Till() {
       setPaying(false)
       if (result.replayed) toast('That bill was already saved. Showing it again.')
     } catch (error) {
+      const details = error?.response?.data?.details
+
+      /*
+       * Somebody needs to say yes. Open the approval sheet ON TOP of the payment sheet, holding the
+       * payments already entered -- the cashier should never have to type them twice, and should
+       * never be signed out for a manager to approve.
+       */
+      if (details?.code === 'APPROVAL_REQUIRED') {
+        setApproval({ need: details, payments, error: null, busy: false })
+        return
+      }
+
+      // An approval that was tried and refused: wrong PIN, not allowed, too many tries. Stay on the
+      // approval sheet and say why, in the server's own words.
+      if (managerApproval && approval) {
+        setApproval(a => ({ ...a, error: messageFor(error), busy: false }))
+        return
+      }
+
       // Stays on the payment screen with the basket intact. A failed save must never look like a
       // completed sale, and must never cost the cashier the basket.
       toast.error(messageFor(error))
     }
+  }
+
+  async function approve(managerApproval) {
+    setApproval(a => ({ ...a, busy: true, error: null }))
+    await takePayment(approval.payments, managerApproval)
   }
 
   if (receipt) return <Receipt sale={receipt} onDone={startAgain} />
@@ -248,7 +346,18 @@ export default function Till() {
                         <button style={s.qtyBtn} onClick={() => setQty(line.id, line.qty + 1)} aria-label="One more">+</button>
                       </div>
                     </td>
-                    <td style={s.tdRight}>{rupees(line.pricePaise)}</td>
+                    <td style={s.tdRight}>
+                      <button
+                        style={s.priceBtn}
+                        onClick={() => overridePrice(line.id)}
+                        aria-label={`Change the price of ${line.name}`}
+                      >
+                        {rupees(unitPrice(line))}
+                      </button>
+                      {line.overridePricePaise && (
+                        <div style={s.wasPrice}>was {rupees(line.pricePaise)}</div>
+                      )}
+                    </td>
                     <td style={s.tdRight}><b>{rupees(lineTotal(line))}</b></td>
                     <td style={s.td}>
                       <button style={s.remove} onClick={() => setQty(line.id, 0)} aria-label="Remove">×</button>
@@ -278,6 +387,9 @@ export default function Till() {
             </div>
             <div style={s.totalLabel}>Total</div>
             <div style={s.totalValue}>{rupees(totals.totalPaise)}</div>
+            {totals.discountPaise > 0 && (
+              <div style={s.muted}>Discount −{rupees(totals.discountPaise)}</div>
+            )}
             {totals.roundOffPaise !== 0 && (
               <div style={s.muted}>Rounding {rupees(totals.roundOffPaise)}</div>
             )}
@@ -292,6 +404,11 @@ export default function Till() {
           </div>
 
           <div style={{ display: 'grid', gap: 8 }}>
+            {lines.length > 0 && (
+              <button onClick={askDiscount}>
+                {totals.discountPaise > 0 ? 'Change discount' : 'Discount'}
+              </button>
+            )}
             {lines.length > 0 && (
               <button onClick={startAgain}>Clear bill</button>
             )}
@@ -312,6 +429,16 @@ export default function Till() {
           enabledMethods={shop?.shop?.enabledPaymentMethods}
           onCancel={() => { setPaying(false); refocus() }}
           onConfirm={takePayment}
+        />
+      )}
+
+      {approval && (
+        <ApprovalSheet
+          need={approval.need}
+          error={approval.error}
+          busy={approval.busy}
+          onApprove={approve}
+          onCancel={() => setApproval(null)}
         />
       )}
 
@@ -381,6 +508,11 @@ const s = {
   qtyBtn: { minHeight: 36, minWidth: 36, padding: 0, fontSize: 18, lineHeight: 1 },
   qtyNum: { minWidth: 28, textAlign: 'center', fontWeight: 600 },
   remove: { minHeight: 36, minWidth: 36, padding: 0, fontSize: 18, lineHeight: 1, border: 'none', background: 'none', color: 'var(--ink-soft)' },
+  priceBtn: {
+    minHeight: 36, padding: '0 8px', border: '1px dashed var(--line)', background: 'none',
+    fontWeight: 400, fontSize: 'inherit'
+  },
+  wasPrice: { fontSize: 11, color: 'var(--ink-soft)', textDecoration: 'line-through' },
   customer: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' },
   customerName: { fontWeight: 600, fontSize: 14 },
   customerClear: { minHeight: 32, padding: '0 8px', fontSize: 12, fontWeight: 400 },

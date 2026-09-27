@@ -8,6 +8,7 @@ import Bills from './pages/Bills.jsx'
 import BillDetail from './pages/BillDetail.jsx'
 import PaymentChecks from './pages/PaymentChecks.jsx'
 import { Customers, CustomerDetail } from './pages/Customers.jsx'
+import Audit from './pages/Audit.jsx'
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -36,6 +37,8 @@ const router = createBrowserRouter([
       // WF-CUSTOMERS-01 and WF-CUSTOMER-02.
       { path: 'customers', element: <Customers /> },
       { path: 'customers/:id', element: <CustomerDetail /> },
+      // POS-CORE-010. Owner and managers.
+      { path: 'activity', element: <Audit /> },
       { path: 'more', element: <More /> },
       // WF-SALES-01 and WF-SALE-02. Reached from More, and from a Home activity row.
       { path: 'bills', element: <Bills /> },
