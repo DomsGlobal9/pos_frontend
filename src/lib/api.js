@@ -45,3 +45,36 @@ export async function health() {
   })
   return data.data
 }
+
+export async function loadShop() {
+  const { data } = await api.get('/shop')
+  return data.data
+}
+
+export async function searchItems(q) {
+  const { data } = await api.get('/sales/items', { params: { q } })
+  return data.data
+}
+
+export async function completeSale(body) {
+  const { data } = await api.post('/sales', body)
+  return data.data
+}
+
+export async function loadSale(id) {
+  const { data } = await api.get(`/sales/${id}`)
+  return data.data
+}
+
+/** Paise to a readable figure. The server sends integers; nothing here ever does money arithmetic
+ * in floats -- it only formats. */
+export function rupees(paise) {
+  if (paise === null || paise === undefined) return ''
+  const negative = paise < 0
+  const value = Math.abs(paise) / 100
+  const text = value.toLocaleString('en-IN', {
+    minimumFractionDigits: Math.abs(paise) % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: 2
+  })
+  return `${negative ? '-' : ''}₹${text}`
+}
