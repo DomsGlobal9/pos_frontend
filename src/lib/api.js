@@ -67,6 +67,28 @@ export async function loadVariants(group) {
   return data.data
 }
 
+/** POS-CUST-002. Null when we have not met them -- an ordinary answer, not a failure. */
+export async function findCustomerByPhone(phone) {
+  const { data } = await api.get(`/customers/by-phone/${encodeURIComponent(phone)}`)
+  return data.data
+}
+
+/** POS-CUST-004. Find-or-create, so two cashiers at once end with one customer. */
+export async function createCustomer(body) {
+  const { data } = await api.post('/customers', body)
+  return data.data
+}
+
+export async function searchCustomers(q) {
+  const { data } = await api.get('/customers', { params: q ? { q } : {} })
+  return data.data
+}
+
+export async function loadCustomer(id) {
+  const { data } = await api.get(`/customers/${id}`)
+  return data.data
+}
+
 /** POS-PAY-011. Payments nobody has confirmed against the bank yet. */
 export async function loadAwaitingCheck() {
   const { data } = await api.get('/payments/awaiting-check')

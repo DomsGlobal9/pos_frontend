@@ -7,6 +7,7 @@ import More from './pages/More.jsx'
 import Bills from './pages/Bills.jsx'
 import BillDetail from './pages/BillDetail.jsx'
 import PaymentChecks from './pages/PaymentChecks.jsx'
+import { Customers, CustomerDetail } from './pages/Customers.jsx'
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -32,16 +33,9 @@ const router = createBrowserRouter([
           />
         )
       },
-      {
-        path: 'customers',
-        element: (
-          <Placeholder
-            title="Customers"
-            does="Find a customer by phone, see what they have bought, and what they owe."
-            arriving="Being built now. A sale does not need a customer, so selling works without this."
-          />
-        )
-      },
+      // WF-CUSTOMERS-01 and WF-CUSTOMER-02.
+      { path: 'customers', element: <Customers /> },
+      { path: 'customers/:id', element: <CustomerDetail /> },
       { path: 'more', element: <More /> },
       // WF-SALES-01 and WF-SALE-02. Reached from More, and from a Home activity row.
       { path: 'bills', element: <Bills /> },

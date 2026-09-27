@@ -7,6 +7,7 @@ import { basketTotals, lineTotal, saveDraft, loadDraft, clearDraft, newOnceKey }
 import PaymentPanel from '../components/PaymentPanel.jsx'
 import Receipt from '../components/Receipt.jsx'
 import VariantSheet from '../components/VariantSheet.jsx'
+import CustomerSheet from '../components/CustomerSheet.jsx'
 
 /**
  * The sell screen.
@@ -39,6 +40,14 @@ export default function Till() {
   const [receipt, setReceipt] = useState(null)
   // The colour/size picker, when a search result turns out to have siblings. WF-PRODUCT-01.
   const [picking, setPicking] = useState(null)
+  /*
+   * The customer on this bill, or null. POS-CUST-001.
+   *
+   * Null is a perfectly good final answer -- someone paying cash who will not give a number is a
+   * normal Saturday -- so nothing below may treat it as a missing value to be chased.
+   */
+  const [customer, setCustomer] = useState(null)
+  const [askingCustomer, setAskingCustomer] = useState(false)
   const searchBox = useRef(null)
 
   // The shell already loads these and shows connection state in the header; asking again here
@@ -124,6 +133,7 @@ export default function Till() {
 
   function startAgain() {
     setLines([])
+    setCustomer(null)
     // A NEW key for the next basket. Reusing it would make the next sale look like a replay of the
     // last one and hand the cashier back the wrong bill.
     setOnceKey(newOnceKey())
@@ -144,6 +154,7 @@ export default function Till() {
         onceKey,
         counterId,
         lines: lines.map(l => ({ itemId: l.id, qty: l.qty })),
+        ...(customer ? { customerId: customer.id } : {}),
         payments
       })
       // Cleared HERE, on save -- not in startAgain. A cashier who walks away after handing
@@ -251,6 +262,20 @@ export default function Till() {
 
         <aside style={{ ...s.right, ...(stacked ? s.rightStacked : s.rightSplit) }}>
           <div>
+            {/* Above the total, because it is the thing a cashier checks last before taking
+                money -- and because leaving it blank has to stay effortless. */}
+            <div style={s.customer}>
+              {customer ? (
+                <>
+                  <span style={s.customerName}>{customer.name || customer.phoneDisplay}</span>
+                  <button style={s.customerClear} onClick={() => setCustomer(null)}>Remove</button>
+                </>
+              ) : (
+                <button style={s.customerAdd} onClick={() => setAskingCustomer(true)}>
+                  + Add customer
+                </button>
+              )}
+            </div>
             <div style={s.totalLabel}>Total</div>
             <div style={s.totalValue}>{rupees(totals.totalPaise)}</div>
             {totals.roundOffPaise !== 0 && (
@@ -287,6 +312,14 @@ export default function Till() {
           enabledMethods={shop?.shop?.enabledPaymentMethods}
           onCancel={() => { setPaying(false); refocus() }}
           onConfirm={takePayment}
+        />
+      )}
+
+      {askingCustomer && (
+        <CustomerSheet
+          onPick={(c) => { setCustomer(c); setAskingCustomer(false); refocus() }}
+          onSkip={() => { setAskingCustomer(false); refocus() }}
+          onClose={() => { setAskingCustomer(false); refocus() }}
         />
       )}
 
@@ -348,6 +381,10 @@ const s = {
   qtyBtn: { minHeight: 36, minWidth: 36, padding: 0, fontSize: 18, lineHeight: 1 },
   qtyNum: { minWidth: 28, textAlign: 'center', fontWeight: 600 },
   remove: { minHeight: 36, minWidth: 36, padding: 0, fontSize: 18, lineHeight: 1, border: 'none', background: 'none', color: 'var(--ink-soft)' },
+  customer: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' },
+  customerName: { fontWeight: 600, fontSize: 14 },
+  customerClear: { minHeight: 32, padding: '0 8px', fontSize: 12, fontWeight: 400 },
+  customerAdd: { minHeight: 40, padding: '0 12px', fontSize: 14, fontWeight: 400 },
   totalLabel: { fontSize: 13, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: 0.4 },
   totalValue: { fontSize: 40, fontWeight: 700, lineHeight: 1.1 },
   complete: { minHeight: 54, fontSize: 16, background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' }

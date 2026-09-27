@@ -40,6 +40,12 @@ export default function BillDetail() {
     <div>
       <div style={s.crumb} className="no-print">
         <Link to="/bills" style={s.back}>← All bills</Link>
+        {/* POS-SALE-009. Only when the bill has one -- most will not. */}
+        {data.customer && (
+          <Link to={`/customers/${data.customer.id}`} style={s.back}>
+            {data.customer.name || data.customer.phoneMasked} →
+          </Link>
+        )}
       </div>
       <Receipt sale={data} />
     </div>
@@ -48,7 +54,7 @@ export default function BillDetail() {
 
 const s = {
   state: { padding: 16, display: 'grid', gap: 12, justifyItems: 'start' },
-  crumb: { padding: '10px 16px 0' },
+  crumb: { padding: '10px 16px 0', display: 'flex', justifyContent: 'space-between', gap: 12 },
   back: { color: 'var(--ink-soft)', textDecoration: 'none', fontSize: 14 },
   bad: { color: 'var(--bad)', margin: 0 }
 }
