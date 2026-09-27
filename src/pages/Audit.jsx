@@ -22,7 +22,13 @@ const LABEL = {
   'sale.completed': 'Sale',
   'return.created': 'Return',
   'exchange.created': 'Exchange',
-  'store_credit.spent': 'Store credit spent'
+  'store_credit.spent': 'Store credit spent',
+  'shift.opened': 'Shift opened',
+  'shift.closed': 'Shift closed',
+  'shift.count_mismatch': "Drawer count didn't match",
+  'cash.in': 'Cash in',
+  'cash.out': 'Cash out',
+  'day.closed': 'Day closed'
 }
 
 export default function Audit() {

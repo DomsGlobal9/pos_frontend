@@ -12,6 +12,8 @@ import Audit from './pages/Audit.jsx'
 import { Orders, OrderDetail } from './pages/Orders.jsx'
 import ReturnFlow from './pages/ReturnFlow.jsx'
 import CreditNote from './pages/CreditNote.jsx'
+import Shift from './pages/Shift.jsx'
+import DayClose from './pages/DayClose.jsx'
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -44,6 +46,9 @@ const router = createBrowserRouter([
       { path: 'bills/:id/exchange', element: <ReturnFlow mode="EXCHANGE" /> },
       // The credit note, as it prints. POS-RET-006.
       { path: 'returns/:id', element: <CreditNote /> },
+      // WF-SHIFT-01 (with WF-CASH-01 as its sheet) and WF-DAY-01.
+      { path: 'shift', element: <Shift /> },
+      { path: 'day-close', element: <DayClose /> },
       // WF-PAY-02.
       { path: 'payment-checks', element: <PaymentChecks /> },
       {

@@ -9,11 +9,9 @@ import { homeSummary, rupees } from '../lib/api.js'
  * not to turn this into a BI surface, and the Class 7 rule means a first-time user should know
  * what to press without being told.
  *
- * TWO APPROVED TILES ARE ABSENT ON PURPOSE. POS-HOME-004 (orders needing attention) and
- * POS-HOME-005 (shift status) are P0 but their data arrives in Phases 5 and 7. The server says
- * which sections it can answer and this renders only those, because "0 orders waiting" and "there
- * is no orders feature yet" look identical on a screen and mean opposite things. Both are recorded
- * BLOCKED in FEATURES.md, not dropped.
+ * The server says which sections it can answer and this renders only those, because "0 orders
+ * waiting" and "there is no orders feature yet" look identical on a screen and mean opposite
+ * things. Orders arrived in Phase 5 and shift status (POS-HOME-005) in Phase 7.
  */
 export default function Home() {
   const { data, isLoading, isError } = useQuery({
@@ -48,6 +46,25 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* POS-HOME-005, POS-SHIFT-009. Which drawers are open -- and loudly, one left open overnight. */}
+      {data?.shifts && (
+        <Link to="/shift" style={s.shift}>
+          {data.shifts.overnight > 0 && (
+            <div style={s.late}>
+              {data.shifts.overnight === 1 ? 'A shift has' : `${data.shifts.overnight} shifts have`} been open since yesterday. Close it first.
+            </div>
+          )}
+          {data.shifts.open.length === 0
+            ? <div>No shift open. Open one before taking cash →</div>
+            : data.shifts.open.filter(sh => !sh.openSinceYesterday).map(sh => (
+              <div key={sh.id}>
+                {sh.counterName} open since {new Date(sh.openedAt).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}
+                {sh.openedBy ? ` · ${sh.openedBy}` : ''}
+              </div>
+            ))}
+        </Link>
+      )}
 
       {/* Only on a day with returns. Said separately from sales, never netted off silently. */}
       {data?.today.returnCount > 0 && (
@@ -142,6 +159,10 @@ const s = {
   },
   late: { color: 'var(--bad)' },
   returns: { margin: 0, color: 'var(--ink-soft)', fontSize: 14 },
+  shift: {
+    display: 'grid', gap: 4, padding: 12, borderRadius: 12, textDecoration: 'none',
+    color: 'var(--ink)', border: '1px solid var(--line)', fontSize: 14
+  },
   returnTag: { color: 'var(--warn)', fontWeight: 600 },
   feed: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
   row: {

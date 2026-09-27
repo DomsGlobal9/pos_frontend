@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useOutletContext, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
@@ -124,6 +124,7 @@ export function OrderDetail() {
   const queryClient = useQueryClient()
   const [collecting, setCollecting] = useState(null)
   const [busy, setBusy] = useState(false)
+  const { shop } = useOutletContext() ?? {}
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['bill', id],
@@ -138,7 +139,8 @@ export function OrderDetail() {
 
   async function collect(payments) {
     try {
-      await collectOnOrder(id, { onceKey: collecting.onceKey, payments })
+      // The counter, so a cash balance counts in the drawer it went into. POS-SHIFT-005.
+      await collectOnOrder(id, { onceKey: collecting.onceKey, payments, counterId: shop?.counters?.[0]?.id })
       toast.success('Payment taken.')
       setCollecting(null)
       refresh()

@@ -143,7 +143,8 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
       ...(!info.customer && customer ? { customerId: customer.id } : {}),
       ...(refund ? { refund } : {})
     }
-    if (!exchange) return { ...base, ...extra }
+    // The counter, so a cash refund comes out of the drawer it is paid from. POS-SHIFT-005.
+    if (!exchange) return { ...base, counterId: shop?.counters?.[0]?.id, ...extra }
     return {
       ...base,
       newSale: {

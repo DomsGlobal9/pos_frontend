@@ -212,6 +212,38 @@ export async function loadCreditNote(id) {
   return data.data
 }
 
+// ---- Shift, drawer and day close. WF-SHIFT-01, WF-CASH-01, WF-DAY-01. ------------------------
+
+export async function loadShift(counterId) {
+  const { data } = await api.get(`/shifts/counter/${counterId}`)
+  return data.data
+}
+
+export async function openShift(body) {
+  const { data } = await api.post('/shifts', body)
+  return data.data
+}
+
+export async function moveCash(body) {
+  const { data } = await api.post('/shifts/cash', body)
+  return data.data
+}
+
+export async function closeShift(id, body) {
+  const { data } = await api.post(`/shifts/${id}/close`, body)
+  return data.data
+}
+
+export async function loadDay(date) {
+  const { data } = await api.get(`/day-close/${date}`)
+  return data.data
+}
+
+export async function closeTheDay(date, body = {}) {
+  const { data } = await api.post(`/day-close/${date}`, body)
+  return data.data
+}
+
 export async function loadSale(id) {
   const { data } = await api.get(`/sales/${id}`)
   return data.data

@@ -7,6 +7,7 @@ import { basketTotals, lineTotal, unitPrice, saveDraft, loadDraft, clearDraft, n
 import PaymentPanel from '../components/PaymentPanel.jsx'
 import Receipt from '../components/Receipt.jsx'
 import VariantSheet from '../components/VariantSheet.jsx'
+import ShiftBar from '../components/ShiftBar.jsx'
 import CustomerSheet from '../components/CustomerSheet.jsx'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
 import KeepSheet from '../components/KeepSheet.jsx'
@@ -357,6 +358,7 @@ export default function Till() {
     <div style={s.page}>
       <main style={{ ...s.body, ...(stacked ? s.bodyStacked : s.bodySplit) }}>
         <section style={s.left}>
+          <ShiftBar counter={shop?.counters?.[0]} />
           <form onSubmit={find}>
             <input
               ref={searchBox}

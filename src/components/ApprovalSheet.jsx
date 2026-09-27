@@ -99,6 +99,9 @@ function describe(need) {
     }
     return `Changing the price of ${lines.length} items.`
   }
+  if (need.kind === 'CASH_OUT') {
+    return `Taking ${rupees(need.amountPaise)} out of the drawer for "${need.forWhat}".`
+  }
   if (need.kind === 'RETURN') {
     return `Refunding ${rupees(need.totalPaise)} on ${need.invoiceNo}. Cashiers need a manager for any return.`
   }
