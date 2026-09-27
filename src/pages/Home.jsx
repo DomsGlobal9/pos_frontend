@@ -63,8 +63,10 @@ export default function Home() {
         )}
         <ul style={s.feed}>
           {(data?.activity ?? []).map(row => (
-            <li key={row.id} style={s.row}>
-              <div>
+            <li key={row.id}>
+              {/* Every activity row is a destination, not decoration. WF-SALE-02. */}
+              <Link to={`/bills/${row.id}`} style={s.row}>
+                <div>
                 <div>
                   <b>{rupees(row.totalPaise)}</b>
                   <span style={s.muted}>
@@ -72,9 +74,10 @@ export default function Home() {
                     {row.customerName ? ` · ${row.customerName}` : ''}
                   </span>
                 </div>
-                <div style={s.muted}>{row.invoiceNo}</div>
-              </div>
-              <span style={s.muted}>{time(row.at)}</span>
+                  <div style={s.muted}>{row.invoiceNo}</div>
+                </div>
+                <span style={s.muted}>{time(row.at)}</span>
+              </Link>
             </li>
           ))}
         </ul>
@@ -109,7 +112,8 @@ const s = {
   feed: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
   row: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
-    padding: '10px 0', borderBottom: '1px solid var(--line)'
+    minHeight: 56, padding: '10px 0', borderBottom: '1px solid var(--line)',
+    textDecoration: 'none', color: 'var(--ink)'
   },
   muted: { color: 'var(--ink-soft)', fontSize: 12 }
 }

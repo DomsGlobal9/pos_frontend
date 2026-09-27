@@ -12,7 +12,7 @@ import { useOutletContext } from 'react-router-dom'
  * VISIBLE REASON rather than hidden or dead, which is what the link-integrity rule allows.
  */
 const ROWS = [
-  { to: '/sales', label: 'Bills', hint: 'Find, reprint, return', phase: 'Phase 1' },
+  { to: '/bills', label: 'Bills', hint: 'Find a sale, open it, print it again', live: true },
   { to: '/shift', label: 'Shift and drawer', hint: 'Open, cash in and out, close', phase: 'Phase 7' },
   { to: '/reports', label: 'Reports', hint: 'Today, payment methods, day close', phase: 'Phase 9' },
   { to: '/sync', label: 'Waiting to sync', hint: 'Anything not yet saved to the server', phase: 'Phase 11' },
@@ -30,13 +30,25 @@ export default function More() {
       <ul style={s.list}>
         {ROWS.map(row => (
           <li key={row.to}>
-            <div style={s.row} aria-disabled="true">
-              <div>
-                <div style={s.label}>{row.label}</div>
-                <div style={s.muted}>{row.hint}</div>
+            {/* Live rows navigate. The rest are disabled WITH A VISIBLE REASON -- which the link
+                integrity rule allows, and a dead button does not. */}
+            {row.live ? (
+              <Link to={row.to} style={{ ...s.row, ...s.rowLive }}>
+                <div>
+                  <div style={s.label}>{row.label}</div>
+                  <div style={s.muted}>{row.hint}</div>
+                </div>
+                <span aria-hidden="true" style={s.muted}>›</span>
+              </Link>
+            ) : (
+              <div style={s.row} aria-disabled="true">
+                <div>
+                  <div style={s.label}>{row.label}</div>
+                  <div style={s.muted}>{row.hint}</div>
+                </div>
+                <span style={s.badge}>{row.phase}</span>
               </div>
-              <span style={s.badge}>{row.phase}</span>
-            </div>
+            )}
           </li>
         ))}
       </ul>
@@ -65,6 +77,7 @@ const s = {
     // Not yet reachable, and it says so rather than looking tappable.
     opacity: 0.55
   },
+  rowLive: { opacity: 1, textDecoration: 'none', color: 'var(--ink)' },
   label: { fontWeight: 600 },
   muted: { color: 'var(--ink-soft)', fontSize: 12 },
   badge: {

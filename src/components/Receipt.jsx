@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
-import { rupees } from '../lib/api.js'
+import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
+import { rupees, markPrinted, messageFor } from '../lib/api.js'
 
 /**
  * The 80 mm receipt, printed from the browser.
@@ -15,17 +16,63 @@ import { rupees } from '../lib/api.js'
  * WHAT IT CARRIES, because a GST invoice is not optional: shop name and GSTIN, invoice number, date
  * and time, the cashier, each line with its HSN, the CGST/SGST split, the round-off, the total, how
  * it was paid, and what they saved.
+ *
+ * ONE COMPONENT, TWO PLACES. This is both the screen after a sale and the bill opened from history
+ * (WF-SUCCESS-01 and WF-SALE-02). Deliberately not two components: two renderings of one bill is
+ * how a reprint stops matching the original, and the original is the one the customer is holding.
+ * `onDone` is what differs -- present after a sale (Next sale), absent from history.
+ *
+ * DUPLICATES ARE MARKED. POS-RCPT-004. Copy 1 is the original; every copy after it prints
+ * DUPLICATE across the top. Two identical-looking copies of one invoice is how the same saree gets
+ * returned twice, and how a shop loses track of which one the accountant has.
  */
 export default function Receipt({ sale, onDone }) {
+  // Which copy is in the printer's hand right now. Null until Print is pressed.
+  const [copyNumber, setCopyNumber] = useState(null)
+  const [printing, setPrinting] = useState(false)
+
   // Enter starts the next sale. A cashier's hand is already on the keyboard and the next customer
-  // is already at the counter.
+  // is already at the counter. Only after a sale -- from history there is no next sale to start.
   useEffect(() => {
+    if (!onDone) return
     const onKey = (event) => {
       if (event.key === 'Enter') { event.preventDefault(); onDone() }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onDone])
+
+  /**
+   * Count the copy, then print.
+   *
+   * Counted on the way IN rather than after, because the browser gives no reliable signal that a
+   * page actually reached paper. That over-counts when someone cancels the dialog, which is the
+   * safe direction: a copy wrongly marked duplicate costs nothing, an unmarked duplicate in
+   * circulation costs a saree.
+   *
+   * A failure to count does NOT block the print. A shop with a customer waiting needs the paper
+   * more than we need the tally.
+   */
+  async function print() {
+    if (printing) return
+    setPrinting(true)
+    try {
+      const { copyNumber: n } = await markPrinted(sale.id)
+      setCopyNumber(n)
+      // Let the banner render before the print dialog freezes the page.
+      await new Promise(resolve => setTimeout(resolve, 60))
+    } catch (error) {
+      toast.error(messageFor(error))
+    } finally {
+      setPrinting(false)
+      window.print()
+    }
+  }
+
+  // Before the first press, fall back to what the bill already knows: opening a bill that has been
+  // printed twice should not look like a fresh original.
+  const isDuplicate = (copyNumber ?? (sale.printCount ?? 0) + 1) > 1
+  const shownCopy = copyNumber ?? (sale.printCount ?? 0) + 1
 
   const shop = sale.shop ?? {}
   /*
@@ -45,16 +92,26 @@ export default function Receipt({ sale, onDone }) {
 
       <div style={s.bar} className="no-print">
         <div>
-          <b>Saved as {sale.invoiceNo}</b>
-          <div style={s.muted}>{rupees(sale.totalPaise)} · {new Date(sale.createdAt).toLocaleString('en-IN')}</div>
+          <b>{onDone ? `Saved as ${sale.invoiceNo}` : sale.invoiceNo}</b>
+          <div style={s.muted}>
+            {rupees(sale.totalPaise)} · {new Date(sale.createdAt).toLocaleString('en-IN')}
+            {(sale.printCount ?? 0) > 0 && ` · printed ${sale.printCount} ${sale.printCount === 1 ? 'time' : 'times'}`}
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => window.print()}>Print</button>
-          <button style={s.next} onClick={onDone}>Next sale</button>
+          <button onClick={print} disabled={printing}>
+            {printing ? 'Preparing…' : (sale.printCount ?? 0) > 0 ? 'Print again' : 'Print'}
+          </button>
+          {onDone && <button style={s.next} onClick={onDone}>Next sale</button>}
         </div>
       </div>
 
       <div style={s.sheet} className="receipt">
+        {isDuplicate && (
+          <div style={s.duplicate}>
+            DUPLICATE &middot; COPY {shownCopy}
+          </div>
+        )}
         <div style={s.centre}>
           <b style={{ fontSize: 14 }}>{shop.shopName ?? 'Shop'}</b>
           {shop.address && <div>{shop.address}</div>}
@@ -176,6 +233,10 @@ const s = {
     fontFamily: 'ui-monospace, Consolas, monospace'
   },
   centre: { textAlign: 'center' },
+  duplicate: {
+    textAlign: 'center', fontWeight: 700, letterSpacing: 1,
+    border: '1px solid #111', padding: '3px 0', marginBottom: 6
+  },
   line: { display: 'flex', justifyContent: 'space-between', gap: 8 },
   muted: { color: '#555', fontSize: 11 }
 }

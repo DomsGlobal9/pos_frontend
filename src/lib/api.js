@@ -66,6 +66,33 @@ export async function completeSale(body) {
   return data.data
 }
 
+/** POS-SALE-001..006. Filters are optional; `after` pages. */
+export async function loadBills(params = {}) {
+  const clean = Object.fromEntries(
+    Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
+  )
+  const { data } = await api.get('/bills', { params: clean })
+  return data.data
+}
+
+export async function loadBill(id) {
+  const { data } = await api.get(`/bills/${id}`)
+  return data.data
+}
+
+/**
+ * POS-RCPT-003, -004. Records that a copy was taken and says WHICH copy it is.
+ *
+ * Called before the print dialog opens, not after: the browser gives no reliable signal that a
+ * page actually printed, so counting on the way in is the only honest option. It over-counts if
+ * someone cancels the dialog, which is the safe direction to be wrong -- a copy marked duplicate
+ * that never existed costs nothing; an unmarked duplicate in circulation costs a saree.
+ */
+export async function markPrinted(id) {
+  const { data } = await api.post(`/bills/${id}/printed`)
+  return data.data
+}
+
 export async function loadSale(id) {
   const { data } = await api.get(`/sales/${id}`)
   return data.data
