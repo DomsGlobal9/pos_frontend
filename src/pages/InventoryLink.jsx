@@ -74,6 +74,23 @@ export default function InventoryLink() {
         </button>
       )}
 
+      {/* Bills Inventory ACCEPTED but flagged -- a GST rate that differs, stock it thought it did not
+          have. Nothing stopped; somebody should settle it in Inventory or at the next count. */}
+      {data.warnings?.length > 0 && (
+        <section>
+          <h2 style={s.heading}>Notes from Inventory</h2>
+          <ul style={s.notes} className="card-list">
+            {data.warnings.map((w, i) => (
+              <li key={i} style={s.note}>
+                <span className="chip warn" style={{ justifySelf: 'start' }}>{w.document ?? 'A bill'}</span>
+                <span>{w.text}</span>
+                <span style={s.muted}>{new Date(w.at).toLocaleString('en-IN')}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {data.catalogueProblems?.length > 0 && (
         <section>
           <h2 style={s.heading}>Items that need a look in Inventory</h2>
@@ -136,6 +153,8 @@ const s = {
   radio: { display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 14 },
   list: { margin: 0, paddingLeft: 18, display: 'grid', gap: 4 },
   problem: { fontSize: 13 },
+  notes: { listStyle: 'none', margin: 0, padding: 0, display: 'grid' },
+  note: { display: 'grid', gap: 4, padding: '12px 0', borderBottom: '1px solid var(--line)', fontSize: 14 },
   primary: { background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' },
   warn: { margin: 0, color: 'var(--warn)', fontSize: 13 },
   muted: { color: 'var(--ink-soft)', fontSize: 12, margin: 0 },
