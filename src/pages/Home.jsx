@@ -49,6 +49,13 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Only on a day with returns. Said separately from sales, never netted off silently. */}
+      {data?.today.returnCount > 0 && (
+        <p style={s.returns}>
+          Returns today: {rupees(data.today.returnsPaise)} ({data.today.returnCount})
+        </p>
+      )}
+
       {/*
         * POS-HOME-004. Three different reasons to look at Orders, said separately, because "5
         * orders need attention" tells a shop owner nothing about what to DO: phone the ready ones,
@@ -84,10 +91,11 @@ export default function Home() {
           {(data?.activity ?? []).map(row => (
             <li key={row.id}>
               {/* Every activity row is a destination, not decoration. WF-SALE-02. */}
-              <Link to={`/bills/${row.id}`} style={s.row}>
+              <Link to={row.kind === 'RETURN' ? `/returns/${row.id}` : `/bills/${row.id}`} style={s.row}>
                 <div>
                 <div>
-                  <b>{rupees(row.totalPaise)}</b>
+                  {row.kind === 'RETURN' && <span style={s.returnTag}>Return </span>}
+                  <b>{row.kind === 'RETURN' ? `−${rupees(row.totalPaise)}` : rupees(row.totalPaise)}</b>
                   <span style={s.muted}>
                     {' · '}{row.itemCount} {row.itemCount === 1 ? 'item' : 'items'}
                     {row.customerName ? ` · ${row.customerName}` : ''}
@@ -133,6 +141,8 @@ const s = {
     color: 'var(--ink)', border: '1px solid var(--line)', background: 'var(--panel)', fontSize: 14
   },
   late: { color: 'var(--bad)' },
+  returns: { margin: 0, color: 'var(--ink-soft)', fontSize: 14 },
+  returnTag: { color: 'var(--warn)', fontWeight: 600 },
   feed: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
   row: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,

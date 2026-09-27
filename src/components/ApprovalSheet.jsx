@@ -99,6 +99,13 @@ function describe(need) {
     }
     return `Changing the price of ${lines.length} items.`
   }
+  if (need.kind === 'RETURN') {
+    return `Refunding ${rupees(need.totalPaise)} on ${need.invoiceNo}. Cashiers need a manager for any return.`
+  }
+  if (need.kind === 'RETURN_OUTSIDE_WINDOW') {
+    return `Refunding ${rupees(need.totalPaise)} on ${need.invoiceNo}, which is ${need.daysSince} days old. ` +
+      `The shop takes returns for ${need.windowDays} days.`
+  }
   return 'Something on this bill needs a manager.'
 }
 

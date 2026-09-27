@@ -507,6 +507,7 @@ export default function Till() {
         <PaymentPanel
           totalPaise={totals.totalPaise}
           enabledMethods={shop?.shop?.enabledPaymentMethods}
+          creditPaise={customer?.storeCreditPaise ?? 0}
           onCancel={() => { setPaying(false); refocus() }}
           onConfirm={takePayment}
         />
@@ -546,6 +547,7 @@ export default function Till() {
           mode="ADVANCE"
           totalPaise={totals.totalPaise}
           enabledMethods={shop?.shop?.enabledPaymentMethods}
+          creditPaise={customer?.storeCreditPaise ?? 0}
           onCancel={() => { setKeeping(null); refocus() }}
           onConfirm={takePayment}
         />

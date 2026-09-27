@@ -19,7 +19,10 @@ const LABEL = {
   'payment.unconfirmed': 'Payment not confirmed',
   'payment.resolved': 'Payment checked',
   'bill.reprinted': 'Bill reprinted',
-  'sale.completed': 'Sale'
+  'sale.completed': 'Sale',
+  'return.created': 'Return',
+  'exchange.created': 'Exchange',
+  'store_credit.spent': 'Store credit spent'
 }
 
 export default function Audit() {

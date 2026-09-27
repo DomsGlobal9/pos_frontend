@@ -174,7 +174,7 @@ export default function Receipt({ sale, onDone }) {
         {sale.payments.map(p => (
           <div key={p.id} style={s.line}>
             <span>
-              {p.method === 'CASH' ? 'Cash' : p.method}
+              {METHOD[p.method] ?? p.method}
               {/*
                 * Printed on the customer's copy on purpose. If the shop is still checking whether
                 * a transfer landed, the person who made it should be able to see that from their
@@ -186,6 +186,12 @@ export default function Receipt({ sale, onDone }) {
             <span>{rupees(p.amountPaise)}</span>
           </div>
         ))}
+        {/* POS-EXC-005. The customer's copy of an exchange says what it was against. */}
+        {sale.exchangedFrom && (
+          <div style={s.muted}>
+            Exchange against {sale.exchangedFrom.originalInvoiceNo} · credit note {sale.exchangedFrom.creditNoteNo}
+          </div>
+        )}
         {sale.payments.some(p => p.changePaise > 0) && (
           <div style={s.line}>
             <span>Change</span>
@@ -251,6 +257,8 @@ const PRINT_CSS = `
   .till { display: block !important; }
 }
 `
+
+const METHOD = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', EXCHANGE: 'Exchange credit' }
 
 const s = {
   page: { height: '100%', overflow: 'auto', background: 'var(--bg)' },

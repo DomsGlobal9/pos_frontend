@@ -261,6 +261,7 @@ export function OrderDetail() {
         <PaymentPanel
           mode="COLLECT"
           totalPaise={data.owedPaise}
+          creditPaise={data.customer?.storeCreditPaise ?? 0}
           onCancel={() => setCollecting(null)}
           onConfirm={collect}
         />

@@ -183,6 +183,35 @@ export async function markPrinted(id) {
   return data.data
 }
 
+// ---- Returns and exchanges. WF-RETURN-01, WF-EXCHANGE-01. ----------------------------------
+
+/** What on this bill can come back, and on what terms. */
+export async function loadReturnInfo(saleId) {
+  const { data } = await api.get(`/returns/bill/${saleId}`)
+  return data.data
+}
+
+/** The exact refund for a selection. Writes nothing. */
+export async function quoteReturn(saleId, lines) {
+  const { data } = await api.post(`/returns/bill/${saleId}/quote`, { lines })
+  return data.data
+}
+
+export async function recordReturn(saleId, body) {
+  const { data } = await api.post(`/returns/bill/${saleId}`, body)
+  return data.data
+}
+
+export async function recordExchange(saleId, body) {
+  const { data } = await api.post(`/returns/bill/${saleId}/exchange`, body)
+  return data.data
+}
+
+export async function loadCreditNote(id) {
+  const { data } = await api.get(`/returns/${id}`)
+  return data.data
+}
+
 export async function loadSale(id) {
   const { data } = await api.get(`/sales/${id}`)
   return data.data

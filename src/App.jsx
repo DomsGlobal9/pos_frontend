@@ -10,6 +10,8 @@ import PaymentChecks from './pages/PaymentChecks.jsx'
 import { Customers, CustomerDetail } from './pages/Customers.jsx'
 import Audit from './pages/Audit.jsx'
 import { Orders, OrderDetail } from './pages/Orders.jsx'
+import ReturnFlow from './pages/ReturnFlow.jsx'
+import CreditNote from './pages/CreditNote.jsx'
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -37,6 +39,11 @@ const router = createBrowserRouter([
       // WF-SALES-01 and WF-SALE-02. Reached from More, and from a Home activity row.
       { path: 'bills', element: <Bills /> },
       { path: 'bills/:id', element: <BillDetail /> },
+      // WF-RETURN-01 and WF-EXCHANGE-01, started from a bill. POS-SALE-010, -011.
+      { path: 'bills/:id/return', element: <ReturnFlow mode="RETURN" /> },
+      { path: 'bills/:id/exchange', element: <ReturnFlow mode="EXCHANGE" /> },
+      // The credit note, as it prints. POS-RET-006.
+      { path: 'returns/:id', element: <CreditNote /> },
       // WF-PAY-02.
       { path: 'payment-checks', element: <PaymentChecks /> },
       {

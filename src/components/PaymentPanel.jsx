@@ -26,7 +26,8 @@ import { rupees } from '../lib/api.js'
  *   ADVANCE  keeping goods for a customer: anything from nothing up to the bill (POS-ORD-002)
  *   COLLECT  money coming in later against a kept order: something, never more than is owed
  */
-const LABELS = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card' }
+const LABELS = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit' }
+const NEEDS_REFERENCE = ['UPI', 'CARD']
 
 const COPY = {
   EXACT: { heading: 'To pay', confirm: 'Complete sale', remaining: 'Still to pay' },
@@ -34,9 +35,13 @@ const COPY = {
   COLLECT: { heading: 'Owed', confirm: 'Take payment', remaining: 'Still owed after this' }
 }
 
-export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT' }) {
-  const methods = (enabledMethods?.length ? enabledMethods : ['CASH', 'UPI', 'CARD'])
-    .filter(m => LABELS[m])
+export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT', creditPaise = 0, heading }) {
+  // POS-PAY-016. Store credit is offered only when this customer has some. The server takes it
+  // from their live balance, so this figure is a guide and the server has the last word.
+  const methods = [
+    ...(enabledMethods?.length ? enabledMethods : ['CASH', 'UPI', 'CARD']).filter(m => LABELS[m] && m !== 'CREDIT'),
+    ...(creditPaise > 0 ? ['CREDIT'] : [])
+  ]
   const copy = COPY[mode] ?? COPY.EXACT
 
   // An advance starts EMPTY -- the cashier types what the customer is paying now. Defaulting it to
@@ -52,9 +57,13 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
 
   // In ADVANCE mode a row left completely empty is simply "nothing paid now", not a mistake.
   const counted = mode === 'ADVANCE' ? rows.filter(r => String(r.amount ?? '').trim() !== '') : rows
+  const creditUsed = rows.filter(r => r.method === 'CREDIT').reduce((sum, r) => sum + (toPaise(r.amount) ?? 0), 0)
   const problems = useMemo(() => rows.map(row => (
-    mode === 'ADVANCE' && String(row.amount ?? '').trim() === '' ? null : rowProblem(row)
-  )), [rows, mode])
+    mode === 'ADVANCE' && String(row.amount ?? '').trim() === '' ? null
+      : row.method === 'CREDIT' && creditUsed > creditPaise
+        ? `Only ${rupees(creditPaise)} of store credit is available.`
+        : rowProblem(row)
+  )), [rows, mode, creditUsed, creditPaise])
 
   const amountsFit =
     mode === 'EXACT' ? remaining === 0
@@ -70,7 +79,8 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
     // payments is not a thing anyone does.
     const used = new Set(rows.map(r => r.method))
     const next = methods.find(m => !used.has(m)) ?? methods[0]
-    setRows(current => [...current, blank(next, Math.max(0, remaining))])
+    const amount = next === 'CREDIT' ? Math.min(Math.max(0, remaining), creditPaise) : Math.max(0, remaining)
+    setRows(current => [...current, blank(next, amount)])
   }
 
   const removeRow = (index) => setRows(current => current.filter((_, i) => i !== index))
@@ -92,7 +102,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
     <div style={s.backdrop} role="dialog" aria-label="Take payment">
       <form style={s.panel} onSubmit={confirm}>
         <div style={s.row}>
-          <span>{copy.heading}</span>
+          <span>{heading ?? copy.heading}</span>
           <b style={s.big}>{rupees(totalPaise)}</b>
         </div>
         {mode === 'ADVANCE' && (
@@ -167,7 +177,11 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
               </>
             )}
 
-            {row.method !== 'CASH' && (
+            {row.method === 'CREDIT' && (
+              <p style={s.muted}>{rupees(creditPaise)} available. It comes off their balance when the sale is saved.</p>
+            )}
+
+            {NEEDS_REFERENCE.includes(row.method) && (
               <>
                 <label style={s.label}>
                   {LABELS[row.method]} reference
@@ -241,6 +255,7 @@ function rowProblem(row) {
     if (tendered !== null && tendered < amount) return 'That is less than the amount being paid.'
     return null
   }
+  if (row.method === 'CREDIT') return null
   if (!row.unconfirmed && !row.reference.trim()) {
     return `Add the ${LABELS[row.method]} reference, or tick "not confirmed yet".`
   }
@@ -254,8 +269,8 @@ function toPayment(row) {
     method: row.method,
     amountPaise,
     ...(row.method === 'CASH' && tenderedPaise !== null ? { tenderedPaise } : {}),
-    ...(row.method !== 'CASH' && row.reference.trim() ? { reference: row.reference.trim() } : {}),
-    ...(row.unconfirmed ? { unconfirmed: true } : {})
+    ...(NEEDS_REFERENCE.includes(row.method) && row.reference.trim() ? { reference: row.reference.trim() } : {}),
+    ...(NEEDS_REFERENCE.includes(row.method) && row.unconfirmed ? { unconfirmed: true } : {})
   }
 }
 

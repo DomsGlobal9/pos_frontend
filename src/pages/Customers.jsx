@@ -114,6 +114,29 @@ export function CustomerDetail() {
         </Link>
       )}
 
+      {/* POS-CUST-012. Only when there is some, with the reason under it. */}
+      {(data.storeCreditPaise > 0 || data.creditHistory?.length > 0) && (
+        <section>
+          <h2 style={s.heading}>Store credit: {rupees(data.storeCreditPaise)}</h2>
+          <ul style={s.list}>
+            {data.creditHistory.map(entry => (
+              <li key={entry.id} style={s.creditRow}>
+                <span>
+                  {entry.amountPaise > 0 ? 'Given' : 'Spent'}
+                  {entry.documentNo && (
+                    <Link to={entry.documentKind === 'CREDIT_NOTE' ? `/returns/${entry.documentId}` : `/bills/${entry.documentId}`} style={s.muted}>
+                      {' '}· {entry.documentNo}
+                    </Link>
+                  )}
+                  <span style={s.muted}> · {new Date(entry.createdAt).toLocaleDateString('en-IN')}</span>
+                </span>
+                <b>{entry.amountPaise > 0 ? '+' : '−'}{rupees(Math.abs(entry.amountPaise))}</b>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {data.note && <p style={s.note}>{data.note}</p>}
 
       <div style={s.muted}>
@@ -132,7 +155,13 @@ export function CustomerDetail() {
                   <div><b>{rupees(sale.totalPaise)}</b>
                     <span style={s.muted}> · {sale.itemCount} {sale.itemCount === 1 ? 'item' : 'items'}</span>
                   </div>
-                  <div style={s.muted}>{sale.invoiceNo}</div>
+                  <div style={s.muted}>
+                    {sale.invoiceNo}
+                    {/* POS-CUST-015. */}
+                    {sale.status === 'RETURNED'
+                      ? ' · returned'
+                      : sale.returnedPaise > 0 ? ` · ${rupees(sale.returnedPaise)} returned` : ''}
+                  </div>
                 </div>
                 <div style={s.muted}>
                   {new Date(sale.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
@@ -167,6 +196,10 @@ const s = {
     border: '1px solid var(--line)', color: 'var(--warn)', fontWeight: 600
   },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
+  creditRow: {
+    display: 'flex', justifyContent: 'space-between', gap: 12, padding: '6px 0',
+    borderBottom: '1px solid var(--line)', fontSize: 14
+  },
   row: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
     minHeight: 60, padding: '8px 0', borderBottom: '1px solid var(--line)',
