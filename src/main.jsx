@@ -26,7 +26,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />
-      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+      {/* Top-centre rather than top-right: on a phone the right corner is under the thumb that
+          just pressed something, and a toast there gets dismissed by accident. */}
+      <Toaster position="top-center" toastOptions={{ duration: 4000 }} />
     </QueryClientProvider>
   </React.StrictMode>
 )

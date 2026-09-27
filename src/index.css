@@ -74,22 +74,23 @@ input {
 }
 
 /*
- * NOT SOLD ON PHONES. Selling is a counter job, and the decision is settled -- carried over from the
- * counter sale that ran inside Inventory. Below 768 px the till hides itself and says why, rather
- * than rendering a cramped version someone will try to trade on.
+ * PHONE, TABLET AND DESKTOP ARE ALL FIRST-CLASS.
+ *
+ * This file used to hide the till below 768px with the note "selling is a counter job". That rule
+ * is retired -- see docs/product/CHANGELOG.md CHG-001. A salesperson walking a boutique with a
+ * phone is a real customer, and the counter keeps its own speed contract (CHG-002).
+ *
+ * What replaces it is not "make it smaller": the shell swaps a left rail for a bottom bar, screens
+ * go to one column, and the primary action stays reachable by a thumb.
  */
-.narrow-notice { display: none; }
+
+/* No critical horizontal scrolling on a phone. MASTER.md UX commandment 3. */
+html, body { max-width: 100%; overflow-x: hidden; }
 
 @media (max-width: 767px) {
-  .till { display: none !important; }
-  .narrow-notice {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    padding: 32px;
-    text-align: center;
-    line-height: 1.6;
-    color: var(--ink-soft);
+  :root {
+    /* A little larger on a phone: the finger is less accurate than a mouse and the screen is
+       usually being held one-handed. */
+    --tap: 52px;
   }
 }

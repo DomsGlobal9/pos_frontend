@@ -46,6 +46,11 @@ export async function health() {
   return data.data
 }
 
+export async function homeSummary() {
+  const { data } = await api.get('/home/summary')
+  return data.data
+}
+
 export async function loadShop() {
   const { data } = await api.get('/shop')
   return data.data

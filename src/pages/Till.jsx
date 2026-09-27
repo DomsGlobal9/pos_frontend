@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useOutletContext } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { health, loadShop, searchItems, completeSale, messageFor, rupees } from '../lib/api.js'
+import { searchItems, completeSale, messageFor, rupees } from '../lib/api.js'
+import { isTouchFirst } from '../lib/useMedia.js'
 import { basketTotals, lineTotal, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
 import PaymentPanel from '../components/PaymentPanel.jsx'
 import Receipt from '../components/Receipt.jsx'
@@ -9,8 +10,15 @@ import Receipt from '../components/Receipt.jsx'
 /**
  * The sell screen.
  *
- * One screen, no navigation during a sale. Items build up on the left, the total stays large on the
- * right. Nothing here takes the cashier off this screen to finish a bill.
+ * WF-SELL-01. POS-SELL-001..003, -005, -008..012, -014, -022..025.
+ *
+ * One screen, no navigation during a sale. Nothing here takes the cashier off this screen to
+ * finish a bill.
+ *
+ * LAYOUT BY DEVICE. Desktop keeps the basket beside a permanent totals panel, because a counter has
+ * the width and the cashier wants the running total in view at all times. Phone and tablet put the
+ * basket in one column with the total and the primary action pinned to the bottom, where a thumb
+ * reaches -- MASTER.md UX commandments 2 and 3.
  *
  * KEYBOARD FIRST, because a barcode scanner IS a keyboard: it types the code and presses Enter.
  * That single fact drives everything about the input -- the search box holds focus at all times and
@@ -30,8 +38,10 @@ export default function Till() {
   const [receipt, setReceipt] = useState(null)
   const searchBox = useRef(null)
 
-  const { data: status } = useQuery({ queryKey: ['health'], queryFn: health, refetchInterval: 30_000 })
-  const { data: shop } = useQuery({ queryKey: ['shop'], queryFn: loadShop, staleTime: Infinity })
+  // The shell already loads these and shows connection state in the header; asking again here
+  // would be a second round trip for the same answer on the screen that can least afford one.
+  const { device, shop } = useOutletContext() ?? {}
+  const stacked = isTouchFirst(device)
 
   const totals = basketTotals(lines)
 
@@ -135,13 +145,8 @@ export default function Till() {
   if (receipt) return <Receipt sale={receipt} onDone={startAgain} />
 
   return (
-    <div className="till" style={s.page}>
-      <header style={s.header}>
-        <strong>{shop?.shop?.shopName ?? 'ScaleEzy POS'}</strong>
-        <Status status={status} />
-      </header>
-
-      <main style={s.body}>
+    <div style={s.page}>
+      <main style={{ ...s.body, ...(stacked ? s.bodyStacked : s.bodySplit) }}>
         <section style={s.left}>
           <form onSubmit={find}>
             <input
@@ -218,7 +223,7 @@ export default function Till() {
           )}
         </section>
 
-        <aside style={s.right}>
+        <aside style={{ ...s.right, ...(stacked ? s.rightStacked : s.rightSplit) }}>
           <div>
             <div style={s.totalLabel}>Total</div>
             <div style={s.totalValue}>{rupees(totals.totalPaise)}</div>
@@ -269,32 +274,23 @@ function Left({ qty }) {
   return <span style={s.muted}>{qty} left</span>
 }
 
-function Status({ status }) {
-  if (!status) return <span style={s.muted}>Checking…</span>
-  const standalone = status.mode === 'standalone'
-  return (
-    <span style={{ display: 'flex', gap: 16, fontSize: 13 }}>
-      <span style={{ color: status.database === 'up' ? 'var(--good)' : 'var(--bad)' }}>
-        {status.database === 'up' ? `Database ${status.databaseMs} ms` : 'Database unreachable'}
-      </span>
-      <span style={{ color: standalone ? 'var(--warn)' : 'var(--ink-soft)' }}>
-        {standalone ? 'Standalone' : 'Inventory connected'}
-      </span>
-    </span>
-  )
-}
-
 const s = {
-  page: { height: '100%', display: 'flex', flexDirection: 'column' },
-  header: {
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '10px 16px', background: 'var(--panel)', borderBottom: '1px solid var(--line)'
+  page: { height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 },
+  body: { flex: 1, display: 'grid', minHeight: 0 },
+  // Counter: basket and totals side by side, total always in view.
+  bodySplit: { gridTemplateColumns: 'minmax(0, 1fr) 300px' },
+  // Phone and tablet: one column, totals pinned under it.
+  bodyStacked: { gridTemplateRows: 'minmax(0, 1fr) auto' },
+  left: { padding: 16, overflow: 'auto', minWidth: 0 },
+  right: { background: 'var(--panel)', padding: 16, display: 'flex' },
+  rightSplit: {
+    borderLeft: '1px solid var(--line)',
+    flexDirection: 'column', justifyContent: 'space-between'
   },
-  body: { flex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', minHeight: 0 },
-  left: { padding: 16, overflow: 'auto' },
-  right: {
-    borderLeft: '1px solid var(--line)', background: 'var(--panel)', padding: 16,
-    display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+  rightStacked: {
+    borderTop: '1px solid var(--line)',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+    paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))'
   },
   empty: { color: 'var(--ink-soft)', marginTop: 24 },
   results: { listStyle: 'none', margin: '10px 0 0', padding: 0, display: 'grid', gap: 6 },
