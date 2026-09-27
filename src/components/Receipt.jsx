@@ -173,7 +173,16 @@ export default function Receipt({ sale, onDone }) {
 
         {sale.payments.map(p => (
           <div key={p.id} style={s.line}>
-            <span>{p.method === 'CASH' ? 'Cash' : p.method}</span>
+            <span>
+              {p.method === 'CASH' ? 'Cash' : p.method}
+              {/*
+                * Printed on the customer's copy on purpose. If the shop is still checking whether
+                * a transfer landed, the person who made it should be able to see that from their
+                * own receipt rather than be telephoned about it later.
+                */}
+              {p.status === 'NEEDS_CHECKING' && <span style={s.pending}> (being checked)</span>}
+              {p.status === 'VOID' && <span style={s.pending}> (not received)</span>}
+            </span>
             <span>{rupees(p.amountPaise)}</span>
           </div>
         ))}
@@ -238,5 +247,6 @@ const s = {
     border: '1px solid #111', padding: '3px 0', marginBottom: 6
   },
   line: { display: 'flex', justifyContent: 'space-between', gap: 8 },
-  muted: { color: '#555', fontSize: 11 }
+  muted: { color: '#555', fontSize: 11 },
+  pending: { fontSize: 10 }
 }

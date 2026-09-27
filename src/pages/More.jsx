@@ -13,6 +13,7 @@ import { useOutletContext } from 'react-router-dom'
  */
 const ROWS = [
   { to: '/bills', label: 'Bills', hint: 'Find a sale, open it, print it again', live: true },
+  { to: '/payment-checks', label: 'Payments to check', hint: 'UPI and card taken without confirmation', live: true },
   { to: '/shift', label: 'Shift and drawer', hint: 'Open, cash in and out, close', phase: 'Phase 7' },
   { to: '/reports', label: 'Reports', hint: 'Today, payment methods, day close', phase: 'Phase 9' },
   { to: '/sync', label: 'Waiting to sync', hint: 'Anything not yet saved to the server', phase: 'Phase 11' },

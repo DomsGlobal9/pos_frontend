@@ -61,6 +61,23 @@ export async function searchItems(q) {
   return data.data
 }
 
+/** POS-SELL-006. Every colour and size of one thing. */
+export async function loadVariants(group) {
+  const { data } = await api.get(`/sales/variants/${encodeURIComponent(group)}`)
+  return data.data
+}
+
+/** POS-PAY-011. Payments nobody has confirmed against the bank yet. */
+export async function loadAwaitingCheck() {
+  const { data } = await api.get('/payments/awaiting-check')
+  return data.data
+}
+
+export async function resolvePayment(id, body) {
+  const { data } = await api.post(`/payments/${id}/resolve`, body)
+  return data.data
+}
+
 export async function completeSale(body) {
   const { data } = await api.post('/sales', body)
   return data.data

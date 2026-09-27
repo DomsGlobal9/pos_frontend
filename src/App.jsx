@@ -6,6 +6,7 @@ import Placeholder from './pages/Placeholder.jsx'
 import More from './pages/More.jsx'
 import Bills from './pages/Bills.jsx'
 import BillDetail from './pages/BillDetail.jsx'
+import PaymentChecks from './pages/PaymentChecks.jsx'
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -45,6 +46,8 @@ const router = createBrowserRouter([
       // WF-SALES-01 and WF-SALE-02. Reached from More, and from a Home activity row.
       { path: 'bills', element: <Bills /> },
       { path: 'bills/:id', element: <BillDetail /> },
+      // WF-PAY-02.
+      { path: 'payment-checks', element: <PaymentChecks /> },
       {
         path: '*',
         element: (

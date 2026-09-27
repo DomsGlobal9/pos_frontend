@@ -6,6 +6,7 @@ import { isTouchFirst } from '../lib/useMedia.js'
 import { basketTotals, lineTotal, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
 import PaymentPanel from '../components/PaymentPanel.jsx'
 import Receipt from '../components/Receipt.jsx'
+import VariantSheet from '../components/VariantSheet.jsx'
 
 /**
  * The sell screen.
@@ -36,6 +37,8 @@ export default function Till() {
   const [busy, setBusy] = useState(false)
   const [paying, setPaying] = useState(false)
   const [receipt, setReceipt] = useState(null)
+  // The colour/size picker, when a search result turns out to have siblings. WF-PRODUCT-01.
+  const [picking, setPicking] = useState(null)
   const searchBox = useRef(null)
 
   // The shell already loads these and shows connection state in the header; asking again here
@@ -53,6 +56,21 @@ export default function Till() {
   // focus, so anything else means a scanned saree lands in the void.
   const refocus = () => requestAnimationFrame(() => searchBox.current?.focus())
   useEffect(() => { if (!paying && !receipt) refocus() }, [paying, receipt, lines.length])
+
+  /**
+   * A tapped search result. POS-SELL-006.
+   *
+   * If the item has siblings -- the same saree in three colours -- the cashier has not chosen yet,
+   * so the picker opens. A SCANNED barcode never comes through here; it is one specific piece and
+   * goes straight into the basket, because adding a tap to every scan would blow the 150 ms budget.
+   */
+  function chooseItem(item) {
+    if (item.priceFromPaise && item.variantGroup) {
+      setPicking({ group: item.variantGroup, name: item.name })
+      return
+    }
+    addItem(item)
+  }
 
   function addItem(item) {
     setLines(current => {
@@ -115,7 +133,7 @@ export default function Till() {
     refocus()
   }
 
-  async function takePayment(payment) {
+  async function takePayment(payments) {
     const counterId = shop?.counters?.[0]?.id
     if (!counterId) {
       toast.error('This till has no counter set up yet.')
@@ -126,7 +144,7 @@ export default function Till() {
         onceKey,
         counterId,
         lines: lines.map(l => ({ itemId: l.id, qty: l.qty })),
-        payments: [payment]
+        payments
       })
       // Cleared HERE, on save -- not in startAgain. A cashier who walks away after handing
       // over the bill, or whose browser reloads before they press Next sale, must not come back
@@ -163,15 +181,23 @@ export default function Till() {
             <ul style={s.results}>
               {results.map(item => (
                 <li key={item.id}>
-                  <button style={s.result} onClick={() => addItem(item)}>
-                    <span>
-                      {item.name}
-                      {(item.colour || item.size) && <span style={s.muted}> · {[item.colour, item.size].filter(Boolean).join(', ')}</span>}
-                      <span style={s.muted}> · {item.code}</span>
+                  <button style={s.result} onClick={() => chooseItem(item)}>
+                    {item.imageUrl
+                      ? <img src={item.imageUrl} alt="" style={s.thumb} />
+                      : <span style={{ ...s.thumb, ...s.noImage }} aria-hidden="true" />}
+                    <span style={s.resultText}>
+                      <span>{item.name}</span>
+                      <span style={s.muted}>
+                        {item.priceFromPaise
+                          ? `${item.variantCount} colours and sizes`
+                          : [item.colour, item.size, item.code].filter(Boolean).join(' · ')}
+                      </span>
                     </span>
-                    <span>
-                      <Left qty={item.availableQty} />
-                      <b style={{ marginLeft: 12 }}>{rupees(item.pricePaise)}</b>
+                    <span style={s.resultRight}>
+                      {/* A row standing for several colours shows the cheapest as a "from" price;
+                          a specific piece shows its own. */}
+                      <b>{item.priceFromPaise ? `from ${rupees(item.priceFromPaise)}` : rupees(item.pricePaise)}</b>
+                      {!item.priceFromPaise && <Left qty={item.availableQty} />}
                     </span>
                   </button>
                 </li>
@@ -258,8 +284,18 @@ export default function Till() {
       {paying && (
         <PaymentPanel
           totalPaise={totals.totalPaise}
+          enabledMethods={shop?.shop?.enabledPaymentMethods}
           onCancel={() => { setPaying(false); refocus() }}
           onConfirm={takePayment}
+        />
+      )}
+
+      {picking && (
+        <VariantSheet
+          group={picking.group}
+          name={picking.name}
+          onPick={(variant) => { setPicking(null); addItem(variant) }}
+          onClose={() => { setPicking(null); refocus() }}
         />
       )}
     </div>
@@ -295,9 +331,13 @@ const s = {
   empty: { color: 'var(--ink-soft)', marginTop: 24 },
   results: { listStyle: 'none', margin: '10px 0 0', padding: 0, display: 'grid', gap: 6 },
   result: {
-    width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    textAlign: 'left', fontWeight: 400, gap: 12
+    width: '100%', display: 'flex', alignItems: 'center',
+    textAlign: 'left', fontWeight: 400, gap: 12, minHeight: 60
   },
+  resultText: { display: 'grid', flex: 1, minWidth: 0 },
+  resultRight: { display: 'grid', justifyItems: 'end', gap: 2 },
+  thumb: { width: 40, height: 40, borderRadius: 6, flex: '0 0 auto', objectFit: 'cover' },
+  noImage: { background: 'var(--bg)', border: '1px solid var(--line)' },
   table: { width: '100%', borderCollapse: 'collapse', marginTop: 14 },
   th: { textAlign: 'left', fontSize: 12, color: 'var(--ink-soft)', padding: '6px 8px', borderBottom: '1px solid var(--line)' },
   thRight: { textAlign: 'right', fontSize: 12, color: 'var(--ink-soft)', padding: '6px 8px', borderBottom: '1px solid var(--line)' },
