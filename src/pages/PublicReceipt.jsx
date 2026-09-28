@@ -30,7 +30,7 @@ export default function PublicReceipt() {
 
   return (
     <div style={s.page}>
-      <Receipt sale={data} publicView pdfHref={`/api/v1/public/receipts/${token}/pdf`} />
+      <Receipt sale={data} publicView pdfHref={`${import.meta.env.VITE_API_BASE || '/api/v1'}/public/receipts/${token}/pdf`} />
       <p style={s.foot} className="no-print">Your bill from {data.shop?.shopName ?? 'the shop'}. Keep this link to see it again.</p>
     </div>
   )

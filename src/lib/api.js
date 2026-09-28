@@ -9,7 +9,9 @@ import { staffToken, tillToken, tillClosed, personOut } from './session.js'
  * a per-environment base URL is how a deployed till ends up calling localhost.
  */
 export const api = axios.create({
-  baseURL: '/api/v1',
+  // VITE_API_BASE only when the till is hosted apart from its server (e.g. https://pos-api.example.com/api/v1).
+  // Unset: the same origin, as in development.
+  baseURL: import.meta.env.VITE_API_BASE || '/api/v1',
   // A till waits, but not forever. Ten seconds is long enough for a slow shop line and short enough
   // that a cashier knows something is wrong rather than staring at a spinner.
   timeout: 10_000

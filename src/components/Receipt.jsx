@@ -3,9 +3,32 @@ import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 import { useQueryClient } from '@tanstack/react-query'
 import { FileDown, MessageCircle, Printer } from 'lucide-react'
-import { rupees, markPrinted, messageFor, sendReceiptWhatsApp } from '../lib/api.js'
+import { api, rupees, markPrinted, messageFor, sendReceiptWhatsApp } from '../lib/api.js'
 import { newOnceKey } from '../lib/basket.js'
 import { checkIn, paperWidthMm } from '../lib/device.js'
+
+const API_BASE = import.meta.env.VITE_API_BASE || '/api/v1'
+
+/**
+ * The bill's PDF, fetched WITH the person's sign-in and then opened. A plain link opened in a new
+ * tab carries no sign-in, so on a till that requires one it would be refused -- found while getting
+ * ready for sphl, where it would have been the first thing to break. The tab is opened before the
+ * wait so a popup blocker lets it through.
+ */
+async function openPdf(e, saleId) {
+  e.preventDefault()
+  const tab = window.open('', '_blank')
+  try {
+    const res = await api.get(`/bills/${saleId}/receipt.pdf`, { responseType: 'blob', timeout: 30_000 })
+    const url = URL.createObjectURL(res.data)
+    if (tab) tab.location.href = url
+    else window.location.href = url
+    setTimeout(() => URL.revokeObjectURL(url), 60_000)
+  } catch (err) {
+    tab?.close()
+    toast.error(messageFor(err))
+  }
+}
 
 /**
  * The 80 mm receipt, printed from the browser.
@@ -148,7 +171,8 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
             <Printer size={16} aria-hidden="true" />
             {printing ? 'Preparing…' : publicView ? 'Print' : (sale.printCount ?? 0) > 0 ? 'Print again' : 'Print'}
           </button>
-          <a href={pdfHref ?? `/api/v1/bills/${sale.id}/receipt.pdf`} target="_blank" rel="noreferrer" style={s.toolLink}>
+          <a href={pdfHref ?? `${API_BASE}/bills/${sale.id}/receipt.pdf`} target="_blank" rel="noreferrer" style={s.toolLink}
+            onClick={pdfHref ? undefined : (e) => openPdf(e, sale.id)}>
             <FileDown size={16} aria-hidden="true" /> PDF
           </a>
           {!publicView && sale.customer && (
