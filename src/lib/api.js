@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { staffToken, tillToken, tillClosed, personOut } from './session.js'
 
 /**
  * Talking to the POS server.
@@ -13,6 +14,38 @@ export const api = axios.create({
   // that a cashier knows something is wrong rather than staring at a spinner.
   timeout: 10_000
 })
+
+/*
+ * The person at the till goes with every request; the till's own token with the sign-in calls.
+ * When the server says the till was closed, or this person's turn has ended, the session is
+ * updated and the shell shows the right screen -- never a raw 401.
+ */
+api.interceptors.request.use(config => {
+  const staff = staffToken()
+  if (staff && !config.headers.Authorization) config.headers.Authorization = `Bearer ${staff}`
+  const till = tillToken()
+  if (till && String(config.url ?? '').startsWith('/auth/')) config.headers['x-till-token'] = till
+  return config
+})
+api.interceptors.response.use(r => r, error => {
+  const code = error?.response?.status === 401 ? error.response.data?.details?.code : null
+  // Only for the person at the till -- not for a queued sale sent under someone else's name.
+  if (code && !error.config?.headers?.['x-keep-session']) {
+    if (code === 'TILL_CLOSED') tillClosed()
+    else if (code === 'NO_STAFF') personOut()
+  }
+  return Promise.reject(error)
+})
+
+// ---- signing in at the till. POS-CORE-002.
+export const openTill = (body) => api.post('/auth/open', body).then(r => r.data.data)
+export const loadTillStaff = () => api.get('/auth/staff').then(r => r.data.data)
+export const switchPerson = (body) => api.post('/auth/switch', body).then(r => r.data.data)
+export const whoAmI = () => api.get('/auth/me').then(r => r.data.data)
+export const closeThisTill = () => api.post('/auth/close').then(r => r.data.data)
+export const loadStaff = () => api.get('/staff').then(r => r.data.data)
+export const addStaff = (body) => api.post('/staff', body).then(r => r.data.data)
+export const changeStaff = (id, body) => api.patch(`/staff/${id}`, body).then(r => r.data.data)
 
 /**
  * One sentence a cashier can act on, out of anything that can go wrong.
@@ -151,8 +184,9 @@ export async function resolvePayment(id, body) {
   return data.data
 }
 
-export async function completeSale(body) {
-  const { data } = await api.post('/sales', body)
+export async function completeSale(body, asToken) {
+  // A sale kept on the device is sent as the person who made it (their sign-in, kept with it).
+  const { data } = await api.post('/sales', body, asToken ? { headers: { Authorization: `Bearer ${asToken}`, 'x-keep-session': '1' } } : undefined)
   return data.data
 }
 

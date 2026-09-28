@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { completeSale, messageFor } from './api.js'
+import { staffToken } from './session.js'
 
 /**
  * Sales this till could not send, kept until it can. POS-SYNC-003..005, POS-OFF-002.
@@ -96,6 +97,9 @@ export function addToOutbox({ onceKey, body, restore, summary }) {
     body: { ...body, madeOfflineAt: body.madeOfflineAt ?? now },
     restore,
     summary,
+    // Who made it: sent later under their own sign-in, so the bill carries their name even if
+    // someone else is at the till by then.
+    token: staffToken(),
     createdAt: now,
     attempts: 1,
     state: 'waiting',
@@ -135,7 +139,15 @@ export function flush({ includeAttention = false } = {}) {
       if (!items.some(i => i.onceKey === entry.onceKey)) continue
       patch(entry.onceKey, { state: 'sending', lastTriedAt: new Date().toISOString() })
       try {
-        const result = await completeSale(entry.body)
+        let result
+        try {
+          result = await completeSale(entry.body, entry.token ?? undefined)
+        } catch (error) {
+          // Their sign-in has run out (12 hours): send it as whoever is at the till now, rather
+          // than leave a paid sale stuck on the device.
+          if (entry.token && error?.response?.status === 401) result = await completeSale(entry.body)
+          else throw error
+        }
         commit(items.filter(i => i.onceKey !== entry.onceKey))
         sent = [{
           onceKey: entry.onceKey,
@@ -151,7 +163,8 @@ export function flush({ includeAttention = false } = {}) {
       } catch (error) {
         const current = items.find(i => i.onceKey === entry.onceKey)
         if (!current) continue
-        if (isNetworkFailure(error)) {
+        // Nobody signed in right now: keep it waiting, it is not the sale's fault.
+        if (isNetworkFailure(error) || error?.response?.status === 401) {
           patch(entry.onceKey, { state: 'waiting', attempts: (current.attempts ?? 0) + 1 })
           break   // the line is still down; the rest would fail the same way
         }

@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useOutletContext } from 'react-router-dom'
-import { Receipt, ShieldCheck, History, Wallet, CalendarCheck, Boxes, BarChart3, RefreshCw, Settings, Plug, ChevronRight, Monitor } from 'lucide-react'
+import { tillToken, tillClosed } from '../lib/session.js'
+import { closeThisTill } from '../lib/api.js'
+import { Users, Receipt, ShieldCheck, History, Wallet, CalendarCheck, Boxes, BarChart3, RefreshCw, Settings, Plug, ChevronRight, Monitor } from 'lucide-react'
 
 /**
  * WF-MORE-01.
@@ -23,6 +25,7 @@ const ROWS = [
   { to: '/sync', label: 'Waiting to sync', hint: 'Sales kept on this till while the internet was down', live: true, Icon: RefreshCw },
   { to: '/settings', label: 'Settings', hint: 'UPI QR, Inventory link, devices', live: true, Icon: Settings },
   { to: '/devices', label: 'Devices', hint: 'Every screen the till runs on', live: true, Icon: Monitor },
+  { to: '/staff', label: 'Staff', hint: 'Who works the till, their PINs and roles', live: true, Icon: Users },
   { to: '/connections', label: 'Connections', hint: 'Your other software, Excel import, sales for the accountant', live: true, Icon: Plug }
 ]
 
@@ -71,6 +74,14 @@ export default function More() {
       )}
 
       <Link to="/sell" style={s.action}>Go to Sell</Link>
+      {/* Only on a till that was opened with a password -- not in development's stand-in mode. */}
+      {tillToken() && (
+        <button style={s.close} onClick={async () => {
+          if (!window.confirm('Close the till on this device? An owner or manager will need to open it again.')) return
+          try { await closeThisTill() } catch { /* closing here is what matters */ }
+          tillClosed()
+        }}>Close the till on this device</button>
+      )}
     </div>
   )
 }
@@ -98,5 +109,6 @@ const s = {
     justifySelf: 'start', display: 'inline-flex', alignItems: 'center', minHeight: 48,
     padding: '0 18px', borderRadius: 10, textDecoration: 'none',
     border: '1px solid var(--line)', color: 'var(--ink)', fontWeight: 600
-  }
+  },
+  close: { background: 'none', border: 'none', boxShadow: 'none', color: 'var(--bad)', textDecoration: 'underline', justifySelf: 'start', padding: 0 }
 }

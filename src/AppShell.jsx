@@ -1,12 +1,14 @@
 import { Outlet, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { health, loadShop } from './lib/api.js'
+import { health, loadShop, whoAmI } from './lib/api.js'
 import { useDevice, isTouchFirst } from './lib/useMedia.js'
 import NavBar from './components/NavBar.jsx'
 import { useEffect, useState } from 'react'
 import { checkIn } from './lib/device.js'
 import { useOutbox, flush, outboxItems } from './lib/outbox.js'
+import { onSession, tillToken, personOut } from './lib/session.js'
+import { OpenTill, WhoAtTill } from './components/TillGate.jsx'
 
 /**
  * The shell every screen sits in. POS-CORE-001.
@@ -25,12 +27,37 @@ export default function AppShell() {
   const bottomNav = isTouchFirst(device)
 
   const queryClient = useQueryClient()
+
+  /*
+   * Is someone at this till? POS-CORE-002.
+   *
+   *   ok     somebody is signed in (or, in development only, the seeded dev user answers)
+   *   open   the till is closed on this device: an owner or manager opens it
+   *   who    the till is open, nobody is billing: choose your name, enter your PIN
+   *
+   * If the server cannot be reached at all, the till carries on: sales are kept on the device
+   * (Phase 11), and nobody is locked out of their own counter by a dropped line.
+   */
+  const [gate, setGate] = useState('checking')
+  useEffect(() => {
+    let alive = true
+    whoAmI()
+      .then(() => alive && setGate('ok'))
+      .catch(err => { if (alive) setGate(err?.response?.status === 401 ? (tillToken() ? 'who' : 'open') : 'ok') })
+    const off = onSession(st => {
+      if (!st.tillToken) setGate('open')
+      else if (!st.staffToken) setGate('who')
+      else { setGate('ok'); queryClient.invalidateQueries() }
+    })
+    return () => { alive = false; off() }
+  }, [queryClient])
+
   const { items: waiting } = useOutbox()
   const { data: status, isError: unreachable, refetch: recheck } = useQuery({
     queryKey: ['health'], queryFn: health, refetchInterval: 30_000, retry: false
   })
   const [online, setOnline] = useState(() => navigator.onLine)
-  const { data: shop } = useQuery({ queryKey: ['shop'], queryFn: loadShop, staleTime: Infinity })
+  const { data: shop } = useQuery({ queryKey: ['shop'], queryFn: loadShop, staleTime: Infinity, enabled: gate === 'ok' })
 
   // This device checks in when the till opens and every minute after. Never blocks anything.
   useEffect(() => {
@@ -72,6 +99,10 @@ export default function AppShell() {
     }
   }, [queryClient, recheck])
 
+  if (gate === 'checking') return <div style={s.page} aria-busy="true" />
+  if (gate === 'open') return <OpenTill />
+  if (gate === 'who') return <WhoAtTill />
+
   return (
     <div style={{ ...s.page, flexDirection: bottomNav ? 'column' : 'row' }}>
       {!bottomNav && <NavBar device={device} />}
@@ -83,7 +114,13 @@ export default function AppShell() {
             {bottomNav && <img src="/scaleezy-mark.svg" alt="" width="26" height="26" />}
             <div style={{ minWidth: 0 }}>
               <strong style={s.shop}>{shop?.shop?.shopName ?? 'ScaleEzy POS'}</strong>
-              {shop?.cashier?.name && <div style={s.who}>{shop.cashier.name}</div>}
+              {shop?.cashier?.name && (
+                <div style={s.who}>
+                  {shop.cashier.name}
+                  {/* The next person takes the till with their own PIN. Only on an opened till. */}
+                  {tillToken() && <button type="button" style={s.switch} onClick={() => personOut()}>Switch</button>}
+                </div>
+              )}
             </div>
           </div>
           <Connection status={status} offline={!online || unreachable} waiting={waiting.length} />
@@ -150,7 +187,8 @@ const s = {
   },
   brand: { display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 },
   shop: { display: 'block', fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-  who: { fontSize: 12, color: 'var(--ink-soft)' },
+  who: { fontSize: 12, color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', gap: 8 },
+  switch: { minHeight: 26, padding: '0 10px', fontSize: 12, fontWeight: 600, borderRadius: 99 },
   state: { fontSize: 12, textAlign: 'right', whiteSpace: 'normal' },
   content: { flex: 1, minHeight: 0, overflow: 'auto' }
 }

@@ -21,6 +21,7 @@ import Settings from './pages/Settings.jsx'
 import Devices from './pages/Devices.jsx'
 import Sync from './pages/Sync.jsx'
 import Connections from './pages/Connections.jsx'
+import Staff from './pages/Staff.jsx'
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -69,6 +70,8 @@ const router = createBrowserRouter([
       { path: 'sync', element: <Sync /> },
       // WF-INTEGRATIONS-01. POS-API-001, POS-WEB-001..006, POS-EXP-001/002.
       { path: 'connections', element: <Connections /> },
+      // Who works the till. POS-CORE-002, POS-SET-008.
+      { path: 'staff', element: <Staff /> },
       // WF-PAY-02.
       { path: 'payment-checks', element: <PaymentChecks /> },
       {
