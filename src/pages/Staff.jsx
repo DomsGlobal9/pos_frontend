@@ -3,7 +3,8 @@ import { useOutletContext } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { UserPlus } from 'lucide-react'
-import { loadStaff, addStaff, changeStaff, messageFor } from '../lib/api.js'
+import { loadStaff, addStaff, changeStaff, closeEveryTill, messageFor } from '../lib/api.js'
+import { tillClosed } from '../lib/session.js'
 
 /**
  * Staff, for the owner. POS-CORE-002, POS-SET-008. Approved layout 27 Sep.
@@ -86,6 +87,12 @@ export default function Staff() {
       )}
 
       {isLoading && <p style={s.muted}>Loading…</p>}
+
+      {/* A lost or stolen tablet: every open till of the shop stops at once, this one included. */}
+      <button style={{ ...s.danger, justifySelf: 'start' }} onClick={async () => {
+        if (!window.confirm('Close the till on every device of this shop, including this one? Everyone will need an owner or manager to open it again.')) return
+        try { const r = await closeEveryTill(); toast(`${r.closed} till${r.closed === 1 ? '' : 's'} closed.`); tillClosed() } catch (err) { toast.error(messageFor(err)) }
+      }}>Close the till on every device</button>
       <ul className="card-list" style={s.list}>
         {people.map(p => (
           <li key={p.id} style={s.row} data-person={p.name}>
