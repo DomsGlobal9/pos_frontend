@@ -29,6 +29,7 @@ const EVENTS = [
   ['sale.completed', 'Sales'],
   ['sale.returned', 'Returns'],
   ['sale.exchanged', 'Exchanges'],
+  ['payment.updated', 'Money after the bill'],
   ['day.closed', 'Day close']
 ]
 const when = (d) => d ? new Date(d).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : ''
@@ -255,7 +256,7 @@ function State({ h }) {
 function History({ id, onChange }) {
   const queryClient = useQueryClient()
   const { data: rows, isLoading } = useQuery({ queryKey: ['deliveries', id], queryFn: () => loadDeliveries(id), refetchInterval: 15_000 })
-  const LABEL = { 'sale.completed': 'Sale', 'sale.returned': 'Return', 'sale.exchanged': 'Exchange', 'day.closed': 'Day close', ping: 'Test' }
+  const LABEL = { 'sale.completed': 'Sale', 'sale.returned': 'Return', 'sale.exchanged': 'Exchange', 'payment.updated': 'Money after the bill', 'day.closed': 'Day close', ping: 'Test' }
   async function again(d) {
     try {
       await resendDelivery(d.id)
