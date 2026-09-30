@@ -158,6 +158,7 @@ export default function InventoryLink() {
           <label style={s.label}>
             Connection key from Inventory
             <input type="password" autoComplete="off" value={key} onChange={e => setKey(e.target.value)} aria-label="Connection key" />
+            <span style={s.muted}>In Inventory: Settings → Money → POS (billing counter) → Create key. It is shown once -- copy it straight here.</span>
           </label>
           <button style={s.primary} disabled={busy || key.trim().length < 16}
             onClick={() => act(async () => { await connectInventory({ key: key.trim() }); setKey('') }, 'Connected.')}>

@@ -432,7 +432,7 @@ function Ready({ done, onAnother }) {
           <li><b>Open the till</b> with <b>{done.signInWith}</b> and the password you were given.</li>
           <li>Tap your name and type your 4-digit PIN.</li>
           <li><b>More → Staff</b>: add your managers and cashiers — a name, a role and a PIN each.</li>
-          <li><b>More → Settings → Inventory link</b>: paste the key from Inventory, then <b>Refresh items</b>.</li>
+          <li>In Inventory, <b>Settings → Money → POS (billing counter)</b>: create a till key. Then in the POS, <b>More → Settings → Inventory link</b>: paste it, <b>Connect</b>, then <b>Refresh items</b>.</li>
           <li><b>More → Settings</b>: your UPI ID, so customers see a QR to pay.</li>
         </ol>
 
