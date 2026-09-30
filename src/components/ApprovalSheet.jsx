@@ -16,8 +16,8 @@ import { rupees } from '../lib/api.js'
  * WHAT IS BEING APPROVED IS SHOWN IN FULL before anyone types a PIN. A manager approving
  * "something" without seeing that it is 26% off a silk saree is not approving anything.
  */
-export default function ApprovalSheet({ need, error, busy, onApprove, onCancel }) {
-  const [reason, setReason] = useState('')
+export default function ApprovalSheet({ need, error, busy, onApprove, onCancel, initialReason = '' }) {
+  const [reason, setReason] = useState(initialReason)
   const [pin, setPin] = useState('')
   const reasonBox = useRef(null)
 
@@ -104,6 +104,10 @@ function describe(need) {
   }
   if (need.kind === 'RETURN') {
     return `Refunding ${rupees(need.totalPaise)} on ${need.invoiceNo}. Cashiers need a manager for any return.`
+  }
+  if (need.kind === 'PAYMENT_VOID') {
+    return `Marking ${rupees(need.amountPaise)} ${need.method} on ${need.invoiceNo} as never arrived. ` +
+      'The customer will owe it again.'
   }
   if (need.kind === 'RETURN_OUTSIDE_WINDOW') {
     return `Refunding ${rupees(need.totalPaise)} on ${need.invoiceNo}, which is ${need.daysSince} days old. ` +

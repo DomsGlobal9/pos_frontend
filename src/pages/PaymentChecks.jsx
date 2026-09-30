@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { loadAwaitingCheck, resolvePayment, rupees, messageFor } from '../lib/api.js'
+import ApprovalSheet from '../components/ApprovalSheet.jsx'
 
 /**
  * WF-PAY-02. POS-PAY-010, -011.
@@ -20,6 +21,9 @@ import { loadAwaitingCheck, resolvePayment, rupees, messageFor } from '../lib/ap
 export default function PaymentChecks() {
   const queryClient = useQueryClient()
   const [busy, setBusy] = useState(null)
+  // "Never arrived" by someone who may not do it alone: the manager's PIN, with the reason given.
+  const [need, setNeed] = useState(null)
+  const [approvalError, setApprovalError] = useState('')
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['awaiting-check'],
@@ -27,18 +31,38 @@ export default function PaymentChecks() {
   })
 
   async function settle(payment, arrived) {
-    const reference = arrived
+    let body
+    if (arrived) {
       // Asked for, not demanded: the whole point is that a reference may still not exist.
-      ? (window.prompt(`Reference for the ${rupees(payment.amountPaise)} ${payment.method} payment, if you have one:`) ?? '')
-      : ''
+      const reference = window.prompt(`Reference for the ${rupees(payment.amountPaise)} ${payment.method} payment, if you have one:`)
+      if (reference === null) return
+      body = { arrived, ...(reference.trim() ? { reference: reference.trim() } : {}) }
+    } else {
+      // Always a reason: this makes the customer owe the money again, on a bill already closed.
+      const why = window.prompt(
+        `Why do you say this ${rupees(payment.amountPaise)} ${payment.method} payment never arrived? ` +
+        'For example: not in the bank statement. The customer will owe it again.'
+      )
+      if (why === null) return
+      if (why.trim().length < 4) { toast.error('Write why, in a few words.'); return }
+      body = { arrived, note: why.trim() }
+    }
+    await send(payment, body)
+  }
+
+  async function send(payment, body, approval) {
     setBusy(payment.id)
     try {
-      await resolvePayment(payment.id, { arrived, ...(reference.trim() ? { reference: reference.trim() } : {}) })
-      toast.success(arrived ? 'Marked as received.' : 'Marked as never arrived.')
+      await resolvePayment(payment.id, { ...body, ...(approval ? { approval } : {}) })
+      toast.success(body.arrived ? 'Marked as received.' : 'Marked as never arrived.')
+      setNeed(null)
       queryClient.invalidateQueries({ queryKey: ['awaiting-check'] })
       queryClient.invalidateQueries({ queryKey: ['bill', payment.saleId] })
     } catch (err) {
-      toast.error(messageFor(err))
+      const details = err?.response?.data?.details
+      if (details?.code === 'APPROVAL_REQUIRED' && !approval) { setApprovalError(''); setNeed({ ...details, payment, body }) }
+      else if (approval) setApprovalError(messageFor(err))
+      else toast.error(messageFor(err))
     } finally {
       setBusy(null)
     }
@@ -59,6 +83,17 @@ export default function PaymentChecks() {
 
       {!isLoading && payments.length === 0 && (
         <p style={s.muted}>Nothing to check. Every payment is confirmed.</p>
+      )}
+
+      {need && (
+        <ApprovalSheet
+          need={need}
+          error={approvalError}
+          busy={busy === need.payment.id}
+          initialReason={need.body.note ?? ''}
+          onCancel={() => setNeed(null)}
+          onApprove={(yes) => send(need.payment, { ...need.body, note: yes.reason }, yes)}
+        />
       )}
 
       <ul style={s.list} className="card-list">

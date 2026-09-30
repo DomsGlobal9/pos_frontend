@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { loadInventoryLink, connectInventory, disconnectInventory, retryInventory, syncInventoryItems, setInventoryWhenDown, messageFor } from '../lib/api.js'
+import { loadInventoryLink, connectInventory, disconnectInventory, retryInventory, leaveOutOfInventory, syncInventoryItems, setInventoryWhenDown, messageFor } from '../lib/api.js'
 
 /**
  * The owner's Inventory link. POS-INV-001, -009, POS-SYNC-006.
@@ -15,6 +15,9 @@ export default function InventoryLink() {
   const { data, isLoading, isError, error } = useQuery({ queryKey: ['inventory-link'], queryFn: loadInventoryLink, refetchInterval: 15_000 })
   const [key, setKey] = useState('')
   const [busy, setBusy] = useState(false)
+  // Leaving the stopped bill out: opened on purpose, with a reason, never one click.
+  const [leaving, setLeaving] = useState(false)
+  const [why, setWhy] = useState('')
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['inventory-link'] })
 
@@ -53,6 +56,35 @@ export default function InventoryLink() {
           <div>{data.blocked.message}</div>
           {data.blocked.document && <div style={s.muted}>At {data.blocked.document}. Everything after it is waiting, safely.</div>}
           {manage && <button disabled={busy} onClick={() => act(retryInventory, (r) => `Sent ${r.sent?.sent ?? 0}.`)}>I've fixed it — try again</button>}
+          {manage && data.blocked.mayLeaveOut && data.blocked.document && !leaving && (
+            <button style={s.quiet} disabled={busy} onClick={() => { setWhy(''); setLeaving(true) }}>
+              It can't be fixed — leave this bill out of Inventory
+            </button>
+          )}
+          {manage && leaving && (
+            <div style={s.leave}>
+              <b style={s.ink}>Leave {data.blocked.document} out of Inventory?</b>
+              <p style={s.inkSmall}>
+                Only when it can't be fixed in Inventory (for example, the item was deleted there for good).
+                The bills waiting behind it are sent straight away. The items on this bill stay counted in
+                Inventory's stock, so fix that there by hand. Inventory will be told the bill number, your reason
+                and your name.
+              </p>
+              <label style={s.label}>
+                Why
+                <textarea rows={2} value={why} onChange={e => setWhy(e.target.value)} aria-label="Why leave it out"
+                  placeholder="The saree was deleted in Inventory and can't be brought back" />
+              </label>
+              <div style={s.buttons}>
+                <button type="button" disabled={busy} onClick={() => setLeaving(false)}>Back</button>
+                <button type="button" style={s.danger} disabled={busy || why.trim().length < 10}
+                  onClick={() => act(async () => { const r = await leaveOutOfInventory(data.blocked.document, why.trim()); setLeaving(false); return r },
+                    (r) => `Left out. ${r.sent?.sent ?? 0} waiting bills sent.`)}>
+                  {busy ? 'Working…' : 'Leave it out'}
+                </button>
+              </div>
+            </div>
+          )}
         </section>
       )}
 
@@ -87,6 +119,26 @@ export default function InventoryLink() {
                 <span className="chip warn" style={{ justifySelf: 'start' }}>{w.document ?? 'A bill'}</span>
                 <span>{w.text}</span>
                 <span style={s.muted}>{new Date(w.at).toLocaleString('en-IN')}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Kept on the screen for good: a gap in Inventory that somebody chose, and why. */}
+      {data.leftOut?.length > 0 && (
+        <section>
+          <h2 style={s.heading}>Left out of Inventory</h2>
+          <ul style={s.notes} className="card-list">
+            {data.leftOut.map((x, i) => (
+              <li key={i} style={s.note}>
+                <span className="chip warn" style={{ justifySelf: 'start' }}>{x.document}</span>
+                <span>{x.reason}</span>
+                <span style={s.muted}>
+                  {x.skippedBy ?? 'Someone'} · {new Date(x.skippedAt).toLocaleString('en-IN')}
+                  {x.refusedText ? ` · Inventory had said: ${x.refusedText}` : ''}
+                  {x.reportedAt ? ' · Inventory told' : ' · Inventory not told yet'}
+                </span>
               </li>
             ))}
           </ul>
@@ -160,5 +212,11 @@ const s = {
   primary: { background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' },
   warn: { margin: 0, color: 'var(--warn)', fontSize: 13 },
   muted: { color: 'var(--ink-soft)', fontSize: 12, margin: 0 },
-  bad: { color: 'var(--bad)' }
+  bad: { color: 'var(--bad)' },
+  quiet: { justifySelf: 'start', color: 'var(--ink-soft)' },
+  leave: { display: 'grid', gap: 10, padding: 12, borderRadius: 10, border: '1px solid var(--line)', background: 'var(--panel)' },
+  ink: { color: 'var(--ink)' },
+  inkSmall: { margin: 0, color: 'var(--ink)', fontSize: 13, lineHeight: 1.5 },
+  buttons: { display: 'flex', gap: 8, justifyContent: 'flex-end', flexWrap: 'wrap' },
+  danger: { background: 'var(--bad)', color: '#fff', borderColor: 'var(--bad)' }
 }

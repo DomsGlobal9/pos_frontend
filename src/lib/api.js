@@ -303,6 +303,13 @@ export async function retryInventory() {
   return data.data
 }
 
+/** Leave the bill the queue stopped at out of Inventory. Owner only; a reason is required. */
+export async function leaveOutOfInventory(document, reason) {
+  // It sends what was waiting behind the bill straight after, which can take a while.
+  const { data } = await api.post('/inventory-link/leave-out', { document, reason }, { timeout: 120_000 })
+  return data.data
+}
+
 export async function syncInventoryItems() {
   // Can take a while for a big catalogue; longer than the till's usual ten seconds.
   const { data } = await api.post('/inventory-link/sync-catalogue', {}, { timeout: 120_000 })
