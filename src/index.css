@@ -107,12 +107,12 @@ button[aria-pressed="true"] {
 }
 
 /* Visible focus, always. A keyboard-first screen with invisible focus is unusable. */
-button:focus-visible, input:focus-visible, a:focus-visible, textarea:focus-visible {
+button:focus-visible, input:focus-visible, a:focus-visible, textarea:focus-visible, select:focus-visible {
   outline: 3px solid rgba(166, 217, 43, 0.9);
   outline-offset: 2px;
 }
 
-input, textarea {
+input, textarea, select {
   min-height: var(--tap);
   font: inherit;
   padding: 0 14px;
@@ -123,7 +123,7 @@ input, textarea {
   width: 100%;
   transition: border-color 120ms ease, box-shadow 120ms ease;
 }
-input:focus { border-color: var(--brand-deep); box-shadow: 0 0 0 3px rgba(166, 217, 43, 0.35); outline: none; }
+input:focus, select:focus { border-color: var(--brand-deep); box-shadow: 0 0 0 3px rgba(166, 217, 43, 0.35); outline: none; }
 input::placeholder { color: #9a9aa3; }
 input[type="checkbox"], input[type="radio"] { width: 20px; min-height: 20px; height: 20px; accent-color: var(--brand-deep); box-shadow: none; }
 
@@ -177,4 +177,9 @@ html, body { max-width: 100%; overflow-x: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
+}
+
+/* Buttons that only make sense on screen (Print, Set up another) stay off the paper. */
+@media print {
+  .no-print { display: none !important; }
 }

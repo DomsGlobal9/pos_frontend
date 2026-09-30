@@ -22,6 +22,7 @@ import Devices from './pages/Devices.jsx'
 import Sync from './pages/Sync.jsx'
 import Connections from './pages/Connections.jsx'
 import Staff from './pages/Staff.jsx'
+import ShopSetup from './pages/ShopSetup.jsx'
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -33,6 +34,8 @@ import Staff from './pages/Staff.jsx'
 const router = createBrowserRouter([
   // The customer's digital receipt, outside the till: no navigation, no sign-in. POS-RCPT-009.
   { path: '/r/:token', element: <PublicReceipt /> },
+  // Setting up a new shop -- ScaleEzy staff, with the setup key. Outside the till: no sign-in.
+  { path: '/setup', element: <ShopSetup /> },
   {
     path: '/',
     element: <AppShell />,
