@@ -136,7 +136,7 @@ export default function Till() {
     addItem(item)
   }
 
-  function addItem(item) {
+  function addItem(item, searched) {
     setLines(current => {
       const at = current.findIndex(l => l.id === item.id)
       if (at >= 0) {
@@ -149,7 +149,12 @@ export default function Till() {
         pricePaise: item.pricePaise, taxRate: item.taxRate, qty: 1, availableQty: item.availableQty
       }]
     })
-    setQuery('')
+    /*
+     * Clear the box only if it still holds the code that was looked up. On a slow line a scanner can
+     * already be typing the NEXT code when this lookup comes back; clearing then wiped its first
+     * digits, and the rest became a code nobody has -- a lost scan at a busy counter (QA-SELL-01).
+     */
+    setQuery(current => (searched === undefined || current.trim() === searched ? '' : current))
     setResults([])
     refocus()
   }
@@ -168,7 +173,7 @@ export default function Till() {
       if (found.exact && found.items.length === 1) {
         // Straight into the basket. Asking the cashier to click the only result is a click a sale,
         // all day.
-        addItem(found.items[0])
+        addItem(found.items[0], q)
       } else if (found.items.length === 0) {
         // The box keeps what was typed: a scan that read badly is usually retyped, not re-scanned.
         toast.error(`Nothing found for "${q}"`)
