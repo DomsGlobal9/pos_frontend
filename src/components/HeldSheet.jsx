@@ -13,7 +13,9 @@ import { loadHeldBills, recallBill, discardHeldBill, messageFor } from '../lib/a
  */
 export default function HeldSheet({ basketIsEmpty, onRecalled, onClose }) {
   const queryClient = useQueryClient()
-  const { data, isLoading, isError, error } = useQuery({ queryKey: ['held-bills'], queryFn: loadHeldBills })
+  // Always read fresh when opened: a bill parked a moment ago -- here or at another till -- must be
+  // on the list. With the app's 30-second cache it was not, and a cashier would think it was lost.
+  const { data, isLoading, isError, error } = useQuery({ queryKey: ['held-bills'], queryFn: loadHeldBills, staleTime: 0, refetchOnMount: 'always' })
 
   async function takeBack(held) {
     // One bill on the till at a time. Recalling over a half-built basket would silently throw the

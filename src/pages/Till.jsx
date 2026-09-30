@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { useOutletContext, useLocation, useNavigate, Link } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { searchItems, completeSale, parkBill, messageFor, rupees } from '../lib/api.js'
 import { isTouchFirst } from '../lib/useMedia.js'
@@ -41,6 +42,7 @@ export default function Till() {
   // Read once, lazily. Passing loadDraft itself rather than calling it keeps localStorage out of
   // every render.
   const [draft] = useState(loadDraft)
+  const queryClient = useQueryClient()
   const [lines, setLines] = useState(draft.lines)
   const [onceKey, setOnceKey] = useState(draft.onceKey)
   const [query, setQuery] = useState('')
@@ -289,6 +291,9 @@ export default function Till() {
       // over the bill, or whose browser reloads before they press Next sale, must not come back
       // to a basket that has already been paid for.
       clearDraft()
+      // Bills, Home, Orders, the customer's card and pieces-left all changed: read them fresh next
+      // time they are opened, not from the 30-second cache.
+      queryClient.invalidateQueries()
       setReceipt(result.sale)
       setPaying(false)
       if (result.replayed) toast('That bill was already saved. Showing it again.')
@@ -403,6 +408,7 @@ export default function Till() {
         }
       })
       toast.success(`Parked as "${held.label}".`)
+      queryClient.invalidateQueries({ queryKey: ['held-bills'] })
       startAgain()
     } catch (error) {
       toast.error(messageFor(error))

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query'
 import { loadBills, rupees, messageFor } from '../lib/api.js'
 
 /**
@@ -21,23 +21,26 @@ export default function Bills() {
   const [q, setQ] = useState('')
   const [method, setMethod] = useState('')
   const [when, setWhen] = useState('')
-  const [pages, setPages] = useState([undefined])
-
   const params = { q: q.trim(), method, ...dateRange(when) }
 
-  const { data, isLoading, isError, error, isFetching } = useQuery({
-    // The cursor is part of the key so each page caches separately.
-    queryKey: ['bills', params, pages[pages.length - 1]],
-    queryFn: () => loadBills({ ...params, after: pages[pages.length - 1] }),
-    // Keeps the previous page on screen while the next one loads, so the list does not blink
-    // empty under someone who is reading it.
+  /*
+   * Older bills are ADDED below, not swapped in. The first version replaced the list with the next
+   * page, so the bills just read disappeared and the only way back was "Back to newest" -- on a
+   * phone, scrolling down a longer list is the friendlier thing. A filter change starts over (it is
+   * part of the key).
+   */
+  const { data, isLoading, isError, error, isFetching, fetchNextPage, hasNextPage } = useInfiniteQuery({
+    queryKey: ['bills', params],
+    queryFn: ({ pageParam }) => loadBills({ ...params, after: pageParam }),
+    initialPageParam: undefined,
+    getNextPageParam: (last) => last?.nextCursor ?? undefined,
+    // Keeps the list on screen while a new search loads, so it does not blink empty.
     placeholderData: keepPreviousData
   })
 
-  /** Any filter change starts the paging over -- page 3 of the old filter is meaningless. */
-  const reset = (fn) => (value) => { fn(value); setPages([undefined]) }
+  const reset = (fn) => (value) => fn(value)
 
-  const bills = data?.bills ?? []
+  const bills = data?.pages.flatMap(p => p?.bills ?? []) ?? []
 
   return (
     <div style={s.page}>
@@ -100,17 +103,10 @@ export default function Bills() {
         ))}
       </ul>
 
-      {data?.nextCursor && (
-        <button
-          onClick={() => setPages(p => [...p, data.nextCursor])}
-          disabled={isFetching}
-        >
+      {hasNextPage && (
+        <button onClick={() => fetchNextPage()} disabled={isFetching}>
           {isFetching ? 'Loading…' : 'Show older'}
         </button>
-      )}
-
-      {pages.length > 1 && (
-        <button onClick={() => setPages([undefined])}>Back to newest</button>
       )}
     </div>
   )
