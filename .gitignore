@@ -28,3 +28,6 @@ npm-debug.log*
 
 # Test and helper scripts stay local.
 scripts/
+
+# Local production-test builds.
+dist-*/
