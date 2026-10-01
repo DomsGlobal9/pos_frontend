@@ -19,7 +19,8 @@ export default function InventoryLink() {
   const [leaving, setLeaving] = useState(false)
   const [why, setWhy] = useState('')
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ['inventory-link'] })
+  // The shop too: the header's "Inventory connected" comes from it, and it is otherwise kept for good.
+  const refresh = () => { queryClient.invalidateQueries({ queryKey: ['inventory-link'] }); queryClient.invalidateQueries({ queryKey: ['shop'] }) }
 
   async function act(fn, done) {
     setBusy(true)

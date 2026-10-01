@@ -123,7 +123,7 @@ export default function AppShell() {
               )}
             </div>
           </div>
-          <Connection status={status} offline={!online || unreachable} waiting={waiting.length} />
+          <Connection status={status} offline={!online || unreachable} waiting={waiting.length} inventory={shop?.inventoryConnected === true} />
         </header>
 
         <div style={s.content} className="shell-content">
@@ -144,7 +144,7 @@ export default function AppShell() {
  * "ECONNREFUSED" -- and it distinguishes the server being unreachable from the server being up
  * with a database problem, because those need different people to fix them.
  */
-function Connection({ status, offline, waiting }) {
+function Connection({ status, offline, waiting, inventory }) {
   // Sales on this till that the server has not got. POS-SYNC-003: never "All saved" while any are.
   const held = waiting > 0 && (
     <Link to="/sync" className="chip warn" style={s.state}>
@@ -171,7 +171,8 @@ function Connection({ status, offline, waiting }) {
   }
   return (
     <span className="chip good" style={s.state}>
-      <Dot color="var(--good)" /> {status.mode === 'standalone' ? 'All saved' : 'All saved · Inventory connected'}
+      {/* "Inventory connected" only when this shop's own link is on -- never from the server's setting. */}
+      <Dot color="var(--good)" /> {inventory ? 'All saved · Inventory connected' : 'All saved'}
     </span>
   )
 }
