@@ -93,7 +93,25 @@ export default function Reports() {
             <div style={s.col}>
               {/* POS-RPT-002 */}
               <Card title="How it was paid">
-                <Bars rows={r.paidIn.map(p => ({ label: METHOD[p.method] ?? p.method, value: p.amountPaise, note: `${p.count}` }))} empty="Nothing taken." />
+                <Bars rows={r.paidIn.map(p => ({ label: METHOD[p.method] ?? p.method, value: p.amountPaise, note: `${p.count}` }))}
+                  empty={r.beingChecked?.amountPaise ? 'Nothing confirmed yet.' : 'Nothing taken.'} />
+                {/*
+                  * Money that is not in the drawer and not written off. Without these two lines the
+                  * screen said "Net sales Rs 24,499" beside "Nothing taken", which reads as the day's
+                  * takings having vanished rather than as one bill waiting on the bank.
+                  */}
+                {r.beingChecked?.amountPaise > 0 && (
+                  <div style={s.subhead}>
+                    Still being checked · {rupees(r.beingChecked.amountPaise)}
+                    {r.beingChecked.count > 1 ? ` across ${r.beingChecked.count} payments` : ''}
+                    <Link to="/payment-checks" style={{ marginLeft: 8 }}>Check them →</Link>
+                  </div>
+                )}
+                {r.neverArrived?.amountPaise > 0 && (
+                  <div style={{ ...s.subhead, color: 'var(--bad)' }}>
+                    Checked and never arrived · {rupees(r.neverArrived.amountPaise)} — the customer owes it again
+                  </div>
+                )}
                 {r.paidOut.length > 0 && (
                   <>
                     <div style={s.subhead}>Given back on returns</div>
