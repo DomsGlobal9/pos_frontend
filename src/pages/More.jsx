@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { tillToken, tillClosed } from '../lib/session.js'
 import { closeThisTill } from '../lib/api.js'
 import { Users, Receipt, ShieldCheck, History, Wallet, CalendarCheck, Boxes, BarChart3, RefreshCw, Settings, Plug, ChevronRight, Monitor } from 'lucide-react'
+import { askYesNo } from '../components/Ask.jsx'
 
 /**
  * WF-MORE-01.
@@ -77,7 +78,7 @@ export default function More() {
       {/* Only on a till that was opened with a password -- not in development's stand-in mode. */}
       {tillToken() && (
         <button style={s.close} onClick={async () => {
-          if (!window.confirm('Close the till on this device? An owner or manager will need to open it again.')) return
+          if (!await askYesNo('Close the till on this device?', { note: 'An owner or manager will need to open it again.', confirmLabel: 'Close the till' })) return
           try { await closeThisTill() } catch { /* closing here is what matters */ }
           tillClosed()
         }}>Close the till on this device</button>

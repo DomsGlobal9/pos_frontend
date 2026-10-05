@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import AppShell from './AppShell.jsx'
+import AskHost from './components/Ask.jsx'
 import Home from './pages/Home.jsx'
 import Till from './pages/Till.jsx'
 import Placeholder from './pages/Placeholder.jsx'
@@ -92,5 +93,11 @@ const router = createBrowserRouter([
 ])
 
 export default function App() {
-  return <RouterProvider router={router} />
+  return (
+    <>
+      <RouterProvider router={router} />
+      {/* One for the whole app: every askText/askYesNo anywhere renders here. */}
+      <AskHost />
+    </>
+  )
 }

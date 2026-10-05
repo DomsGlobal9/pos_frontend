@@ -9,6 +9,7 @@ import {
 import { newOnceKey } from '../lib/basket.js'
 import PaymentPanel from '../components/PaymentPanel.jsx'
 import Receipt from '../components/Receipt.jsx'
+import { askYesNo } from '../components/Ask.jsx'
 
 /**
  * WF-ORDERS-01. POS-ORD-006..010.
@@ -180,10 +181,10 @@ export function OrderDetail() {
     } catch (err) {
       const details = err?.response?.data?.details
       if (details?.code === 'HANDOVER_WITH_DUE') {
-        const yes = window.confirm(
-          `${rupees(details.owedPaise)} is still owed on this order.\n\n` +
-          'Hand it over anyway? The amount and your name will be recorded.'
-        )
+        const yes = await askYesNo('Hand it over anyway?', {
+          note: `${rupees(details.owedPaise)} is still owed on this order. The amount and your name will be recorded.`,
+          confirmLabel: 'Hand over'
+        })
         if (yes) {
           try {
             await handOverOrder(id, true)

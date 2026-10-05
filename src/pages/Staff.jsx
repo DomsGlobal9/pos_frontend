@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { UserPlus } from 'lucide-react'
 import { loadStaff, addStaff, changeStaff, closeEveryTill, messageFor } from '../lib/api.js'
 import { tillClosed } from '../lib/session.js'
+import { askYesNo } from '../components/Ask.jsx'
 
 /**
  * Staff, for the owner. POS-CORE-002, POS-SET-008. Approved layout 27 Sep.
@@ -54,7 +55,7 @@ export default function Staff() {
     } catch (err) { toast.error(messageFor(err)) } finally { setBusy(false) }
   }
   async function setActive(p, active) {
-    if (!active && !window.confirm(`Remove ${p.name}? They can no longer sign in. Their name stays on the bills they made.`)) return
+    if (!active && !await askYesNo(`Remove ${p.name}?`, { note: 'They can no longer sign in. Their name stays on the bills they made.', confirmLabel: 'Remove', danger: true })) return
     try { await changeStaff(p.id, { active }); toast(active ? `${p.name} is back.` : `${p.name} removed.`); refresh() } catch (err) { toast.error(messageFor(err)) }
   }
 
@@ -90,7 +91,7 @@ export default function Staff() {
 
       {/* A lost or stolen tablet: every open till of the shop stops at once, this one included. */}
       <button style={{ ...s.danger, justifySelf: 'start' }} onClick={async () => {
-        if (!window.confirm('Close the till on every device of this shop, including this one? Everyone will need an owner or manager to open it again.')) return
+        if (!await askYesNo('Close the till on every device of this shop, including this one?', { note: 'Everyone will need an owner or manager to open it again.', confirmLabel: 'Close everywhere', danger: true })) return
         try { const r = await closeEveryTill(); toast(`${r.closed} till${r.closed === 1 ? '' : 's'} closed.`); tillClosed() } catch (err) { toast.error(messageFor(err)) }
       }}>Close the till on every device</button>
       <ul className="card-list" style={s.list}>

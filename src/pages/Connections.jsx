@@ -7,6 +7,7 @@ import {
   loadApiKeys, createApiKey, revokeApiKey, loadWebhooks, createWebhook, updateWebhook, removeWebhook,
   testWebhook, loadDeliveries, resendDelivery, importItems, download, messageFor
 } from '../lib/api.js'
+import { askYesNo } from '../components/Ask.jsx'
 
 /**
  * WF-INTEGRATIONS-01. Connections, for the owner. Approved layout 27 Sep: one page, four sections.
@@ -104,7 +105,7 @@ function Keys() {
     } catch (err) { toast.error(messageFor(err)) } finally { setBusy(false) }
   }
   async function stop(k) {
-    if (!window.confirm(`Stop "${k.name}"? Software using it stops working at once. This cannot be undone -- make a new key instead.`)) return
+    if (!await askYesNo(`Stop "${k.name}"?`, { note: 'Software using it stops working at once. This cannot be undone -- make a new key instead.', confirmLabel: 'Stop the key', danger: true })) return
     try {
       await revokeApiKey(k.id)
       toast('Key stopped.')
@@ -188,7 +189,7 @@ function Updates() {
     try { await updateWebhook(h.id, { active: !h.active }); refresh() } catch (err) { toast.error(messageFor(err)) }
   }
   async function remove(h) {
-    if (!window.confirm(`Remove "${h.name}"? Updates waiting for it are dropped.`)) return
+    if (!await askYesNo(`Remove "${h.name}"?`, { note: 'Updates waiting for it are dropped.', confirmLabel: 'Remove', danger: true })) return
     try { await removeWebhook(h.id); refresh() } catch (err) { toast.error(messageFor(err)) }
   }
 

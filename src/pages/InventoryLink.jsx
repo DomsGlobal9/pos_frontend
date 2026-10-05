@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { loadInventoryLink, connectInventory, disconnectInventory, retryInventory, leaveOutOfInventory, syncInventoryItems, setInventoryWhenDown, messageFor } from '../lib/api.js'
+import { askYesNo } from '../components/Ask.jsx'
 
 /**
  * The owner's Inventory link. POS-INV-001, -009, POS-SYNC-006.
@@ -183,7 +184,7 @@ export default function InventoryLink() {
       )}
 
       {manage && connected && (
-        <button disabled={busy} onClick={() => { if (window.confirm('Disconnect from Inventory? The till keeps selling from its own list.')) act(disconnectInventory, 'Disconnected.') }}>
+        <button disabled={busy} onClick={async () => { if (await askYesNo('Disconnect from Inventory?', { note: 'The till keeps selling from its own list.', confirmLabel: 'Disconnect', danger: true })) act(disconnectInventory, 'Disconnected.') }}>
           Disconnect
         </button>
       )}

@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { loadHeldBills, recallBill, discardHeldBill, messageFor } from '../lib/api.js'
+import { askYesNo } from './Ask.jsx'
 
 /**
  * WF-HELD-01. POS-SELL-020, -021.
@@ -36,7 +37,7 @@ export default function HeldSheet({ basketIsEmpty, onRecalled, onClose }) {
   }
 
   async function throwAway(held) {
-    if (!window.confirm(`Throw away "${held.label}"? Nothing was sold, so nothing else changes.`)) return
+    if (!await askYesNo(`Throw away "${held.label}"?`, { note: 'Nothing was sold, so nothing else changes.', confirmLabel: 'Throw away', danger: true })) return
     try {
       await discardHeldBill(held.id)
       queryClient.invalidateQueries({ queryKey: ['held-bills'] })

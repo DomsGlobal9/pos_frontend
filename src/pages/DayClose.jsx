@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { loadDay, closeTheDay, rupees, messageFor } from '../lib/api.js'
 import { Difference } from './Shift.jsx'
+import { askYesNo } from '../components/Ask.jsx'
 
 /**
  * WF-DAY-01. POS-DAY-001..005.
@@ -44,7 +45,10 @@ export default function DayClose() {
       const details = err?.response?.data?.details
       if (details?.code === 'OPEN_SHIFTS' && !acceptOpenShifts) {
         // The warning is the refusal. Closing anyway is a decision someone makes, in so many words.
-        const yes = window.confirm(`${messageFor(err)}\n\nClose the day anyway? The open shifts will be noted on it.`)
+        const yes = await askYesNo('Close the day anyway?', {
+          note: `${messageFor(err)} The open shifts will be noted on it.`,
+          confirmLabel: 'Close the day'
+        })
         if (yes) await close(true)
       } else {
         toast.error(messageFor(err))

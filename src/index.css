@@ -183,3 +183,37 @@ html, body { max-width: 100%; overflow-x: hidden; }
 @media print {
   .no-print { display: none !important; }
 }
+
+/*
+ * The till's own question box (components/Ask.jsx), in place of window.prompt and window.confirm.
+ *
+ * A bottom sheet under 768px, where a thumb already is, and a centred box above it -- a sheet
+ * stuck to the bottom edge of a desk monitor reads as a rendering fault, not a design. The height
+ * is capped and the panel scrolls, so a long question can never push its own buttons off-screen.
+ */
+.ask-backdrop {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(16, 24, 14, 0.4);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.ask-panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  width: 440px; max-width: 100%; max-height: calc(100vh - 32px); overflow: auto;
+  padding: 20px; display: grid; gap: 12px; align-content: start;
+  box-shadow: 0 20px 50px -20px rgba(16, 24, 14, 0.5);
+}
+.ask-message { margin: 0; font-weight: 600; font-size: 16px; line-height: 1.4; }
+.ask-note, .ask-hint { margin: 0; color: var(--ink-soft); font-size: 13px; line-height: 1.4; }
+.ask-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+.ask-buttons button { min-width: 104px; min-height: var(--tap); }
+
+@media (max-width: 767px) {
+  .ask-backdrop { align-items: flex-end; padding: 0; }
+  .ask-panel {
+    width: 100%; border-radius: 12px 12px 0 0; max-height: 85vh;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+  /* Full width and side by side: both are reachable with one thumb. */
+  .ask-buttons button { flex: 1; min-width: 0; }
+}
