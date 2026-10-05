@@ -33,7 +33,28 @@ const LABEL = {
   'inventory.disconnected': 'Disconnected from Inventory',
   'inventory.retried': 'Inventory sending retried',
   'inventory.skipped': 'Bill left out of Inventory',
-  'inventory.catalogue_synced': 'Items refreshed from Inventory'
+  'inventory.catalogue_synced': 'Items refreshed from Inventory',
+  /*
+   * The rest of what the server actually records. Fifteen of these were missing, so the owner's
+   * Activity screen showed them raw -- "shop.upi_set", "till.opened" -- next to rows in English
+   * (found on the live till, 5 Oct). An unknown action still falls back to its code below, which
+   * is the right last resort: it names exactly what to add here.
+   */
+  'till.opened': 'Till opened',
+  'till.closed': 'Till closed',
+  'staff.added': 'Person added',
+  'staff.changed': 'Person changed',
+  'device.updated': 'Device changed',
+  'shop.upi_set': 'UPI ID set',
+  'items.imported': 'Items imported from a file',
+  'receipt.sent': 'Bill sent to the customer',
+  'order.handed_over_with_due': 'Kept order handed over with money still owed',
+  'api_key.created': 'Key made for your other software',
+  'api_key.revoked': 'Key stopped',
+  'webhook.created': 'Updates address added',
+  'webhook.updated': 'Updates address changed',
+  'webhook.deleted': 'Updates address removed',
+  'webhook.resent': 'Update sent again'
 }
 
 export default function Audit() {
@@ -57,7 +78,7 @@ export default function Audit() {
             <li key={row.id} style={s.row}>
               <div>
                 <b>{LABEL[row.action] ?? row.action}</b>
-                <span style={s.muted}> · {row.subject ?? ''}</span>
+                {row.subject && <span style={s.muted}> · {row.subject}</span>}
               </div>
               <div style={s.muted}>
                 {row.actorName ?? 'Someone'}
