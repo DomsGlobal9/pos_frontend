@@ -7,6 +7,7 @@ import { rupees } from '../lib/api.js'
 import { useOutbox, flush, removeFromOutbox, storageAvailable } from '../lib/outbox.js'
 import { loadDraft } from '../lib/basket.js'
 import { checkIn } from '../lib/device.js'
+import { askYesNo } from '../components/Ask.jsx'
 
 /**
  * WF-SYNC-01. What this till is holding that the server has not got. POS-SYNC-003, -004.
@@ -56,11 +57,15 @@ export default function Sync() {
     navigate('/sell', { state: { restore: entry.restore } })
   }
 
-  function remove(entry) {
-    const ok = window.confirm(
-      'Remove this sale from the till? It will not be sent, so there will be no bill for it. ' +
-      'If the customer paid, that money is in the drawer with no bill to match.'
-    )
+  async function remove(entry) {
+    const ok = await askYesNo('Remove this sale from the till?', {
+      note: 'It will not be sent, so there will be no bill for it. If the customer paid, that money '
+          + 'is in the drawer with no bill to match.',
+      // Not plain 'Remove': the row behind it already has a Remove, and two buttons with one
+      // name is a coin-flip for a screen reader and for anyone glancing at a half-covered screen.
+      confirmLabel: 'Remove from this till',
+      danger: true
+    })
     if (!ok) return
     removeFromOutbox(entry.onceKey)
     checkIn()

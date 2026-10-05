@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { loadAwaitingCheck, resolvePayment, rupees, messageFor } from '../lib/api.js'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
+import { askText } from '../components/Ask.jsx'
 
 /**
  * WF-PAY-02. POS-PAY-010, -011.
@@ -34,15 +35,20 @@ export default function PaymentChecks() {
     let body
     if (arrived) {
       // Asked for, not demanded: the whole point is that a reference may still not exist.
-      const reference = window.prompt(`Reference for the ${rupees(payment.amountPaise)} ${payment.method} payment, if you have one:`)
+      const reference = await askText(`Reference for the ${rupees(payment.amountPaise)} ${payment.method} payment, if you have one:`, '', {
+        note: 'Leave it empty if there is no reference -- the money still counts as arrived.',
+        confirmLabel: 'It arrived'
+      })
       if (reference === null) return
       body = { arrived, ...(reference.trim() ? { reference: reference.trim() } : {}) }
     } else {
       // Always a reason: this makes the customer owe the money again, on a bill already closed.
-      const why = window.prompt(
-        `Why do you say this ${rupees(payment.amountPaise)} ${payment.method} payment never arrived? ` +
-        'For example: not in the bank statement. The customer will owe it again.'
-      )
+      const why = await askText(`Why do you say this ${rupees(payment.amountPaise)} ${payment.method} payment never arrived?`, '', {
+        note: 'For example: not in the bank statement. The customer will owe it again.',
+        placeholder: 'not in the bank statement',
+        confirmLabel: 'It never arrived',
+        danger: true
+      })
       if (why === null) return
       if (why.trim().length < 4) { toast.error('Write why, in a few words.'); return }
       body = { arrived, note: why.trim() }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { openTill, loadTillStaff, switchPerson, closeThisTill, messageFor } from '../lib/api.js'
 import { tillOpened, personIn, tillClosed } from '../lib/session.js'
 import { deviceId } from '../lib/device.js'
+import { askYesNo } from './Ask.jsx'
 
 /**
  * Signing in at the till. Approved layout 27 Sep.
@@ -98,7 +99,7 @@ export function WhoAtTill({ onDone }) {
     if (next.length === 4) tryPin(next)
   }
   async function close() {
-    if (!window.confirm('Close the till on this device? An owner or manager will need to open it again.')) return
+    if (!await askYesNo('Close the till on this device?', { note: 'An owner or manager will need to open it again.', confirmLabel: 'Close the till' })) return
     try { await closeThisTill() } catch { /* closing locally is what matters */ }
     tillClosed()
   }

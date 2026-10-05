@@ -19,6 +19,7 @@ import CustomerSheet from '../components/CustomerSheet.jsx'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
 import KeepSheet from '../components/KeepSheet.jsx'
 import HeldSheet from '../components/HeldSheet.jsx'
+import { askText } from '../components/Ask.jsx'
 
 /**
  * The sell screen.
@@ -206,13 +207,14 @@ export default function Till() {
    * approval sheet when they take payment, exactly as for a big discount -- so there is one rule,
    * enforced in one place, and a cashier cannot get round it by using an older till.
    */
-  function overridePrice(id) {
+  async function overridePrice(id) {
     const line = lines.find(l => l.id === id)
     if (!line) return
-    const typed = window.prompt(
-      `Sell ${line.name} at a different price? The tag says ${rupees(line.pricePaise)}.`,
-      String(unitPrice(line) / 100)
-    )
+    const typed = await askText(`Sell ${line.name} at a different price?`, String(unitPrice(line) / 100), {
+      note: `The tag says ${rupees(line.pricePaise)}.`,
+      inputMode: 'decimal',
+      confirmLabel: 'Use this price'
+    })
     if (typed === null) { refocus(); return }
     const value = Math.round(Number(typed) * 100)
     if (!Number.isFinite(value) || value <= 0) {
@@ -228,11 +230,13 @@ export default function Till() {
     refocus()
   }
 
-  function askDiscount() {
-    const typed = window.prompt(
-      'Money off the whole bill, in rupees. End with % for a percentage.',
-      billDiscountPaise ? String(billDiscountPaise / 100) : ''
-    )
+  async function askDiscount() {
+    const typed = await askText('Money off the whole bill', billDiscountPaise ? String(billDiscountPaise / 100) : '', {
+      note: `In rupees. End with % for a percentage -- 10% of ${rupees(totals.subtotalPaise)} is ${rupees(Math.round(totals.subtotalPaise / 10))}.`,
+      placeholder: '0',
+      inputMode: 'decimal',
+      confirmLabel: 'Take it off'
+    })
     if (typed === null) { refocus(); return }
     const text = typed.trim()
     if (!text) { setBillDiscountPaise(0); refocus(); return }
