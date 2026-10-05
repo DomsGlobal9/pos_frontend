@@ -119,6 +119,14 @@ export default function Till() {
   // The box takes focus back whenever nothing is in the way. A scanner fires into whatever has
   // focus, so anything else means a scanned saree lands in the void.
   const refocus = () => requestAnimationFrame(() => searchBox.current?.focus())
+  /*
+   * Focus the box with its text SELECTED. After a code that found nothing, the text stays so a person
+   * can correct a typo -- but a scanner does not correct, it types the next code. Left unselected, that
+   * next scan landed on the end of the old text ("NOPE-999BLO-101"), found nothing either, and so did
+   * every scan after it until someone cleared the box by hand (found on the live till, 1 Oct).
+   * Selected, the next scan or keystroke replaces it; a click or an arrow key still edits it.
+   */
+  const refocusSelected = () => requestAnimationFrame(() => { searchBox.current?.focus(); searchBox.current?.select() })
   useEffect(() => { if (!paying && !receipt) refocus() }, [paying, receipt, lines.length])
 
   /**
@@ -178,13 +186,14 @@ export default function Till() {
         // The box keeps what was typed: a scan that read badly is usually retyped, not re-scanned.
         toast.error(`Nothing found for "${q}"`)
         setResults([])
-        refocus()
+        refocusSelected()
       } else {
         setResults(found.items)
       }
     } catch (error) {
+      // Same as nothing-found: the typed code stays, so the next scan must replace it, not append.
       toast.error(messageFor(error))
-      refocus()
+      refocusSelected()
     } finally {
       setBusy(false)
     }
@@ -259,6 +268,9 @@ export default function Till() {
     clearDraft()
     setReceipt(null)
     setPaying(false)
+    // The next customer starts with an empty box, whatever was left in it.
+    setQuery('')
+    setResults([])
     refocus()
   }
 
