@@ -119,7 +119,16 @@ export default function Till() {
 
   // The box takes focus back whenever nothing is in the way. A scanner fires into whatever has
   // focus, so anything else means a scanned saree lands in the void.
-  const refocus = () => requestAnimationFrame(() => searchBox.current?.focus())
+  /*
+   * setTimeout, not requestAnimationFrame. rAF is tied to the compositor, so it does not fire while
+   * the browser is not painting -- another window in front, the tab in the background, the screen
+   * asleep. The focus never came back in those states and every scan went into the void, silently
+   * (found 5 Oct, when it made the fix below look broken on the live till). Getting focus back is a
+   * DOM job, not a drawing job: a zero timeout runs after React has committed, which is all this
+   * needs, and it runs whether or not anything is on screen.
+   */
+  const after = (fn) => setTimeout(fn, 0)
+  const refocus = () => after(() => searchBox.current?.focus())
   /*
    * Focus the box with its text SELECTED. After a code that found nothing, the text stays so a person
    * can correct a typo -- but a scanner does not correct, it types the next code. Left unselected, that
@@ -127,7 +136,7 @@ export default function Till() {
    * every scan after it until someone cleared the box by hand (found on the live till, 1 Oct).
    * Selected, the next scan or keystroke replaces it; a click or an arrow key still edits it.
    */
-  const refocusSelected = () => requestAnimationFrame(() => { searchBox.current?.focus(); searchBox.current?.select() })
+  const refocusSelected = () => after(() => { searchBox.current?.focus(); searchBox.current?.select() })
   useEffect(() => { if (!paying && !receipt) refocus() }, [paying, receipt, lines.length])
 
   /**
