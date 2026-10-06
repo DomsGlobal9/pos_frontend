@@ -2,9 +2,9 @@ import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { useOutletContext, useLocation, useNavigate, Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { searchItems, completeSale, parkBill, messageFor, rupees } from '../lib/api.js'
+import { searchItems, completeSale, parkBill, quoteBasket, messageFor, rupees } from '../lib/api.js'
 import { isTouchFirst } from '../lib/useMedia.js'
-import { basketTotals, lineTotal, unitPrice, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
+import { basketTotals, lineTotal, unitPrice, offerOn, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
 import { addToOutbox, isNetworkFailure, outboxItems } from '../lib/outbox.js'
 import { checkIn } from '../lib/device.js'
 import PaymentPanel from '../components/PaymentPanel.jsx'
@@ -92,6 +92,10 @@ export default function Till() {
   const [keepAfterCustomer, setKeepAfterCustomer] = useState(false)
   const [showHeld, setShowHeld] = useState(false)
   const [showMore, setShowMore] = useState(false)
+  // Inventory's quote for this basket (§9): the offers per code, the coupon's fate, or why there is none.
+  const [quote, setQuote] = useState(null)
+  const [couponCode, setCouponCode] = useState('')
+  const quoteSeq = useRef(0)
   const searchBox = useRef(null)
 
   // The shell already loads these and shows connection state in the header; asking again here
@@ -99,7 +103,42 @@ export default function Till() {
   const { device, shop } = useOutletContext() ?? {}
   const stacked = isTouchFirst(device)
 
-  const totals = basketTotals(lines, billDiscountPaise)
+  const offers = quote?.byCode ?? null
+  const totals = basketTotals(lines, billDiscountPaise, offers)
+
+  /*
+   * THE OFFERS, asked of Inventory as the basket changes. Contract §9.
+   *
+   * Debounced, and the latest answer wins: a scan a second after the last must not be undone by a
+   * slow reply to the earlier basket. Only an ID ever comes back here to be sent with the sale --
+   * the server fetched the figures, holds them, and re-reads them at Complete, so nothing on this
+   * screen can price a line. A parked bill re-quotes on recall for free: its lines change.
+   *
+   * No answer, any refusal, or no link: the till sells at its own prices and says so in one line.
+   * An offer-less bill is never refused.
+   */
+  useEffect(() => {
+    if (!shop?.inventoryConnected || lines.length === 0) { setQuote(null); return }
+    const seq = ++quoteSeq.current
+    const timer = setTimeout(async () => {
+      try {
+        const r = await quoteBasket({
+          lines: lines.map(l => ({ itemId: l.id, qty: l.qty })),
+          ...(customer ? { customerId: customer.id } : {}),
+          ...(couponCode ? { couponCode } : {})
+        })
+        if (seq !== quoteSeq.current) return
+        if (!r.ok) { setQuote({ failed: true, reason: r.reason }); return }
+        const byCode = Object.fromEntries(
+          r.quote.lines.filter(l => !l.unpriced).map(l => [l.itemCode, { qty: l.qty, discountPaise: l.discountPaise ?? 0, offers: l.offers ?? [] }])
+        )
+        setQuote({ id: r.quote.quoteId, byCode, coupon: r.quote.coupon ?? null, notes: r.quote.notes ?? [] })
+      } catch (err) {
+        if (seq === quoteSeq.current) setQuote({ failed: true, reason: messageFor(err) })
+      }
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [lines, customer, couponCode, shop?.inventoryConnected])
 
   // Brought back from the Sync screen ("Open in till"): the basket as it was, with its own key.
   const location = useLocation()
@@ -239,6 +278,17 @@ export default function Till() {
     refocus()
   }
 
+  async function askCoupon() {
+    const typed = await askText('Coupon code', couponCode, {
+      note: 'From the customer. Inventory says whether it applies to this bill.',
+      placeholder: 'DIWALI10',
+      confirmLabel: 'Apply'
+    })
+    if (typed === null) { refocus(); return }
+    setCouponCode(typed.trim().toUpperCase())
+    refocus()
+  }
+
   async function askDiscount() {
     const typed = await askText('Money off the whole bill', billDiscountPaise ? String(billDiscountPaise / 100) : '', {
       note: `In rupees. End with % for a percentage -- 10% of ${rupees(totals.subtotalPaise)} is ${rupees(Math.round(totals.subtotalPaise / 10))}.`,
@@ -272,6 +322,8 @@ export default function Till() {
     setLines([])
     setCustomer(null)
     setBillDiscountPaise(0)
+    setCouponCode('')
+    setQuote(null)
     setApproval(null)
     setKeeping(null)
     setKeepAfterCustomer(false)
@@ -303,6 +355,9 @@ export default function Till() {
       })),
       ...(customer ? { customerId: customer.id } : {}),
       ...(billDiscountPaise ? { billDiscountPaise } : {}),
+      // The quote's id, never its figures. The server re-reads what it held (§9).
+      ...(quote?.id ? { quoteId: quote.id } : {}),
+      ...(couponCode ? { couponCode } : {}),
       ...(managerApproval ? { approval: managerApproval } : {}),
       ...(keeping?.step === 'payment'
         ? {
@@ -315,6 +370,8 @@ export default function Till() {
     }
     try {
       const result = await completeSale(body)
+      // Plain lines, not errors: offers that could not be checked after all, mostly.
+      ;(result.notes ?? []).forEach(n => toast(n, { duration: 6000 }))
       setApproval(null)
       setKeeping(null)
       // Cleared HERE, on save -- not in startAgain. A cashier who walks away after handing
@@ -552,7 +609,10 @@ export default function Till() {
                         {line.colour || line.size ? ' · ' : ''}{line.code}
                       </div>
                     </div>
-                    <b style={s.lineTotal}>{rupees(lineTotal(line))}</b>
+                    <div style={{ textAlign: 'right' }}>
+                      <b style={s.lineTotal}>{rupees(lineTotal(line, offers))}</b>
+                      {offerOn(line, offers) > 0 && <div style={s.offer}>offer −{rupees(offerOn(line, offers))}</div>}
+                    </div>
                   </div>
                   <div style={s.lineBottom}>
                     <div style={s.qty}>
@@ -612,7 +672,10 @@ export default function Till() {
                         <div style={s.wasPrice}>was {rupees(line.pricePaise)}</div>
                       )}
                     </td>
-                    <td style={s.tdRight}><b>{rupees(lineTotal(line))}</b></td>
+                    <td style={s.tdRight}>
+                      <b>{rupees(lineTotal(line, offers))}</b>
+                      {offerOn(line, offers) > 0 && <div style={s.offer}>offer −{rupees(offerOn(line, offers))}</div>}
+                    </td>
                     <td style={s.td}>
                       <button style={s.remove} onClick={() => setQty(line.id, 0)} aria-label="Remove">×</button>
                     </td>
@@ -643,6 +706,16 @@ export default function Till() {
             </div>
             <div style={s.totalLabel}>Total</div>
             <div style={s.totalValue}>{rupees(totals.totalPaise)}</div>
+            {totals.offersPaise > 0 && (
+              <div style={s.offer}>Offers −{rupees(totals.offersPaise)}</div>
+            )}
+            {quote?.coupon && (
+              <div style={quote.coupon.accepted ? s.offer : s.muted}>
+                {quote.coupon.accepted ? `Code ${quote.coupon.code} applied` : (quote.coupon.reason ?? `Code ${quote.coupon.code} not accepted`)}
+              </div>
+            )}
+            {quote?.failed && <div style={s.muted}>Offers could not be checked</div>}
+            {quote?.notes?.[0] && <div style={s.muted}>{quote.notes[0]}</div>}
             {totals.discountPaise > 0 && (
               <div style={s.muted}>Discount −{rupees(totals.discountPaise)}</div>
             )}
@@ -694,6 +767,11 @@ export default function Till() {
             {lines.length > 0 && (
               <button onClick={() => { setShowMore(false); askDiscount() }}>
                 {totals.discountPaise > 0 ? 'Change discount' : 'Discount'}
+              </button>
+            )}
+            {lines.length > 0 && shop?.inventoryConnected && (
+              <button onClick={() => { setShowMore(false); askCoupon() }}>
+                {couponCode ? `Coupon ${couponCode}` : 'Coupon code'}
               </button>
             )}
             {lines.length > 0 && (
@@ -785,6 +863,7 @@ function Left({ qty }) {
 }
 
 const s = {
+  offer: { color: 'var(--good)', fontSize: 12, fontWeight: 600 },
   page: { height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 },
   body: { flex: 1, display: 'grid', minHeight: 0 },
   // Counter: basket and totals side by side, total always in view.
