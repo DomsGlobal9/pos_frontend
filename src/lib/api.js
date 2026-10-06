@@ -415,3 +415,15 @@ export async function download(path, params, filename) {
   a.remove()
   setTimeout(() => URL.revokeObjectURL(url), 5000)
 }
+
+/** The owner's item list, including the items switched off. POS-STAND-003. */
+export async function loadItems(q) {
+  const { data } = await api.get('/items', { params: q ? { q } : {} })
+  return data.data
+}
+
+/** Add one item, or correct one already there -- the same code is how a price gets fixed. */
+export async function saveItem(body) {
+  const { data } = await api.post('/items', body)
+  return data.data
+}

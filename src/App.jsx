@@ -23,6 +23,7 @@ import Devices from './pages/Devices.jsx'
 import Sync from './pages/Sync.jsx'
 import Connections from './pages/Connections.jsx'
 import Staff from './pages/Staff.jsx'
+import Items from './pages/Items.jsx'
 import ShopSetup from './pages/ShopSetup.jsx'
 
 /**
@@ -76,6 +77,8 @@ const router = createBrowserRouter([
       { path: 'connections', element: <Connections /> },
       // Who works the till. POS-CORE-002, POS-SET-008.
       { path: 'staff', element: <Staff /> },
+
+      { path: 'items', element: <Items /> },
       // WF-PAY-02.
       { path: 'payment-checks', element: <PaymentChecks /> },
       {
