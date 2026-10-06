@@ -360,6 +360,16 @@ export async function setShopLogo(logoUrl) {
   return data.data
 }
 
+/**
+ * What this basket comes to with the shop's offers on it, from Inventory via our server (§9).
+ * Always answers: `{ ok: true, quote }` or `{ ok: false, reason }`. Never a thrown error for a
+ * quote that could not be had -- the till sells at its own prices and says so in one line.
+ */
+export async function quoteBasket(body) {
+  const { data } = await api.post('/sales/quote', body)
+  return data.data
+}
+
 export async function loadDevices() {
   const { data } = await api.get('/devices')
   return data.data

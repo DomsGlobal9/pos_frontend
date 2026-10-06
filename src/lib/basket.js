@@ -24,8 +24,20 @@ const KEY = 'pos.basket.v2'
 /** The price this line is actually being sold at: the override when there is one, the tag otherwise. */
 export const unitPrice = (line) => line.overridePricePaise ?? line.pricePaise
 
-export function lineTotal(line) {
-  return unitPrice(line) * line.qty
+/*
+ * THE OFFER ON A LINE, from the quote Inventory gave for this basket (§9). It applies only while
+ * the line is the one that was quoted -- same quantity, no price typed over it -- which is exactly
+ * when the server will apply it too. An override is a person at the counter, and it drops the
+ * line's offers on both sides.
+ */
+export function offerOn(line, offers) {
+  const q = offers?.[line.code]
+  if (!q || line.overridePricePaise || q.qty !== line.qty) return 0
+  return q.discountPaise ?? 0
+}
+
+export function lineTotal(line, offers) {
+  return unitPrice(line) * line.qty - offerOn(line, offers)
 }
 
 /**
@@ -36,14 +48,18 @@ export function lineTotal(line) {
  * server will charge. If they ever disagree the server refuses with the exact difference, which
  * is the safety net, not the plan.
  */
-export function basketTotals(lines, billDiscountPaise = 0) {
-  const subtotal = lines.reduce((sum, l) => sum + lineTotal(l), 0)
-  const discount = Math.min(Math.max(0, billDiscountPaise), subtotal)
-  const beforeRounding = subtotal - discount
+export function basketTotals(lines, billDiscountPaise = 0, offers = null) {
+  // Offers first, then the manual discount on what is left -- the order both sides keep (§9).
+  const tags = lines.reduce((sum, l) => sum + unitPrice(l) * l.qty, 0)
+  const offersPaise = lines.reduce((sum, l) => sum + offerOn(l, offers), 0)
+  const afterOffers = tags - offersPaise
+  const discount = Math.min(Math.max(0, billDiscountPaise), afterOffers)
+  const beforeRounding = afterOffers - discount
   const whole = Math.floor(beforeRounding / 100) * 100
   const total = beforeRounding - whole >= 50 ? whole + 100 : whole
   return {
-    subtotalPaise: subtotal,
+    subtotalPaise: tags,
+    offersPaise,
     discountPaise: discount,
     roundOffPaise: total - beforeRounding,
     totalPaise: total
