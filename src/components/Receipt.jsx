@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
 import { useQueryClient } from '@tanstack/react-query'
@@ -144,6 +145,24 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
 
   const shop = sale.shop ?? {}
   /*
+   * Null outside a route (the public receipt renders on its own), so read it defensively. A till
+   * that cannot send for itself offers Share instead -- see the toolbar below.
+   */
+  const whatsappReady = (useOutletContext() ?? {})?.shop?.whatsappReady === true
+  /*
+   * wa.me wants digits with the country code and no plus. The bill's own web address goes in the
+   * message so the customer gets the real document, not a screenshot of one -- the same link the
+   * QR on the paper carries.
+   */
+  const shareHref = (() => {
+    const digits = String(sale.customer?.phone ?? '').replace(/\D/g, '')
+    if (!digits) return null
+    const where = shop.shopName ? ` at ${shop.shopName}` : ''
+    const link = sale.receiptUrl ? ` ${sale.receiptUrl}` : ''
+    const text = `Thank you for shopping${where}. Your bill ${sale.invoiceNo} for ${rupees(sale.totalPaise)}.${link}`
+    return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`
+  })()
+  /*
    * Summed from what was CHARGED, never worked out again here.
    *
    * The split is stored on each line for exactly this reason: the odd paisa of an odd tax has to
@@ -175,11 +194,31 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
             onClick={pdfHref ? undefined : (e) => openPdf(e, sale.id)}>
             <FileDown size={16} aria-hidden="true" /> PDF
           </a>
-          {!publicView && sale.customer && (
-            <button onClick={sendWhatsApp} disabled={sending} style={s.tool}>
-              <MessageCircle size={16} aria-hidden="true" />
-              {sending ? 'Sending…' : 'WhatsApp'}
-            </button>
+          {/*
+            * Two different things, and only ever one of them on screen.
+            *
+            * WhatsApp: the till sends it itself, from the shop's own linked number, and the bill
+            * keeps the delivered tick. It needs the WhatsApp service set up AND the shop's number
+            * linked -- and today a number can only be linked in Inventory, so a shop that does not
+            * use Inventory can never have this.
+            *
+            * Share: opens the cashier's own WhatsApp with the message ready. Nothing to set up, no
+            * daily cap, no linked number to get banned, and it works for every shop on its first
+            * day. The service's own module guide names this as the fallback when a shop is not
+            * linked, and for a standalone till it is not a fallback, it is the whole feature.
+            */}
+          {!publicView && sale.customer && (whatsappReady
+            ? (
+              <button onClick={sendWhatsApp} disabled={sending} style={s.tool}>
+                <MessageCircle size={16} aria-hidden="true" />
+                {sending ? 'Sending…' : 'WhatsApp'}
+              </button>
+            )
+            : shareHref && (
+              <a href={shareHref} target="_blank" rel="noreferrer" style={s.toolLink}>
+                <MessageCircle size={16} aria-hidden="true" /> Share
+              </a>
+            )
           )}
           {onDone && <button style={s.next} onClick={onDone}>Next sale</button>}
         </div>
