@@ -68,6 +68,7 @@ export default function CreditNote() {
 
       <div style={s.sheet} className="receipt">
         <div style={s.centre}>
+          {shop.logoUrl && <img src={shop.logoUrl} alt="" style={{ display: 'block', maxWidth: 160, maxHeight: 64, margin: '0 auto 6px' }} />}
           <b style={{ fontSize: 14 }}>{shop.shopName ?? 'Shop'}</b>
           {shop.address && <div>{shop.address}</div>}
           {shop.gstin && <div>GSTIN {shop.gstin}</div>}

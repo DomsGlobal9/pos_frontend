@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { QrCode, Boxes, Monitor } from 'lucide-react'
-import { setShopUpi, messageFor } from '../lib/api.js'
+import { QrCode, Boxes, Monitor, Image as ImageIcon } from 'lucide-react'
+import { setShopUpi, setShopLogo, messageFor } from '../lib/api.js'
 
 /**
  * Shop settings. POS-SET-003 (partly), POS-PAY-012.
@@ -19,6 +19,26 @@ export default function Settings() {
   const [upi, setUpi] = useState(current)
   const [busy, setBusy] = useState(false)
   const owner = (shop?.permissions ?? []).includes('settings:manage')
+  const logo = shop?.shop?.logoUrl ?? null
+  const [busyLogo, setBusyLogo] = useState(false)
+
+  async function saveLogo(value) {
+    setBusyLogo(true)
+    try {
+      await setShopLogo(value)
+      toast.success(value ? 'Saved. It prints at the top of every bill from now.' : 'Removed. Bills show the shop name only.')
+      queryClient.invalidateQueries({ queryKey: ['shop'] })
+    } catch (err) {
+      toast.error(err?.response ? messageFor(err) : err.message)
+    } finally {
+      setBusyLogo(false)
+    }
+  }
+  async function pickLogo(event) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (file) await saveLogo(await toJpeg(file).catch(err => { toast.error(err.message); return null }) ?? undefined)
+  }
 
   async function save(value) {
     setBusy(true)
@@ -56,12 +76,53 @@ export default function Settings() {
         ) : <p style={s.muted}>Only the owner can change this.</p>}
       </section>
 
+      <section style={s.card}>
+        <div style={s.head}><span style={s.icon}><ImageIcon size={18} aria-hidden="true" /></span><b>Logo on the bill</b></div>
+        <p style={s.muted}>
+          Printed at the top of every bill and credit note, and on the PDF sent on WhatsApp. It prints about 4 cm across,
+          so a simple mark reads better than fine detail.
+        </p>
+        {logo && <img src={logo} alt="The logo as it will print" style={s.logoPreview} />}
+        {owner ? (
+          <div style={s.actions}>
+            <input type="file" accept="image/*" aria-label="Choose a logo picture" onChange={pickLogo} disabled={busyLogo} />
+            {logo && <button disabled={busyLogo} onClick={() => saveLogo(null)}>Remove</button>}
+          </div>
+        ) : <p style={s.muted}>Only the owner can change this.</p>}
+      </section>
+
       <Link to="/inventory-link" style={s.row}><span style={s.icon}><Boxes size={18} aria-hidden="true" /></span>Inventory link</Link>
       <Link to="/devices" style={s.row}><span style={s.icon}><Monitor size={18} aria-hidden="true" /></span>Devices</Link>
 
       <p style={s.muted}>Shop name, GSTIN, address, invoice numbering and discount limits are set up by ScaleEzy for now.</p>
     </div>
   )
+}
+
+/*
+ * Any picture becomes a small JPEG here, in the browser. 400 px across is more than a 42 mm print
+ * can show, and JPEG is the one format the receipt PDF carries without an image library on either
+ * side. Drawn on white first, so a transparent PNG does not come out on black.
+ */
+function toJpeg(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      const scale = Math.min(1, 400 / img.width, 200 / img.height)
+      const c = document.createElement('canvas')
+      c.width = Math.max(1, Math.round(img.width * scale))
+      c.height = Math.max(1, Math.round(img.height * scale))
+      const ctx = c.getContext('2d')
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, c.width, c.height)
+      ctx.drawImage(img, 0, 0, c.width, c.height)
+      URL.revokeObjectURL(url)
+      resolve(c.toDataURL('image/jpeg', 0.85))
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('That file is not a picture the browser can read.')) }
+    img.src = url
+  })
 }
 
 const s = {
@@ -76,5 +137,6 @@ const s = {
     display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 14, background: 'var(--panel)',
     border: '1px solid var(--line)', boxShadow: 'var(--shadow)', textDecoration: 'none', color: 'var(--ink)', fontWeight: 600
   },
-  muted: { color: 'var(--ink-soft)', fontSize: 13, margin: 0 }
+  muted: { color: 'var(--ink-soft)', fontSize: 13, margin: 0 },
+  logoPreview: { maxWidth: 160, maxHeight: 80, objectFit: 'contain', background: '#fff', border: '1px solid var(--line)', borderRadius: 8, padding: 6 }
 }

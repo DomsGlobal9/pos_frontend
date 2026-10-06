@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -57,6 +57,8 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
   const [results, setResults] = useState([])
   const [picking, setPicking] = useState(null)
   const [paying, setPaying] = useState(false)
+  // The scan box on "Coming back". A hook, so it lives up here with the others, above the early returns.
+  const scanBox = useRef(null)
 
   const { data: info, isLoading, isError, error } = useQuery({
     queryKey: ['return-info', id],
@@ -130,6 +132,29 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
 
   function takeEverything() {
     setPick(Object.fromEntries(info.lines.filter(l => l.remainingQty > 0).map(l => [l.saleLineId, l.remainingQty])))
+  }
+
+  /*
+   * A SCAN OF THE PIECE COMING BACK. A cashier at a counter scans the tag the customer hands over;
+   * making them read the bill and tap the right line is the gap a scanner exists to close. Matched
+   * against THIS bill's lines by barcode or code, so scanning something not on the bill says so,
+   * rather than finding it in the shop and taking back a thing that was never sold here.
+   */
+  function scanBack(event) {
+    event.preventDefault()
+    const q = (scanBox.current?.value ?? '').trim().toLowerCase()
+    if (!q) return
+    const same = l => (l.barcode ?? '').toLowerCase() === q || (l.itemCode ?? '').toLowerCase() === q
+    const line = info.lines.find(l => same(l) && l.remainingQty > 0)
+    if (!line) {
+      toast.error(info.lines.some(same) ? 'That one has already come back.' : 'That is not on this bill.')
+    } else {
+      const now = pick[line.saleLineId] ?? 0
+      if (now >= line.remainingQty) toast.error(`All ${line.remainingQty} of ${line.description} already chosen.`)
+      else setQty(line.saleLineId, now + 1, line.remainingQty)
+    }
+    // As on the sell screen: the next scan replaces this one rather than landing on the end of it.
+    scanBox.current?.select()
   }
 
   function payload(extra = {}) {
@@ -274,6 +299,10 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
           <h2 style={s.heading}>Coming back</h2>
           <button type="button" onClick={takeEverything} style={s.small}>All of it</button>
         </div>
+        <form onSubmit={scanBack} style={s.searchRow}>
+          <input ref={scanBox} placeholder="Scan or type the code of the piece coming back" aria-label="Scan the piece coming back" />
+          <button type="submit">Add</button>
+        </form>
         <ul style={s.list} className="card-list">
           {info.lines.map(line => {
             const qty = pick[line.saleLineId] ?? 0

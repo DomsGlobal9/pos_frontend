@@ -33,8 +33,11 @@ api.interceptors.response.use(r => r, error => {
   const code = error?.response?.status === 401 ? error.response.data?.details?.code : null
   // Only for the person at the till -- not for a queued sale sent under someone else's name.
   if (code && !error.config?.headers?.['x-keep-session']) {
-    if (code === 'TILL_CLOSED' || code === 'TILL_UNKNOWN') tillClosed()
-    else if (code === 'NO_STAFF') personOut()
+    // The token this request actually carried: a refusal is about that one, not whatever is held now.
+    const h = error.config?.headers ?? {}
+    const refused = String(h.Authorization ?? '').replace(/^Bearer /, '') || h['x-till-token'] || undefined
+    if (code === 'TILL_CLOSED' || code === 'TILL_UNKNOWN') tillClosed(refused)
+    else if (code === 'NO_STAFF') personOut(refused)
   }
   return Promise.reject(error)
 })
@@ -348,6 +351,12 @@ export async function loadPublicReceipt(token) {
 
 export async function setShopUpi(upiId) {
   const { data } = await api.put('/shop/upi', { upiId })
+  return data.data
+}
+
+/** The logo on the bill: a JPEG data URL, an https address, or null to remove. Owner-only. */
+export async function setShopLogo(logoUrl) {
+  const { data } = await api.put('/shop/logo', { logoUrl })
   return data.data
 }
 
