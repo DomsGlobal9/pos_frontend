@@ -26,6 +26,7 @@ const ROWS = [
   { to: '/sync', label: 'Waiting to sync', hint: 'Sales kept on this till while the internet was down', live: true, Icon: RefreshCw },
   { to: '/settings', label: 'Settings', hint: 'UPI QR, Inventory link, devices', live: true, Icon: Settings },
   { to: '/devices', label: 'Devices', hint: 'Every screen the till runs on', live: true, Icon: Monitor },
+  { to: '/items', label: 'Items', hint: 'What this till sells, their prices and GST', live: true, Icon: Boxes },
   { to: '/staff', label: 'Staff', hint: 'Who works the till, their PINs and roles', live: true, Icon: Users },
   { to: '/connections', label: 'Connections', hint: 'Your other software, Excel import, sales for the accountant', live: true, Icon: Plug }
 ]
