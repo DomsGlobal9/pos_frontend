@@ -33,7 +33,7 @@ api.interceptors.response.use(r => r, error => {
   const code = error?.response?.status === 401 ? error.response.data?.details?.code : null
   // Only for the person at the till -- not for a queued sale sent under someone else's name.
   if (code && !error.config?.headers?.['x-keep-session']) {
-    if (code === 'TILL_CLOSED') tillClosed()
+    if (code === 'TILL_CLOSED' || code === 'TILL_UNKNOWN') tillClosed()
     else if (code === 'NO_STAFF') personOut()
   }
   return Promise.reject(error)
