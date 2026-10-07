@@ -1,3 +1,4 @@
+import { HEADING, COMPOSITION_DECLARATION, kindOf } from '../lib/gst.js'
 import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -234,11 +235,13 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
           {shop.logoUrl && <img src={shop.logoUrl} alt="" style={{ display: 'block', maxWidth: 160, maxHeight: 64, margin: '0 auto 6px' }} />}
           <b style={{ fontSize: 14 }}>{shop.shopName ?? 'Shop'}</b>
           {shop.address && <div>{shop.address}</div>}
-          {shop.gstin && <div>GSTIN {shop.gstin}</div>}
+          {/* A plain receipt is from a shop with no GST registration: there is no GSTIN to print. */}
+          {shop.gstin && kindOf(sale) !== 'RECEIPT' && <div>GSTIN {shop.gstin}</div>}
         </div>
 
         <Rule />
 
+        <div style={{ ...s.centre, fontWeight: 700, letterSpacing: '0.04em' }}>{HEADING[kindOf(sale)]}</div>
         <div style={s.line}><span>Bill</span><b>{sale.invoiceNo}</b></div>
         <div style={s.line}>
           <span>Date</span><span>{new Date(sale.createdAt).toLocaleString('en-IN')}</span>
@@ -346,6 +349,13 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
             <Rule />
             {/* The cheapest loyalty tool there is, and it costs one line. */}
             <div style={s.centre}><b>You saved {rupees(sale.savedPaise)}</b></div>
+          </>
+        )}
+
+        {kindOf(sale) === 'BILL_OF_SUPPLY' && (
+          <>
+            <Rule />
+            <div style={s.centre}>{COMPOSITION_DECLARATION}</div>
           </>
         )}
 
