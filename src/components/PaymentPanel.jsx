@@ -202,7 +202,8 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
 
             {row.method === 'POINTS' && (
               <p style={s.muted}>
-                {points.balance} points; up to {rupees(pointsUsable)} on this bill. Held in Inventory when the sale is saved.
+                {points.customerName ? `${points.customerName} has ` : ''}{points.balance} points; up to {rupees(pointsUsable)} on this bill.
+                {' '}Check the name with the customer. Held in Inventory when the sale is saved.
               </p>
             )}
 
