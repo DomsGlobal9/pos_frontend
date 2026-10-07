@@ -29,6 +29,7 @@ const TABS = [
 ]
 
 const WHERE = { WAITING: 'Waiting', READY: 'Ready to collect', HANDED_OVER: 'Handed over' }
+const ORDERS_SHOWN = 100
 
 export function Orders() {
   const [tab, setTab] = useState('ALL')
@@ -72,6 +73,13 @@ export function Orders() {
       {!isLoading && orders.length === 0 && (
         <p style={s.muted}>
           {q.trim() ? 'No orders match that.' : EMPTY[tab]}
+        </p>
+      )}
+      {/* The server sends at most 100 (orders.service LIMIT). Said, not hidden: on the Due list the
+          newest credit sales are the ones past the cut, and a shop chasing money must find them. */}
+      {orders.length >= ORDERS_SHOWN && (
+        <p style={s.muted} role="note">
+          Showing the first {ORDERS_SHOWN}. Search by name, number or bill to find the rest.
         </p>
       )}
 
