@@ -1,4 +1,5 @@
 import { kindOf } from '../lib/gst.js'
+import { waLink } from '../lib/whatsapp.js'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { loadCreditNote, rupees, messageFor } from '../lib/api.js'
@@ -51,6 +52,14 @@ export default function CreditNote() {
           </div>
         </div>
         <button onClick={() => window.print()}>Print</button>
+        {(() => {
+          const back = note.refunds.map(r => `${rupees(r.amountPaise)} ${HOW[r.method] ?? r.method}`.trim()).join(', ')
+          const href = waLink(note.customer?.phone,
+            `Credit note ${note.creditNoteNo} against bill ${note.originalSale?.invoiceNo ?? ''}: ${rupees(note.totalPaise)} returned` +
+            (back ? ` (${back})` : '') + (note.pointsBack > 0 ? `, ${note.pointsBack} points back` : '') + '.' +
+            (note.refunds.some(r => r.method === 'STORE_CREDIT') && note.customer ? ` Store credit now ${rupees(note.customer.storeCreditPaise)}.` : ''))
+          return href ? <a href={href} target="_blank" rel="noreferrer">Share on WhatsApp</a> : null
+        })()}
       </div>
 
       <div style={s.links} className="no-print">

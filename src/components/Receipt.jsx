@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { FileDown, MessageCircle, Printer } from 'lucide-react'
 import { api, rupees, markPrinted, messageFor, sendReceiptWhatsApp } from '../lib/api.js'
 import { newOnceKey } from '../lib/basket.js'
+import { waLink } from '../lib/whatsapp.js'
 import { checkIn, paperWidthMm } from '../lib/device.js'
 
 const API_BASE = import.meta.env.VITE_API_BASE || '/api/v1'
@@ -156,12 +157,9 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
    * QR on the paper carries.
    */
   const shareHref = (() => {
-    const digits = String(sale.customer?.phone ?? '').replace(/\D/g, '')
-    if (!digits) return null
     const where = shop.shopName ? ` at ${shop.shopName}` : ''
     const link = sale.receiptUrl ? ` ${sale.receiptUrl}` : ''
-    const text = `Thank you for shopping${where}. Your bill ${sale.invoiceNo} for ${rupees(sale.totalPaise)}.${link}`
-    return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`
+    return waLink(sale.customer?.phone, `Thank you for shopping${where}. Your bill ${sale.invoiceNo} for ${rupees(sale.totalPaise)}.${link}`)
   })()
   /*
    * Summed from what was CHARGED, never worked out again here.

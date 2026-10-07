@@ -227,6 +227,8 @@ export default function Till() {
   }
 
   function addItem(item, searched) {
+    // A new "typing episode" starts with every add: a lookup started before it is about old text.
+    episode.current++
     setLines(current => {
       const at = current.findIndex(l => l.id === item.id)
       if (at >= 0) {
@@ -253,13 +255,58 @@ export default function Till() {
   const [scanning, setScanning] = useState(false)
   const canCamera = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
 
+  /*
+   * SEARCH AS YOU TYPE, AND ADD BY ITSELF (7 Oct, asked for at the counter: "typing a code did nothing
+   * until Enter"). A pause of a third of a second after typing looks the text up: names show their
+   * matches straight away, and a code that is exactly one item goes into the basket on its own.
+   *
+   * Not when that code is also the start of longer ones -- "COT-01" while "COT-010" exists -- because
+   * the cashier may only have paused halfway through the longer code. Those show as a result, and Enter
+   * or a tap adds them. A scanner never waits for the pause: it ends with Enter, which runs at once.
+   *
+   * Never twice: if Enter is pressed while the pause's own lookup is still out, Enter waits for that
+   * one rather than asking again, and does nothing more if it already added the item. Two scans of the
+   * same code still add two -- each Enter is its own lookup.
+   */
+  const episode = useRef(0)
+  const pending = useRef(null)
+  const queryNow = useRef('')
+  queryNow.current = query
+  useEffect(() => {
+    const q = query.trim()
+    if (q.length < 2) { if (!q) setResults([]); return }
+    if (paying || receipt || keeping) return
+    const ep = episode.current
+    const timer = setTimeout(async () => {
+      const entry = { q, episode: ep, added: false, promise: searchItems(q) }
+      pending.current = entry
+      try {
+        const found = await entry.promise
+        if (episode.current !== ep || queryNow.current.trim() !== q) return
+        if (found.exact && found.items.length === 1 && !found.prefixOfOthers) {
+          entry.added = true
+          addItem(found.items[0], q)
+        } else {
+          setResults(found.items)
+        }
+      } catch { /* still typing; Enter says what went wrong */ } finally {
+        if (pending.current === entry) pending.current = null
+      }
+    }, 350)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, paying, receipt, keeping])
+
   async function find(event, typed) {
     event?.preventDefault?.()
     const q = (typed ?? query).trim()
     if (!q) return
+    // The pause's lookup for this same text is already out: wait for it, and stop if it added the item.
+    const joined = pending.current && pending.current.q === q && pending.current.episode === episode.current ? pending.current : null
     setBusy(true)
     try {
-      const found = await searchItems(q)
+      const found = joined ? await joined.promise : await searchItems(q)
+      if (joined?.added) return
       if (found.exact && found.items.length === 1) {
         // Straight into the basket. Asking the cashier to click the only result is a click a sale,
         // all day.
@@ -606,7 +653,7 @@ export default function Till() {
           )}
 
           {results.length > 0 && (
-            <ul style={s.results} className="card-list">
+            <ul style={s.results} className="card-list" aria-label="Matches">
               {results.map(item => (
                 <li key={item.id}>
                   <button style={s.result} onClick={() => chooseItem(item)}>

@@ -7,6 +7,7 @@ import {
   rupees, messageFor
 } from '../lib/api.js'
 import { newOnceKey } from '../lib/basket.js'
+import { waLink } from '../lib/whatsapp.js'
 import PaymentPanel from '../components/PaymentPanel.jsx'
 import Receipt from '../components/Receipt.jsx'
 import { askYesNo } from '../components/Ask.jsx'
@@ -259,6 +260,27 @@ export function OrderDetail() {
         {data.handoverDuePaise > 0 && (
           <p style={s.muted}>Handed over with {rupees(data.handoverDuePaise)} still owed.</p>
         )}
+
+        {/*
+          * Telling the customer, from the shop's own WhatsApp: that the order is ready to collect, or
+          * what is still owed. The words are ready; the cashier presses send on their phone.
+          */}
+        {(() => {
+          const shopName = shop?.shop?.shopName ?? 'the shop'
+          const link = data.receiptUrl ? ` ${data.receiptUrl}` : ''
+          const ready = kept && data.fulfilment === 'READY' && waLink(data.customer?.phone,
+            `Hello${data.customer?.name ? ` ${data.customer.name.split(' ')[0]}` : ''}, your order ${data.invoiceNo} at ${shopName} is ready to collect.` +
+            (data.owedPaise > 0 ? ` ${rupees(data.owedPaise)} is still to pay.` : '') + link)
+          const due = data.owedPaise > 0 && waLink(data.customer?.phone,
+            `Hello${data.customer?.name ? ` ${data.customer.name.split(' ')[0]}` : ''}, a gentle reminder from ${shopName}: ${rupees(data.owedPaise)} is still due on bill ${data.invoiceNo}. Thank you.` + link)
+          if (!ready && !due) return null
+          return (
+            <div style={s.actions}>
+              {ready && <a href={ready} target="_blank" rel="noreferrer" aria-label="Tell them it is ready on WhatsApp">WhatsApp: it&apos;s ready</a>}
+              {due && !ready && <a href={due} target="_blank" rel="noreferrer" aria-label="Remind them on WhatsApp what is due">WhatsApp: remind about {rupees(data.owedPaise)}</a>}
+            </div>
+          )
+        })()}
       </div>
 
       <Receipt sale={data} />
