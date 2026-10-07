@@ -91,15 +91,18 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
   const update = (index, patch) =>
     setRows(current => current.map((row, i) => (i === index ? { ...row, ...patch } : row)))
 
+  // What a row can hold on this method: store credit and points only as far as the customer has them
+  // (points in whole steps). Switching a row to Points keeps no amount it could never take.
+  const fit = (method, paise) => method === 'CREDIT' ? Math.min(paise, creditPaise)
+    : method === 'POINTS' ? Math.floor(Math.min(paise, pointsUsable) / pointStep) * pointStep
+    : paise
+
   function addRow() {
     // A second row starts on a different method from the first, because a split across two cash
     // payments is not a thing anyone does.
     const used = new Set(rows.map(r => r.method))
     const next = methods.find(m => !used.has(m)) ?? methods[0]
-    const amount = next === 'CREDIT' ? Math.min(Math.max(0, remaining), creditPaise)
-      : next === 'POINTS' ? Math.floor(Math.min(Math.max(0, remaining), pointsUsable) / pointStep) * pointStep
-      : Math.max(0, remaining)
-    setRows(current => [...current, blank(next, amount)])
+    setRows(current => [...current, blank(next, fit(next, Math.max(0, remaining)))])
   }
 
   const removeRow = (index) => setRows(current => current.filter((_, i) => i !== index))
@@ -155,7 +158,11 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
                   type="button"
                   aria-pressed={row.method === method}
                   style={{ ...s.method, ...(row.method === method ? s.methodOn : null) }}
-                  onClick={() => update(index, { method, unconfirmed: false, reference: '', tendered: '' })}
+                  onClick={() => {
+                    const was = toPaise(row.amount)
+                    const now = was === null ? null : fit(method, was)
+                    update(index, { method, unconfirmed: false, reference: '', tendered: '', ...(now !== null && now !== was ? { amount: now > 0 ? String(now / 100) : '' } : {}) })
+                  }}
                 >
                   {LABELS[method]}
                 </button>

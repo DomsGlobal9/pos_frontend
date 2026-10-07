@@ -112,7 +112,7 @@ export default function Bills() {
   )
 }
 
-const pretty = (m) => ({ CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', POINTS: 'Points', BALANCE: 'Balance' }[m] ?? m)
+const pretty = (m) => ({ CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', POINTS: 'Points', BALANCE: 'Balance', EXCHANGE: 'Exchange credit' }[m] ?? m)
 
 function dateRange(when) {
   if (!when) return {}
