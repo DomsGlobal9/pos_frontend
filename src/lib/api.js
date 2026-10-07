@@ -383,6 +383,20 @@ export async function quoteBasket(body) {
 }
 
 /** The customer's points and store credit usable on this bill, from Inventory (§10). Always answers. */
+/** Self-confirming UPI (PLAN-payments Step 2): a Razorpay QR through Inventory. Always 200; { ok:false, reason } when not here. */
+export async function createUpiQr(amountPaise, idempotencyKey) {
+  const { data } = await api.post('/sales/upi-qr', { amountPaise, idempotencyKey })
+  return data.data
+}
+export async function loadUpiQr(qrId) {
+  const { data } = await api.get(`/sales/upi-qr/${encodeURIComponent(qrId)}`)
+  return data.data
+}
+export async function closeUpiQr(qrId) {
+  const { data } = await api.post(`/sales/upi-qr/${encodeURIComponent(qrId)}/close`, {})
+  return data.data
+}
+
 export async function loadWallet(customerId, billPaise) {
   const { data } = await api.get('/sales/wallet', { params: { customerId, billPaise } })
   return data.data

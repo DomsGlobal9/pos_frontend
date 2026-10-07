@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { rupees } from '../lib/api.js'
 import UpiQr from './UpiQr.jsx'
+import RazorpayQr from './RazorpayQr.jsx'
+import { closeUpiQr } from '../lib/api.js'
 
 /**
  * WF-PAY-01. POS-PAY-001..010.
@@ -40,7 +42,7 @@ const COPY = {
 // Credit and advance take the same rules: whatever is paid now, nothing included, up to the bill.
 const advanceLike = (mode) => mode === 'ADVANCE' || mode === 'CREDIT'
 
-export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT', creditPaise = 0, heading, upi, points = null, walletNote = null }) {
+export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT', creditPaise = 0, heading, upi, points = null, walletNote = null, upiQr = false }) {
   // Contract §10. Points are offered only when Inventory says some can be used on THIS bill; the
   // server holds them in Inventory at Complete, so this figure is a guide and Inventory has the last word.
   const pointStep = points?.pointValuePaise ?? 100
@@ -107,8 +109,35 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
 
   const removeRow = (index) => setRows(current => current.filter((_, i) => i !== index))
 
+  /*
+   * A Razorpay QR the customer has just paid completes the sale by itself when nothing else is left
+   * to do -- the cashier was waiting for exactly that. The server checks the payment again anyway.
+   */
+  const qrJustPaid = rows.some(r => r.qrId && r.qrPaid)
+  useEffect(() => {
+    if (qrJustPaid && canComplete && !saving) confirm()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qrJustPaid])
+
+  /*
+   * Leaving while a QR is up: close it first. If the customer paid in that very moment, the panel stays
+   * -- that money is this bill's, and walking away from it would leave a payment with no bill.
+   */
+  async function cancel() {
+    for (const [index, row] of rows.entries()) {
+      if (row.qrId && !row.qrPaid) {
+        const s = await closeUpiQr(row.qrId).catch(() => null)
+        if (s?.status === 'PAID') {
+          update(index, { qrPaid: true, reference: s.utr ?? s.paymentId ?? '' })
+          return
+        }
+      }
+    }
+    onCancel()
+  }
+
   async function confirm(event) {
-    event.preventDefault()
+    event?.preventDefault()
     if (!canComplete) return
     setSaving(true)
     try {
@@ -211,8 +240,16 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
               </>
             )}
 
+            {/* PLAN-payments Step 2: the shop switched on UPI that confirms itself (Razorpay, in Inventory). */}
+            {row.method === 'UPI' && upiQr && !row.unconfirmed && (
+              <RazorpayQr
+                key={`qr-${index}`}
+                amountPaise={toPaise(row.amount) ?? 0}
+                onChange={qr => update(index, qr ? { qrId: qr.qrId, qrPaid: qr.paid, ...(qr.paid ? { reference: qr.utr ?? '' } : {}) } : { qrId: null, qrPaid: false })}
+              />
+            )}
             {/* POS-PAY-012. With the shop's UPI ID set, a QR for exactly this row's amount. */}
-            {row.method === 'UPI' && upi?.upiId && !row.unconfirmed && (
+            {row.method === 'UPI' && upi?.upiId && !row.unconfirmed && !row.qrId && (
               <UpiQr upiId={upi.upiId} name={upi.name} amountPaise={toPaise(row.amount) ?? 0} note={upi.note} />
             )}
 
@@ -230,7 +267,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
             {NEEDS_REFERENCE.includes(row.method) && (
               <>
                 {/* PLAN-payments Step 1: what a real reference looks like, so a made-up one is caught here. */}
-                {row.method === 'UPI' ? (
+                {row.method === 'UPI' && row.qrId ? null : row.method === 'UPI' ? (
                   <label style={s.label}>
                     UPI reference (12-digit UTR from the customer's app)
                     <input
@@ -302,7 +339,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
         )}
 
         <div style={s.actions}>
-          <button type="button" onClick={onCancel}>Back</button>
+          <button type="button" onClick={cancel}>Back</button>
           <button type="submit" style={s.confirm} disabled={!canComplete}>
             {saving ? 'Saving…' : copy.confirm}
           </button>
@@ -316,6 +353,8 @@ const blank = (method, amountPaise) => ({
   method,
   amount: amountPaise > 0 ? String(amountPaise / 100) : '',
   reference: '',
+  qrId: null,
+  qrPaid: false,
   cardLast4: '',
   approvalCode: '',
   tendered: '',
@@ -334,6 +373,9 @@ function rowProblem(row) {
   }
   if (row.method === 'CREDIT' || row.method === 'POINTS') return null
   if (row.unconfirmed) return null
+  if (row.method === 'UPI' && row.qrId) {
+    return row.qrPaid ? null : 'Waiting for the customer to pay the QR -- or tick "not confirmed yet" and let them go.'
+  }
   if (row.method === 'UPI') {
     const utr = row.reference.replace(/\s+/g, '')
     if (!utr) return 'Add the UPI reference, or tick "not confirmed yet".'
@@ -357,7 +399,9 @@ function toPayment(row, pointStep = 100) {
     // How many points: the server asks Inventory to hold exactly these, and checks they are worth this.
     ...(row.method === 'POINTS' ? { points: Math.round(amountPaise / pointStep) } : {}),
     ...(row.method === 'CASH' && tenderedPaise !== null ? { tenderedPaise } : {}),
-    ...(row.method === 'UPI' && row.reference.trim() ? { reference: row.reference.replace(/\s+/g, '') } : {}),
+    // A QR payment sends only its QR: the server asks Razorpay (through Inventory) what was paid.
+    ...(row.method === 'UPI' && row.qrId ? { qrId: row.qrId } : {}),
+    ...(row.method === 'UPI' && !row.qrId && row.reference.trim() ? { reference: row.reference.replace(/\s+/g, '') } : {}),
     ...(row.method === 'CARD' && !row.unconfirmed ? { cardLast4: row.cardLast4, approvalCode: row.approvalCode } : {}),
     ...(NEEDS_REFERENCE.includes(row.method) && row.unconfirmed ? { unconfirmed: true } : {})
   }

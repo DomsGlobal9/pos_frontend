@@ -307,6 +307,7 @@ export function OrderDetail() {
       {collecting && (
         <PaymentPanel
           mode="COLLECT"
+          upiQr={!!(shop?.inventoryConnected && shop?.shop?.upiQrEnabled)}
           totalPaise={data.owedPaise}
           creditPaise={data.customer?.storeCreditPaise ?? 0}
           onCancel={() => setCollecting(null)}
