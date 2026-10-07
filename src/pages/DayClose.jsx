@@ -16,7 +16,7 @@ import { askYesNo } from '../components/Ask.jsx'
  * lands on the day afterwards shows on its own "since closing" line rather than quietly changing
  * the closed numbers.
  */
-const METHOD = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', EXCHANGE: 'Exchange credit', STORE_CREDIT: 'Store credit' }
+const METHOD = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', EXCHANGE: 'Exchange credit', STORE_CREDIT: 'Store credit', POINTS: 'Points' }
 
 const today = () => {
   const d = new Date()

@@ -121,6 +121,9 @@ export default function CreditNote() {
         )}
         <Rule />
         <div style={{ ...s.line, fontSize: 15 }}><b>Total</b><b>{rupees(note.totalPaise)}</b></div>
+        {note.pointsBack > 0 && (
+          <div style={s.line}><span>Back as points ({note.pointsBack})</span><span>{rupees(note.pointsBackPaise)}</span></div>
+        )}
 
         {note.refunds.map((r, i) => (
           <div key={i} style={s.line}>

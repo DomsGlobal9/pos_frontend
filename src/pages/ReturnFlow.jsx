@@ -101,7 +101,10 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
     )
   }
 
-  const credit = selection.length > 0 && quote ? quote.totalPaise : 0
+  // A bill paid partly in points: the points share goes back AS POINTS (Inventory does that), so only
+  // the money share is refunded here (contract §10.5). On any other bill the two are the same.
+  const credit = selection.length > 0 && quote ? (quote.moneyBackPaise ?? quote.totalPaise) : 0
+  const pointsBack = selection.length > 0 && quote ? (quote.pointsBack ?? 0) : 0
   const newTotal = basketTotals(newLines).totalPaise
   // Positive: the customer pays. Negative: the shop gives back. Only meaningful in an exchange.
   const difference = exchange ? newTotal - credit : -credit
@@ -256,6 +259,12 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
   const refundChoice = giveBack > 0 && (
     <section style={s.section}>
       <h2 style={s.heading}>{exchange ? `Give back ${rupees(giveBack)} as` : 'Money goes back as'}</h2>
+      {pointsBack > 0 && (
+        <p style={s.muted}>
+          Paid partly in points: {pointsBack} points ({rupees(quote.pointsBackPaise)}) go back to the customer as points.
+          Only {rupees(giveBack)} is refunded here.
+        </p>
+      )}
       <div style={s.choices} role="group" aria-label="Refund method">
         {info.refundMethods.map(m => (
           <button key={m} type="button" aria-pressed={method === m}
