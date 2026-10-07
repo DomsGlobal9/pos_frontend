@@ -851,6 +851,7 @@ export default function Till() {
           totalPaise={totals.totalPaise}
           enabledMethods={shop?.shop?.enabledPaymentMethods}
           {...walletProps}
+          upiQr={!!(shop?.inventoryConnected && shop?.shop?.upiQrEnabled)}
           upi={{ upiId: shop?.shop?.upiId, name: shop?.shop?.shopName, note: 'Bill at the counter' }}
           onCancel={() => { setPaying(false); refocus() }}
           onConfirm={takePayment}
@@ -908,6 +909,7 @@ export default function Till() {
           totalPaise={totals.totalPaise}
           enabledMethods={shop?.shop?.enabledPaymentMethods}
           {...walletProps}
+          upiQr={!!(shop?.inventoryConnected && shop?.shop?.upiQrEnabled)}
           upi={{ upiId: shop?.shop?.upiId, name: shop?.shop?.shopName, note: 'Bill at the counter' }}
           onCancel={() => { setKeeping(null); refocus() }}
           onConfirm={takePayment}

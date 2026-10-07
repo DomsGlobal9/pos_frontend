@@ -57,6 +57,7 @@ function ExchangePayment({ shop, owner, difference, onCancel, onConfirm }) {
       creditPaise={connected ? (w?.credit?.usablePaise ?? 0) : (owner?.storeCreditPaise ?? 0)}
       points={w?.points && w.points.usablePaise > 0 ? { ...w.points, customerName: w.customerName } : null}
       walletNote={walletNote}
+      upiQr={!!(shop?.inventoryConnected && shop?.shop?.upiQrEnabled)}
       onCancel={onCancel}
       onConfirm={onConfirm}
     />
