@@ -110,7 +110,7 @@ export function CustomerDetail() {
       {/* POS-CUST-011. Only when there is something -- a zero here is noise on every card. */}
       {data.owedPaise > 0 && (
         <Link to="/orders" style={s.owes}>
-          Owes {rupees(data.owedPaise)} on kept orders →
+          Owes {rupees(data.owedPaise)} →
         </Link>
       )}
 

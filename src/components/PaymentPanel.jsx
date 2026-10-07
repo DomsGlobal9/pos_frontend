@@ -33,8 +33,12 @@ const NEEDS_REFERENCE = ['UPI', 'CARD']
 const COPY = {
   EXACT: { heading: 'To pay', confirm: 'Complete sale', remaining: 'Still to pay' },
   ADVANCE: { heading: 'Bill', confirm: 'Keep for customer', remaining: 'Balance they will owe' },
-  COLLECT: { heading: 'Owed', confirm: 'Take payment', remaining: 'Still owed after this' }
+  COLLECT: { heading: 'Owed', confirm: 'Take payment', remaining: 'Still owed after this' },
+  // A credit sale (udhaar): an advance in every rule, but the goods go home now.
+  CREDIT: { heading: 'Bill', confirm: 'Sell on credit', remaining: 'Owed on credit' }
 }
+// Credit and advance take the same rules: whatever is paid now, nothing included, up to the bill.
+const advanceLike = (mode) => mode === 'ADVANCE' || mode === 'CREDIT'
 
 export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT', creditPaise = 0, heading, upi, points = null, walletNote = null }) {
   // Contract §10. Points are offered only when Inventory says some can be used on THIS bill; the
@@ -52,7 +56,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
 
   // An advance starts EMPTY -- the cashier types what the customer is paying now. Defaulting it to
   // the whole bill would make a kept order silently fully paid whenever nobody noticed the field.
-  const [rows, setRows] = useState(() => [blank(methods[0] ?? 'CASH', mode === 'ADVANCE' ? 0 : totalPaise)])
+  const [rows, setRows] = useState(() => [blank(methods[0] ?? 'CASH', advanceLike(mode) ? 0 : totalPaise)])
   const [saving, setSaving] = useState(false)
   const firstBox = useRef(null)
 
@@ -62,11 +66,11 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
   const remaining = totalPaise - allocated
 
   // In ADVANCE mode a row left completely empty is simply "nothing paid now", not a mistake.
-  const counted = mode === 'ADVANCE' ? rows.filter(r => String(r.amount ?? '').trim() !== '') : rows
+  const counted = advanceLike(mode) ? rows.filter(r => String(r.amount ?? '').trim() !== '') : rows
   const creditUsed = rows.filter(r => r.method === 'CREDIT').reduce((sum, r) => sum + (toPaise(r.amount) ?? 0), 0)
   const pointsUsed = rows.filter(r => r.method === 'POINTS').reduce((sum, r) => sum + (toPaise(r.amount) ?? 0), 0)
   const problems = useMemo(() => rows.map(row => (
-    mode === 'ADVANCE' && String(row.amount ?? '').trim() === '' ? null
+    advanceLike(mode) && String(row.amount ?? '').trim() === '' ? null
       : row.method === 'CREDIT' && creditUsed > creditPaise
         ? `Only ${rupees(creditPaise)} of store credit is available.`
         : row.method === 'POINTS' && pointsUsed > pointsUsable
@@ -78,7 +82,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
 
   const amountsFit =
     mode === 'EXACT' ? remaining === 0
-    : mode === 'ADVANCE' ? remaining >= 0
+    : advanceLike(mode) ? remaining >= 0
     : allocated > 0 && remaining >= 0
   const canComplete = amountsFit && problems.every(p => !p) && !saving
 
@@ -123,6 +127,12 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
           <p style={s.muted}>
             Take whatever they are paying now — nothing is fine too. The rest is collected when they
             come for it.
+          </p>
+        )}
+        {mode === 'CREDIT' && (
+          <p style={s.muted}>
+            The goods go home now. Take whatever they are paying today — nothing is fine too. The rest is
+            owed, and shows under Orders → Due. A cashier needs a manager to sell on credit.
           </p>
         )}
 
