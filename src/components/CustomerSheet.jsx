@@ -95,6 +95,8 @@ export default function CustomerSheet({ onPick, onSkip, onClose }) {
           <div style={s.known}>
             <div style={s.knownName}>{found.name || 'No name yet'}</div>
             <div style={s.muted}>{found.phoneDisplay}</div>
+            {/* A business buyer: their tax invoices are made out to the business (Bill to). */}
+            {found.gstin && <div style={s.muted}>Business · GSTIN {found.gstin}</div>}
             <div style={s.stats}>
               <span>{found.visitCount} {found.visitCount === 1 ? 'visit' : 'visits'}</span>
               <span>{rupees(found.lifetimeSpentPaise)} spent</span>
