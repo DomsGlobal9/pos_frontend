@@ -23,7 +23,10 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' + our own register (src/lib/update.js): a new version waits until the till is idle,
+      // rather than reloading under a cashier mid-bill. It looks for one every 15 minutes.
+      registerType: 'prompt',
+      injectRegister: false,
       // Injected by the plugin, not hand-written: a hand-written service worker that caches the app
       // shell wrongly is how a shop ends up stuck on a version from last month with no way to
       // clear it.
@@ -31,7 +34,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         // A till is opened once and left open for a trading day. Skip waiting so a fix reaches the
         // counter on the next reload rather than whenever the last tab happens to close.
-        skipWaiting: true,
+        skipWaiting: false,
         clientsClaim: true,
         // NEVER cache the API. Stock, prices and a customer's balance must not be served from a
         // service worker -- a cached balance is exactly the number that is wrong. What the till
