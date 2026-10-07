@@ -29,6 +29,7 @@ const LABEL = {
   'cash.in': 'Cash in',
   'cash.out': 'Cash out',
   'day.closed': 'Day closed',
+  'day.reclosed': 'Day closed again',
   'inventory.connected': 'Connected to Inventory',
   'inventory.disconnected': 'Disconnected from Inventory',
   'inventory.retried': 'Inventory sending retried',
