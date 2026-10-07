@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { loadDay, closeTheDay, rupees, messageFor } from '../lib/api.js'
 import { Difference } from './Shift.jsx'
-import { askYesNo } from '../components/Ask.jsx'
+import { askYesNo, askText } from '../components/Ask.jsx'
 
 /**
  * WF-DAY-01. POS-DAY-001..005.
@@ -35,11 +35,11 @@ export default function DayClose() {
     enabled: !!date
   })
 
-  async function close(acceptOpenShifts = false) {
+  async function close(acceptOpenShifts = false, again = null) {
     setBusy(true)
     try {
-      await closeTheDay(date, acceptOpenShifts ? { acceptOpenShifts: true } : {})
-      toast.success('Day closed.')
+      await closeTheDay(date, { ...(acceptOpenShifts ? { acceptOpenShifts: true } : {}), ...(again ? { again: true, note: again } : {}) })
+      toast.success(again ? 'Day closed again, with the late bills in it.' : 'Day closed.')
       queryClient.invalidateQueries({ queryKey: ['day', date] })
     } catch (err) {
       const details = err?.response?.data?.details
@@ -49,13 +49,28 @@ export default function DayClose() {
           note: `${messageFor(err)} The open shifts will be noted on it.`,
           confirmLabel: 'Close the day'
         })
-        if (yes) await close(true)
+        if (yes) await close(true, again)
       } else {
         toast.error(messageFor(err))
       }
     } finally {
       setBusy(false)
     }
+  }
+
+  /*
+   * CLOSE AGAIN: bills after the day was closed (a late customer). The day is closed afresh with them
+   * in it; the earlier close is kept and listed, never overwritten. It asks why, because it rewrites
+   * a closed day -- and an accountant will want the reason.
+   */
+  async function closeAgain() {
+    const reason = await askText('Why close the day again?', '', {
+      note: 'The earlier close is kept. This one takes in everything since.',
+      placeholder: 'Late customer after closing',
+      confirmLabel: 'Close again'
+    })
+    if (reason === null) return
+    await close(false, reason.trim())
   }
 
   // Frozen figures when closed, live ones otherwise.
@@ -90,7 +105,22 @@ export default function DayClose() {
               Since closing: {data.closed.since.bills} more bill{data.closed.since.bills === 1 ? '' : 's'},{' '}
               {rupees(data.closed.since.netPaise)}
               {data.closed.since.returnsPaise ? `, ${rupees(data.closed.since.returnsPaise)} returned` : ''}.
+              {data.mayClose && (
+                <>{' '}<button onClick={closeAgain} disabled={busy}>{busy ? 'Closing…' : 'Close again'}</button></>
+              )}
             </p>
+          )}
+
+          {data.closed?.earlier?.length > 0 && (
+            <div style={s.muted} aria-label="Earlier closes of this day">
+              {data.closed.earlier.map(e => (
+                <div key={e.revision}>
+                  Closed before at {new Date(e.closedAt).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}
+                  {e.closedBy ? ` by ${e.closedBy}` : ''}: {e.bills} bill{e.bills === 1 ? '' : 's'}, {rupees(e.netPaise)}
+                  {e.note ? ` — "${e.note}"` : ''}
+                </div>
+              ))}
+            </div>
           )}
 
           {/* Closed already, and a till is still holding sales: they arrive after the close. POS-DAY-004. */}
