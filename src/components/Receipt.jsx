@@ -386,7 +386,7 @@ const PRINT_CSS = `
 }
 `
 
-const METHOD = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', EXCHANGE: 'Exchange credit' }
+const METHOD = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', EXCHANGE: 'Exchange credit', POINTS: 'Points' }
 
 const s = {
   tools: { display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' },
