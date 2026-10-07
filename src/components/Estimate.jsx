@@ -46,7 +46,7 @@ export default function Estimate({ shop, lines, totals, offers, customer, onClos
         <div className="receipt estimate-print" style={s.sheet}>
           <div style={s.centre}>
             <b style={{ fontSize: 14 }}>{shop?.shopName ?? 'Shop'}</b>
-            {shop?.address && <div>{shop.address}</div>}
+            {shop?.address && <div style={{ whiteSpace: 'pre-line' }}>{shop.address}</div>}
           </div>
           <hr style={s.rule} />
           <div style={{ ...s.centre, fontWeight: 700, letterSpacing: '0.04em' }}>ESTIMATE — NOT A BILL</div>
