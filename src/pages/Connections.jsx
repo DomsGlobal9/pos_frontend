@@ -390,7 +390,7 @@ function Export() {
   }
 
   return (
-    <Section Icon={ReceiptIndianRupee} title="Sales for your accountant" hint="Every bill and credit note with the GST split. Excel has three sheets: bills, GST by rate, days.">
+    <Section Icon={ReceiptIndianRupee} title="Sales for your accountant" hint="Every bill and credit note with the GST split. Excel has four sheets: bills, GST by rate, HSN summary (for GSTR-1), days.">
       <div style={s.dates}>
         <label style={s.label}>From<input type="date" value={from} max={today} onChange={e => setFrom(e.target.value)} aria-label="From" /></label>
         <label style={s.label}>To<input type="date" value={to} max={today} onChange={e => setTo(e.target.value)} aria-label="To" /></label>
