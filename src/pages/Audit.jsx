@@ -46,6 +46,8 @@ const LABEL = {
   'staff.changed': 'Person changed',
   'device.updated': 'Device changed',
   'shop.upi_set': 'UPI ID set',
+  'shop.logo_set': 'Logo changed',
+  'sale.offers_applied': 'Offers applied',
   'items.imported': 'Items imported from a file',
   'receipt.sent': 'Bill sent to the customer',
   'order.handed_over_with_due': 'Kept order handed over with money still owed',

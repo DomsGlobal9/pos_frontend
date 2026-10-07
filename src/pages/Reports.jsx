@@ -86,7 +86,8 @@ export default function Reports() {
             </div>
             <Tile label="Bills" value={String(r.sales.bills)} />
             <Tile label="Average bill" value={rupees(r.sales.averageBillPaise)} />
-            <Tile label="Discounts given" value={rupees(r.sales.discountPaise)} />
+            <Tile label="Discounts given" value={rupees(r.sales.discountPaise - (r.sales.offersPaise ?? 0))} />
+            {(r.sales.offersPaise ?? 0) > 0 && <Tile label="Offers" value={rupees(r.sales.offersPaise)} />}
           </section>
 
           <div style={wide ? s.twoCol : s.oneCol}>
@@ -138,7 +139,8 @@ export default function Reports() {
                 {r.returns.reasons.length > 0 && (
                   <div style={s.chips}>{r.returns.reasons.map(x => <span key={x.reason} className="chip">{x.reason} · {x.count}</span>)}</div>
                 )}
-                <Line label="Discounts given" value={rupees(r.discounts.totalPaise)} />
+                <Line label="Discounts given" value={rupees(r.discounts.totalPaise - (r.discounts.offersPaise ?? 0))} />
+                {(r.discounts.offersPaise ?? 0) > 0 && <Line label="Offers (Inventory's prices)" value={rupees(r.discounts.offersPaise)} />}
                 <Line label={`Prices changed (${r.discounts.priceOverrides})`} value={r.discounts.priceOverrides ? `${rupees(r.discounts.priceOverridesGivenPaise)} below the tag` : '—'} />
                 {Object.keys(r.discounts.approvals).length > 0 && (
                   <div style={s.chips}>
