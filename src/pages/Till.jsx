@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { searchItems, completeSale, parkBill, quoteBasket, loadWallet, messageFor, rupees } from '../lib/api.js'
 import { isTouchFirst } from '../lib/useMedia.js'
-import { basketTotals, lineTotal, unitPrice, offerOn, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
+import { basketTotals, estimatedTaxablePaise, lineTotal, unitPrice, offerOn, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
 import { addToOutbox, isNetworkFailure, outboxItems } from '../lib/outbox.js'
 import { checkIn } from '../lib/device.js'
 import PaymentPanel from '../components/PaymentPanel.jsx'
@@ -16,6 +16,7 @@ import { Search, ScanBarcode, UserPlus, User, X, Camera } from 'lucide-react'
 // load is on the path of every sale.
 const CameraScan = lazy(() => import('../components/CameraScan.jsx'))
 import CustomerSheet from '../components/CustomerSheet.jsx'
+import { LARGE_B2C_PAISE } from '../lib/gst.js'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
 import KeepSheet from '../components/KeepSheet.jsx'
 import HeldSheet from '../components/HeldSheet.jsx'
@@ -109,6 +110,14 @@ export default function Till() {
 
   const offers = quote?.byCode ?? null
   const totals = basketTotals(lines, billDiscountPaise, offers)
+  /*
+   * RULE 46: a tax invoice of Rs 50,000 or more (before GST) to a customer without a GSTIN names them
+   * and gives their address. Asked for here, before payment; never a reason to stop the sale.
+   */
+  const shopTaxInvoices = !!shop?.shop?.gstin && !['COMPOSITION', 'UNREGISTERED'].includes(shop?.shop?.gstRegistration)
+  const needsBuyer = shopTaxInvoices && !customer?.gstin
+    && estimatedTaxablePaise(lines, offers, totals.totalPaise) >= LARGE_B2C_PAISE
+    && !(customer?.name && customer?.address)
 
   /*
    * THE OFFERS, asked of Inventory as the basket changes. Contract §9.
@@ -800,6 +809,14 @@ export default function Till() {
                 </button>
               )}
             </div>
+            {needsBuyer && (
+              <div style={s.muted} role="note">
+                Rs 50,000 or more: GST rules ask for the customer's name and address on this bill.{' '}
+                <button type="button" style={s.linkish} onClick={() => setAskingCustomer(true)}>
+                  {customer ? 'Add them' : 'Add customer'}
+                </button>
+              </div>
+            )}
             <div style={s.totalLabel}>Total</div>
             <div style={s.totalValue}>{rupees(totals.totalPaise)}</div>
             {totals.offersPaise > 0 && (
@@ -936,6 +953,7 @@ export default function Till() {
 
       {askingCustomer && (
         <CustomerSheet
+          needAddress={needsBuyer}
           onPick={(c) => {
             setCustomer(c)
             setAskingCustomer(false)
@@ -1054,6 +1072,7 @@ const s = {
   },
   customerName: { fontWeight: 700, fontSize: 14 },
   customerClear: { minHeight: 30, minWidth: 30, padding: 0, borderRadius: 999, border: 'none', boxShadow: 'none', background: 'transparent', color: 'var(--brand-deep)', display: 'grid', placeItems: 'center' },
+  linkish: { background: 'none', border: 'none', padding: 0, color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' },
   customerAdd: { minHeight: 40, padding: '0 14px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 999 },
   totalLabel: { fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.08em' },
   totalValue: { fontSize: 44, fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.02em' },

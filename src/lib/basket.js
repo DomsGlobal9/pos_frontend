@@ -41,6 +41,17 @@ export function lineTotal(line, offers) {
 }
 
 /**
+ * The bill's value before GST, ESTIMATED for the screen from each line's rate -- only to decide
+ * whether to ask for a large bill's customer details (Rule 46). The server works out the real figure.
+ */
+export function estimatedTaxablePaise(lines, offers, totalPaise) {
+  const gross = lines.reduce((n, l) => n + lineTotal(l, offers), 0)
+  if (gross <= 0) return 0
+  const taxable = lines.reduce((n, l) => n + lineTotal(l, offers) * 100 / (100 + Number(l.taxRate ?? 0)), 0)
+  return Math.round(totalPaise * taxable / gross)
+}
+
+/**
  * What the bill comes to, for the screen.
  *
  * Mirrors the server's order of operations -- tags (or overrides), then the bill discount, then

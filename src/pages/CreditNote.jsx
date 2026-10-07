@@ -103,12 +103,12 @@ export default function CreditNote() {
           </div>
         )}
         {/* Against a bill made out to a GST-registered buyer: the same buyer, as issued (Rule 53). */}
-        {note.originalSale.buyerGstin && (
+        {(note.originalSale.buyerGstin || note.originalSale.buyerName || note.originalSale.buyerAddress) && (
           <div style={{ margin: '6px 0' }}>
             <div><b>Bill to</b></div>
             {note.originalSale.buyerName && <div>{note.originalSale.buyerName}</div>}
             {note.originalSale.buyerAddress && <div style={{ whiteSpace: 'pre-line' }}>{note.originalSale.buyerAddress}</div>}
-            <div>GSTIN {note.originalSale.buyerGstin}</div>
+            {note.originalSale.buyerGstin && <div>GSTIN {note.originalSale.buyerGstin}</div>}
           </div>
         )}
         <div>Reason: {note.reason}</div>

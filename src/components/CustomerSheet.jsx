@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { findCustomerByPhone, createCustomer, rupees, messageFor } from '../lib/api.js'
+import { findCustomerByPhone, createCustomer, saveCustomerDetails, rupees, messageFor } from '../lib/api.js'
 
 /**
  * WF-CUST-01. POS-CUST-002, -004, -005, -006, -010.
@@ -16,9 +16,11 @@ import { findCustomerByPhone, createCustomer, rupees, messageFor } from '../lib/
  * that gets fake numbers typed into it — which is worse than no customer at all, because a fake
  * number becomes a permanent record that splits someone else's history.
  */
-export default function CustomerSheet({ onPick, onSkip, onClose }) {
+export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = false }) {
   const [phone, setPhone] = useState('')
   const [name, setName] = useState('')
+  // A tax invoice of Rs 50,000 or more names the customer and gives their address (GST rule 46).
+  const [address, setAddress] = useState('')
   const [consent, setConsent] = useState(false)
   const [found, setFound] = useState(null)
   const [searched, setSearched] = useState(false)
@@ -48,12 +50,29 @@ export default function CustomerSheet({ onPick, onSkip, onClose }) {
     }
   }
 
+  // A known customer with no name or address on file, on a bill that needs them: fill them in here.
+  async function completeAndUse() {
+    setBusy(true)
+    try {
+      const updated = await saveCustomerDetails(found.id, {
+        ...(name.trim() && !found.name ? { name: name.trim() } : {}),
+        ...(address.trim() && !found.address ? { address: address.trim() } : {})
+      })
+      onPick({ ...found, ...updated })
+    } catch (error) {
+      toast.error(messageFor(error))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   async function save() {
     setBusy(true)
     try {
       const { customer } = await createCustomer({
         phone,
         ...(name.trim() ? { name: name.trim() } : {}),
+        ...(address.trim() ? { address: address.trim() } : {}),
         ...(consent ? { marketingConsent: true } : {})
       })
       onPick(customer)
@@ -101,9 +120,25 @@ export default function CustomerSheet({ onPick, onSkip, onClose }) {
               <span>{found.visitCount} {found.visitCount === 1 ? 'visit' : 'visits'}</span>
               <span>{rupees(found.lifetimeSpentPaise)} spent</span>
             </div>
-            <button style={s.primary} onClick={() => onPick(found)}>
-              Use {found.name ? found.name.split(' ')[0] : 'this customer'}
-            </button>
+            {needAddress && !found.gstin && (!found.name || !found.address) ? (
+              <>
+                <p style={s.muted}>This bill is Rs 50,000 or more: GST rules ask for their name and address on it.</p>
+                {!found.name && (
+                  <label style={s.label}>Name<input value={name} onChange={e => setName(e.target.value)} aria-label="Customer name" /></label>
+                )}
+                {!found.address && (
+                  <label style={s.label}>Address<textarea value={address} onChange={e => setAddress(e.target.value)} rows={2} maxLength={300} aria-label="Customer address" /></label>
+                )}
+                <button style={s.primary} onClick={completeAndUse} disabled={busy || (!found.name && !name.trim()) || (!found.address && !address.trim())}>
+                  {busy ? 'Saving…' : 'Save and use'}
+                </button>
+                <button type="button" onClick={() => onPick(found)} disabled={busy}>Use without them</button>
+              </>
+            ) : (
+              <button style={s.primary} onClick={() => onPick(found)}>
+                Use {found.name ? found.name.split(' ')[0] : 'this customer'}
+              </button>
+            )}
           </div>
         )}
 
@@ -116,10 +151,17 @@ export default function CustomerSheet({ onPick, onSkip, onClose }) {
                 ref={nameBox}
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="Optional"
+                placeholder={needAddress ? 'Needed on this bill' : 'Optional'}
                 aria-label="Customer name"
               />
             </label>
+            {needAddress && (
+              <label style={s.label}>
+                Address
+                <textarea value={address} onChange={e => setAddress(e.target.value)} rows={2} maxLength={300}
+                  placeholder="Needed on bills of Rs 50,000 or more" aria-label="Customer address" />
+              </label>
+            )}
             {/*
               * Only ever turned ON here. A screen without the tick is not the customer saying no —
               * it is usually nobody having asked — so nothing in the sell flow withdraws consent.
