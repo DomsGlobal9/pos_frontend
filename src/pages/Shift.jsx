@@ -48,7 +48,7 @@ export default function Shift() {
     <div style={s.page}>
       <h1 style={s.title}>Shift · {data.counter.name}</h1>
 
-      {!shift && <OpenForm counterId={counter.id} suggested={data.suggestedOpeningPaise} onOpened={refresh} />}
+      {!shift && <OpenForm key={data.suggestedOpeningPaise ?? 'none'} counterId={counter.id} suggested={data.suggestedOpeningPaise} onOpened={refresh} />}
 
       {shift && (
         <>
@@ -135,7 +135,12 @@ export default function Shift() {
       {closing && shift && (
         <CloseSheet
           shiftId={shift.id}
-          onDone={() => { setClosing(false); refresh() }}
+          onDone={() => {
+            // It is closed: never show it open again while the fresh figures load (a second Close would be refused).
+            queryClient.setQueryData(['shift', counter.id], d => d && { ...d, open: null })
+            setClosing(false)
+            refresh()
+          }}
           onCancel={() => setClosing(false)}
         />
       )}
