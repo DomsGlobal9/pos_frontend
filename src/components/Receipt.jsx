@@ -351,6 +351,15 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
           </>
         )}
 
+        {(sale.pointsEarned > 0 || sale.pointsUsed > 0) && (
+          <>
+            <Rule />
+            {sale.pointsUsed > 0 && <div style={s.line}><span>Points used</span><span>{sale.pointsUsed}</span></div>}
+            {sale.pointsEarned > 0 && <div style={s.line}><span>Points earned</span><span>{sale.pointsEarned}</span></div>}
+            {sale.pointsBalanceAfter != null && <div style={{ ...s.line, fontWeight: 700 }}><span>Points balance</span><span>{sale.pointsBalanceAfter}</span></div>}
+          </>
+        )}
+
         {kindOf(sale) === 'BILL_OF_SUPPLY' && (
           <>
             <Rule />
