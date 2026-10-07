@@ -113,6 +113,9 @@ function describe(need) {
     return `Refunding ${rupees(need.totalPaise)} on ${need.invoiceNo}, which is ${need.daysSince} days old. ` +
       `The shop takes returns for ${need.windowDays} days.`
   }
+  if (need.kind === 'PAY_LATER') {
+    return `Selling on credit: ${rupees(need.owedPaise)} of a ${rupees(need.totalPaise)} bill will be owed, and the goods go home now.`
+  }
   return 'Something on this bill needs a manager.'
 }
 

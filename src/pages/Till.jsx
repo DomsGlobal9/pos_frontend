@@ -390,7 +390,9 @@ export default function Till() {
       ...(quote?.id ? { quoteId: quote.id } : {}),
       ...(couponCode ? { couponCode } : {}),
       ...(managerApproval ? { approval: managerApproval } : {}),
-      ...(keeping?.step === 'payment'
+      ...(keeping?.step === 'payment' && keeping.payLater
+        ? { payLater: true }
+        : keeping?.step === 'payment'
         ? {
             kind: 'KEPT',
             ...(keeping.promisedAt ? { promisedAt: keeping.promisedAt } : {}),
@@ -499,6 +501,20 @@ export default function Till() {
       return
     }
     setKeeping({ step: 'details' })
+  }
+
+  /*
+   * A CREDIT SALE (udhaar): the goods go home now and the rest is owed. Owed money belongs to a
+   * person, so the customer comes first; then straight to what they pay now -- nothing is fine.
+   */
+  function startCredit() {
+    setShowMore(false)
+    if (!customer) {
+      setKeepAfterCustomer('CREDIT')
+      setAskingCustomer(true)
+      return
+    }
+    setKeeping({ step: 'payment', payLater: true })
   }
 
   /**
@@ -808,6 +824,9 @@ export default function Till() {
             {lines.length > 0 && (
               <button onClick={startKeeping}>Keep for customer</button>
             )}
+            {lines.length > 0 && (
+              <button onClick={startCredit}>Sell on credit</button>
+            )}
             {lines.length > 0 && <button onClick={parkCurrent}>Park this bill</button>}
             <button onClick={() => { setShowMore(false); setShowHeld(true) }}>Parked bills</button>
             {lines.length > 0 && (
@@ -828,7 +847,7 @@ export default function Till() {
 
       {keeping?.step === 'payment' && (
         <PaymentPanel
-          mode="ADVANCE"
+          mode={keeping.payLater ? 'CREDIT' : 'ADVANCE'}
           totalPaise={totals.totalPaise}
           enabledMethods={shop?.shop?.enabledPaymentMethods}
           {...walletProps}
@@ -862,8 +881,8 @@ export default function Till() {
             setCustomer(c)
             setAskingCustomer(false)
             if (keepAfterCustomer) {
+              setKeeping(keepAfterCustomer === 'CREDIT' ? { step: 'payment', payLater: true } : { step: 'details' })
               setKeepAfterCustomer(false)
-              setKeeping({ step: 'details' })
             } else {
               refocus()
             }

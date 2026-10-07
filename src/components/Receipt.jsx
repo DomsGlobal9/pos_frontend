@@ -328,7 +328,8 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
         {sale.kind === 'KEPT' && (
           <>
             <Rule />
-            <div style={s.centre}><b>KEPT FOR COLLECTION</b></div>
+            {/* A credit sale is a kept order that went home at once: it is owed, not waiting. */}
+            <div style={s.centre}><b>{sale.handoverDuePaise ? 'ON CREDIT' : 'KEPT FOR COLLECTION'}</b></div>
             {sale.note && <div>{sale.note}</div>}
             {sale.promisedAt && (
               <div style={s.line}>
