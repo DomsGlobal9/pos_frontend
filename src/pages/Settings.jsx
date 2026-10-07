@@ -109,6 +109,10 @@ export default function Settings() {
         {connected
           ? <p style={s.muted}>Set in Inventory (Settings → Name, logo and bill details). It reaches the till with the next item refresh.</p>
           : !owner && <p style={s.muted}>Only the owner can change this.</p>}
+        {/* GST is optional: no GSTIN is a normal shop, not a problem -- said once, quietly. */}
+        {!shop?.shop?.gstin && (
+          <p style={s.muted}>No GSTIN on file, so every bill is a plain receipt with no GST. That is fine -- GST is optional.</p>
+        )}
       </section>
 
       <section style={s.card}>
@@ -134,7 +138,11 @@ export default function Settings() {
       <Link to="/inventory-link" style={s.row}><span style={s.icon}><Boxes size={18} aria-hidden="true" /></span>Inventory link</Link>
       <Link to="/devices" style={s.row}><span style={s.icon}><Monitor size={18} aria-hidden="true" /></span>Devices</Link>
 
-      <p style={s.muted}>Shop name, GSTIN, address, invoice numbering and discount limits are set up by ScaleEzy for now.</p>
+      <p style={s.muted}>
+        {connected
+          ? 'Shop name, address, phone, GSTIN, receipt footer and discount limits come from Inventory (Settings → Name, logo and bill details), with the next item refresh. Invoice numbering is set up by ScaleEzy.'
+          : 'Shop name, GSTIN, address, invoice numbering and discount limits are set up by ScaleEzy for now.'}
+      </p>
     </div>
   )
 }
