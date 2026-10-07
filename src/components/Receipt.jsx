@@ -233,6 +233,7 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
           {shop.logoUrl && <img src={shop.logoUrl} alt="" style={{ display: 'block', maxWidth: 160, maxHeight: 64, margin: '0 auto 6px' }} />}
           <b style={{ fontSize: 14 }}>{shop.shopName ?? 'Shop'}</b>
           {shop.address && <div>{shop.address}</div>}
+          {shop.phone && <div>Ph {shop.phone}</div>}
           {/* A plain receipt is from a shop with no GST registration: there is no GSTIN to print. */}
           {shop.gstin && kindOf(sale) !== 'RECEIPT' && <div>GSTIN {shop.gstin}</div>}
         </div>
