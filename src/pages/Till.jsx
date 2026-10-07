@@ -20,6 +20,7 @@ import ApprovalSheet from '../components/ApprovalSheet.jsx'
 import KeepSheet from '../components/KeepSheet.jsx'
 import HeldSheet from '../components/HeldSheet.jsx'
 import { askText } from '../components/Ask.jsx'
+import Estimate from '../components/Estimate.jsx'
 
 /**
  * The sell screen.
@@ -98,6 +99,7 @@ export default function Till() {
   const quoteSeq = useRef(0)
   // The customer's points and store credit, from Inventory, read when the payment screen opens (§10).
   const [wallet, setWallet] = useState(null)
+  const [showEstimate, setShowEstimate] = useState(false)
   const searchBox = useRef(null)
 
   // The shell already loads these and shows connection state in the header; asking again here
@@ -827,6 +829,9 @@ export default function Till() {
             {lines.length > 0 && (
               <button onClick={startCredit}>Sell on credit</button>
             )}
+            {lines.length > 0 && (
+              <button onClick={() => { setShowMore(false); setShowEstimate(true) }}>Estimate</button>
+            )}
             {lines.length > 0 && <button onClick={parkCurrent}>Park this bill</button>}
             <button onClick={() => { setShowMore(false); setShowHeld(true) }}>Parked bills</button>
             {lines.length > 0 && (
@@ -835,6 +840,11 @@ export default function Till() {
             <button onClick={() => { setShowMore(false); refocus() }}>Close</button>
           </div>
         </div>
+      )}
+
+      {showEstimate && (
+        <Estimate shop={shop?.shop} lines={lines} totals={totals} offers={offers} customer={customer}
+          onClose={() => { setShowEstimate(false); refocus() }} />
       )}
 
       {keeping?.step === 'details' && (
