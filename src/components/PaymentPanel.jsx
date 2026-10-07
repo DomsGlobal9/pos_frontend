@@ -84,7 +84,9 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
     mode === 'EXACT' ? remaining === 0
     : advanceLike(mode) ? remaining >= 0
     : allocated > 0 && remaining >= 0
-  const canComplete = amountsFit && problems.every(p => !p) && !saving
+  // A bill discounted to nothing: nothing to take, and Complete is the only thing to press.
+  const free = mode === 'EXACT' && totalPaise === 0
+  const canComplete = free ? !saving : amountsFit && problems.every(p => !p) && !saving
 
   const update = (index, patch) =>
     setRows(current => current.map((row, i) => (i === index ? { ...row, ...patch } : row)))
@@ -107,7 +109,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
     if (!canComplete) return
     setSaving(true)
     try {
-      await onConfirm(counted.map(row => toPayment(row, pointStep)))
+      await onConfirm(free ? [] : counted.map(row => toPayment(row, pointStep)))
     } finally {
       // Stays open on failure, with everything typed still there. A save that failed must never
       // look like a sale that happened.
@@ -136,7 +138,8 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
           </p>
         )}
 
-        {rows.map((row, index) => (
+        {free && <p style={s.muted}>Nothing to pay: the bill comes to ₹0. Complete it to record the pieces going out.</p>}
+        {!free && rows.map((row, index) => (
           <div key={index} style={s.block}>
             {rows.length > 1 && (
               <div style={s.blockHead}>
