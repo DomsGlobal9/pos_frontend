@@ -165,7 +165,8 @@ export default function Till() {
   const w = wallet?.ok ? wallet.wallet : null
   const walletProps = {
     creditPaise: fromInventory ? (w?.credit?.usablePaise ?? 0) : (customer?.storeCreditPaise ?? 0),
-    points: w?.points && w.points.usablePaise > 0 ? w.points : null,
+    // With the name: Inventory finds the customer by phone, so the cashier confirms it is the right person.
+    points: w?.points && w.points.usablePaise > 0 ? { ...w.points, customerName: w.customerName } : null,
     walletNote: wallet && !wallet.ok ? wallet.reason
       : w?.points?.reason ?? w?.reason ?? null
   }
