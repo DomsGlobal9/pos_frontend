@@ -71,6 +71,7 @@ export default function Items() {
           This shop’s items come from Inventory. Add and price them there, then press{' '}
           <Link to="/inventory-link">Refresh items from Inventory</Link>.
         </p>
+        <Link to="/labels">Print barcode labels →</Link>
       </div>
     )
   }
@@ -79,6 +80,7 @@ export default function Items() {
     <div style={s.page}>
       <div style={s.head}>
         <h1>Items</h1>
+        <Link to="/labels">Print barcode labels</Link>
         {!form && (
           <button style={s.primary} onClick={() => setForm({ ...EMPTY })}>
             <Plus size={16} aria-hidden="true" /> Add item

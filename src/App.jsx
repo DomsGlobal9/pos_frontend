@@ -24,6 +24,7 @@ import Sync from './pages/Sync.jsx'
 import Connections from './pages/Connections.jsx'
 import Staff from './pages/Staff.jsx'
 import Items from './pages/Items.jsx'
+import Labels from './pages/Labels.jsx'
 import ShopSetup from './pages/ShopSetup.jsx'
 
 /**
@@ -79,6 +80,7 @@ const router = createBrowserRouter([
       { path: 'staff', element: <Staff /> },
 
       { path: 'items', element: <Items /> },
+      { path: 'labels', element: <Labels /> },
       // WF-PAY-02.
       { path: 'payment-checks', element: <PaymentChecks /> },
       {
