@@ -6,6 +6,7 @@ import { useDevice, isTouchFirst } from './lib/useMedia.js'
 import NavBar from './components/NavBar.jsx'
 import { useEffect, useState } from 'react'
 import { checkIn } from './lib/device.js'
+import { applyUpdate, updateReady } from './lib/update.js'
 import { useOutbox, flush, outboxItems } from './lib/outbox.js'
 import { onSession, tillToken, personOut } from './lib/session.js'
 import { OpenTill, WhoAtTill } from './components/TillGate.jsx'
@@ -124,6 +125,7 @@ export default function AppShell() {
             </div>
           </div>
           <Connection status={status} offline={!online || unreachable} waiting={waiting.length} inventory={shop?.inventoryConnected === true} />
+          <UpdateReady />
         </header>
 
         <div style={s.content} className="shell-content">
@@ -144,6 +146,23 @@ export default function AppShell() {
  * "ECONNREFUSED" -- and it distinguishes the server being unreachable from the server being up
  * with a database problem, because those need different people to fix them.
  */
+/** A new version is waiting: it goes in by itself when this bill is done, or now on a tap. */
+function UpdateReady() {
+  const [ready, setReady] = useState(updateReady())
+  useEffect(() => {
+    const on = () => setReady(true)
+    window.addEventListener('pos:update-ready', on)
+    return () => window.removeEventListener('pos:update-ready', on)
+  }, [])
+  if (!ready) return null
+  return (
+    <span className="chip" style={s.state} role="status">
+      A new version is ready — it updates when this bill is done.{' '}
+      <button type="button" onClick={applyUpdate} style={{ padding: '0 6px' }}>Update now</button>
+    </span>
+  )
+}
+
 function Connection({ status, offline, waiting, inventory }) {
   // Sales on this till that the server has not got. POS-SYNC-003: never "All saved" while any are.
   const held = waiting > 0 && (
