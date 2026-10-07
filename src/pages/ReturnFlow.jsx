@@ -3,7 +3,7 @@ import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-  loadReturnInfo, quoteReturn, recordReturn, recordExchange, searchItems, rupees, messageFor
+  loadReturnInfo, quoteReturn, recordReturn, recordExchange, searchItems, rupees, messageFor, loadWallet
 } from '../lib/api.js'
 import { basketTotals, newOnceKey } from '../lib/basket.js'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
@@ -27,6 +27,41 @@ import PaymentPanel from '../components/PaymentPanel.jsx'
  * piece is worth depends on its share of the bill's discount, and the cashier is about to say that
  * number out loud to a customer.
  */
+
+/**
+ * The difference on an exchange, paid like any bill: in a connected shop the customer's points and
+ * store credit are Inventory's, asked for here (as the till does) and held when the exchange is saved.
+ * Offline or no answer: one line, and the rest is taken in cash, UPI or card.
+ */
+function ExchangePayment({ shop, owner, difference, onCancel, onConfirm }) {
+  const connected = !!(shop?.inventoryConnected && owner?.id)
+  const online = navigator.onLine
+  const { data: wallet, isError } = useQuery({
+    queryKey: ['wallet', owner?.id, difference],
+    queryFn: () => loadWallet(owner.id, difference),
+    enabled: connected && online,
+    retry: false,
+    staleTime: 0
+  })
+  const w = wallet?.ok ? wallet.wallet : null
+  const walletNote = !connected ? null
+    : !online ? 'Points and store credit can\'t be used offline. Take the payment another way.'
+    : isError ? 'Points and store credit can\'t be used right now. Take the rest another way.'
+    : wallet && !wallet.ok ? wallet.reason
+    : w?.points?.reason ?? w?.reason ?? null
+  return (
+    <PaymentPanel
+      totalPaise={difference}
+      heading="Difference to pay"
+      enabledMethods={shop?.shop?.enabledPaymentMethods}
+      creditPaise={connected ? (w?.credit?.usablePaise ?? 0) : (owner?.storeCreditPaise ?? 0)}
+      points={w?.points && w.points.usablePaise > 0 ? { ...w.points, customerName: w.customerName } : null}
+      walletNote={walletNote}
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+    />
+  )
+}
 
 const REASONS = ['Wrong size', 'Damaged', 'Colour not as expected', 'Changed mind']
 const MONEY = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', STORE_CREDIT: 'Store credit' }
@@ -431,11 +466,10 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
       </div>
 
       {paying && (
-        <PaymentPanel
-          totalPaise={difference}
-          heading="Difference to pay"
-          enabledMethods={shop?.shop?.enabledPaymentMethods}
-          creditPaise={owner?.storeCreditPaise ?? 0}
+        <ExchangePayment
+          shop={shop}
+          owner={owner}
+          difference={difference}
           onCancel={() => setPaying(false)}
           onConfirm={async (payments) => { await send(payload({ payments })) }}
         />
