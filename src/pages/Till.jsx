@@ -62,7 +62,7 @@ export default function Till() {
    * Null is a perfectly good final answer -- someone paying cash who will not give a number is a
    * normal Saturday -- so nothing below may treat it as a missing value to be chased.
    */
-  const [customer, setCustomer] = useState(null)
+  const [customer, setCustomer] = useState(draft.customer ?? null)
   const [askingCustomer, setAskingCustomer] = useState(false)
 
   /*
@@ -72,7 +72,7 @@ export default function Till() {
    * APPROVAL_REQUIRED and the approval sheet opens on top of everything -- basket, payment and
    * customer all stay where they are.
    */
-  const [billDiscountPaise, setBillDiscountPaise] = useState(0)
+  const [billDiscountPaise, setBillDiscountPaise] = useState(draft.billDiscountPaise ?? 0)
 
   // The in-place approval. Holds the payments the cashier already entered, so approving does not
   // mean entering them again.
@@ -95,7 +95,7 @@ export default function Till() {
   const [showMore, setShowMore] = useState(false)
   // Inventory's quote for this basket (§9): the offers per code, the coupon's fate, or why there is none.
   const [quote, setQuote] = useState(null)
-  const [couponCode, setCouponCode] = useState('')
+  const [couponCode, setCouponCode] = useState(draft.couponCode ?? '')
   const quoteSeq = useRef(0)
   // The customer's points and store credit, from Inventory, read when the payment screen opens (§10).
   const [wallet, setWallet] = useState(null)
@@ -187,7 +187,7 @@ export default function Till() {
 
   // Saved together. A reload mid-sale keeps the same key, so resubmitting the same basket
   // replays instead of charging twice.
-  useEffect(() => { saveDraft(lines, onceKey) }, [lines, onceKey])
+  useEffect(() => { saveDraft(lines, onceKey, { customer, billDiscountPaise, couponCode }) }, [lines, onceKey, customer, billDiscountPaise, couponCode])
 
   // The box takes focus back whenever nothing is in the way. A scanner fires into whatever has
   // focus, so anything else means a scanned saree lands in the void.

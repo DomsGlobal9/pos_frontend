@@ -87,9 +87,14 @@ export function newOnceKey() {
  * blocked, and a till that will not open because it could not save a draft is worse than a till
  * that forgets one.
  */
-export function saveDraft(lines, onceKey) {
+/*
+ * The whole bill in progress, not only its lines: a reload that kept the sarees but dropped the
+ * customer or a discount the manager had approved charged the customer more, or lost their points,
+ * without a word (found on the live till, 7 Oct).
+ */
+export function saveDraft(lines, onceKey, extra = {}) {
   try {
-    localStorage.setItem(KEY, JSON.stringify({ lines, onceKey }))
+    localStorage.setItem(KEY, JSON.stringify({ lines, onceKey, ...extra }))
   } catch {
     // Nothing to do, and nothing worth telling the cashier about.
   }
@@ -101,7 +106,12 @@ export function loadDraft() {
     const raw = localStorage.getItem(KEY)
     const parsed = raw ? JSON.parse(raw) : null
     if (parsed && Array.isArray(parsed.lines) && typeof parsed.onceKey === 'string') {
-      return { lines: parsed.lines, onceKey: parsed.onceKey }
+      return {
+        lines: parsed.lines, onceKey: parsed.onceKey,
+        customer: parsed.customer ?? null,
+        billDiscountPaise: Number.isInteger(parsed.billDiscountPaise) ? parsed.billDiscountPaise : 0,
+        couponCode: typeof parsed.couponCode === 'string' ? parsed.couponCode : ''
+      }
     }
   } catch {
     // Fall through to a fresh basket.
