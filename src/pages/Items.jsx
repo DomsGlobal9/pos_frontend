@@ -69,9 +69,8 @@ export default function Items() {
         <h1>Items</h1>
         <p style={s.muted}>
           This shop’s items come from Inventory. Add and price them there, then press{' '}
-          <Link to="/inventory-link">Refresh items from Inventory</Link>.
+          <Link to="/inventory-link">Refresh items from Inventory</Link>. Barcode labels are printed there too.
         </p>
-        <Link to="/labels">Print barcode labels →</Link>
       </div>
     )
   }
