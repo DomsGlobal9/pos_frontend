@@ -1,4 +1,4 @@
-import { HEADING, COMPOSITION_DECLARATION, kindOf } from '../lib/gst.js'
+import { HEADING, COMPOSITION_DECLARATION, kindOf, stateOf } from '../lib/gst.js'
 import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -254,13 +254,15 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
           </div>
         )}
         {/* A tax invoice to a GST-registered business: the buyer as issued (Rule 46). */}
-        {sale.buyerGstin && (
+        {(sale.buyerGstin || sale.buyerName || sale.buyerAddress) && (
           <>
             <Rule />
             <div><b>Bill to</b></div>
             {sale.buyerName && <div>{sale.buyerName}</div>}
             {sale.buyerAddress && <div style={{ whiteSpace: 'pre-line' }}>{sale.buyerAddress}</div>}
-            <div>GSTIN {sale.buyerGstin}</div>
+            {sale.buyerGstin
+              ? <div>GSTIN {sale.buyerGstin}</div>
+              : stateOf(shop.gstin) && <div>State {stateOf(shop.gstin)}</div>}
           </>
         )}
 
