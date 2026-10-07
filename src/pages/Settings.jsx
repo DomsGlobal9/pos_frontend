@@ -118,7 +118,12 @@ export default function Settings() {
           so a simple mark reads better than fine detail.
         </p>
         {logo && <img src={logo} alt="The logo as it will print" style={s.logoPreview} />}
-        {owner ? (
+        {connected ? (
+          <p style={s.muted}>
+            Comes from Inventory (Settings → Name, logo and bill details), like the items and prices. It reaches
+            the till with the next item refresh.
+          </p>
+        ) : owner ? (
           <div style={s.actions}>
             <input type="file" accept="image/*" aria-label="Choose a logo picture" onChange={pickLogo} disabled={busyLogo} />
             {logo && <button disabled={busyLogo} onClick={() => saveLogo(null)}>Remove</button>}
