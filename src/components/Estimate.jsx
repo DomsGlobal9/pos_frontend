@@ -1,5 +1,6 @@
 import { rupees } from '../lib/api.js'
 import { lineTotal, offerOn, unitPrice } from '../lib/basket.js'
+import { waLink } from '../lib/whatsapp.js'
 
 /**
  * An ESTIMATE of the basket on the till -- "what would these come to?" -- on paper, before anyone
@@ -32,6 +33,13 @@ export default function Estimate({ shop, lines, totals, offers, customer, onClos
           <b>Estimate</b>
           <span style={{ flex: 1 }} />
           <button onClick={() => window.print()} style={s.primary}>Print</button>
+          {(() => {
+            const href = customer && waLink(customer.phone,
+              `Estimate from ${shop?.shopName ?? 'the shop'}, valid until ${day(until)}:\n` +
+              lines.map(l => `${l.qty} x ${[l.name, l.colour, l.size].filter(Boolean).join(', ')} - ${rupees(lineTotal(l, offers))}`).join('\n') +
+              `\nEstimated total ${rupees(totals.totalPaise)} (incl. all taxes). Not a bill.`)
+            return href ? <a href={href} target="_blank" rel="noreferrer">WhatsApp</a> : null
+          })()}
           <button onClick={onClose}>Close</button>
         </div>
 
