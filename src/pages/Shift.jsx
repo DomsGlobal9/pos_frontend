@@ -145,7 +145,15 @@ export default function Shift() {
 
 /** POS-SHIFT-001. The float, prefilled with what the last shift on this counter was counted at. */
 function OpenForm({ counterId, suggested, onOpened }) {
-  const [amount, setAmount] = useState(suggested != null ? String(suggested / 100) : '')
+  const offered = suggested != null ? String(suggested / 100) : ''
+  const [amount, setAmount] = useState(offered)
+  // While the offered figure is untouched, the first thing typed replaces it, as if it were selected:
+  // typed after it, 22599 + 5000 became 225995000 (found live 7 Oct). Backspace edits it as usual.
+  const [untouched, setUntouched] = useState(offered !== '')
+  function type(value) {
+    setAmount(untouched && value.length > offered.length && value.startsWith(offered) ? value.slice(offered.length) : value)
+    setUntouched(false)
+  }
   const [busy, setBusy] = useState(false)
 
   async function submit(event) {
@@ -170,7 +178,7 @@ function OpenForm({ counterId, suggested, onOpened }) {
       <p style={{ margin: 0 }}>No shift is open. Count the cash in the drawer and open one.</p>
       <label style={s.label}>
         Cash in the drawer now
-        <input inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} aria-label="Opening cash" autoFocus />
+        <input inputMode="decimal" value={amount} onChange={e => type(e.target.value)} onFocus={e => e.target.select()} aria-label="Opening cash" autoFocus />
       </label>
       {suggested != null && <p style={s.muted}>The last shift here was counted at {rupees(suggested)}.</p>}
       <button type="submit" style={s.primary} disabled={toPaise(amount) === null || busy}>
