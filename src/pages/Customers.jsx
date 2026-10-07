@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useQuery, keepPreviousData } from '@tanstack/react-query'
-import { searchCustomers, loadCustomer, rupees, messageFor } from '../lib/api.js'
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
+import { searchCustomers, loadCustomer, saveCustomerDetails, rupees, messageFor } from '../lib/api.js'
 
 /**
  * WF-CUSTOMERS-01. POS-CUST-007.
@@ -69,6 +70,62 @@ export function Customers() {
 }
 
 /**
+ * A business buyer: name, GSTIN and address, so their bills are tax invoices made out to them
+ * (GST Rule 46) and the accountant can file them as B2B. The server checks the GSTIN's check
+ * character and asks for the address with it. Bills already given keep what they were issued with.
+ */
+function BusinessDetails({ customer }) {
+  const queryClient = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const [form, setForm] = useState({ name: '', gstin: '', address: '' })
+  const [problem, setProblem] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  function start() {
+    setForm({ name: customer.name ?? '', gstin: customer.gstin ?? '', address: customer.address ?? '' })
+    setProblem('')
+    setOpen(true)
+  }
+
+  async function save(event) {
+    event.preventDefault()
+    setBusy(true)
+    setProblem('')
+    try {
+      await saveCustomerDetails(customer.id, { name: form.name || null, gstin: form.gstin || null, address: form.address || null })
+      await queryClient.invalidateQueries({ queryKey: ['customer', customer.id] })
+      toast.success(form.gstin ? 'Saved. Their next bills carry these details.' : 'Saved.')
+      setOpen(false)
+    } catch (err) {
+      setProblem(messageFor(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (!open) {
+    return (
+      <button type="button" style={s.linkButton} onClick={start}>
+        {customer.gstin ? 'Change business details' : 'Business buyer? Add GSTIN for tax invoices'}
+      </button>
+    )
+  }
+  const set = key => e => setForm(f => ({ ...f, [key]: e.target.value }))
+  return (
+    <form onSubmit={save} style={s.form} aria-label="Business details">
+      <label style={s.field}>Business name<input value={form.name} onChange={set('name')} maxLength={120} /></label>
+      <label style={s.field}>GSTIN<input value={form.gstin} onChange={set('gstin')} maxLength={20} placeholder="27AAPFU0939F1ZV" autoCapitalize="characters" /></label>
+      <label style={s.field}>Address (printed on their bills)<textarea value={form.address} onChange={set('address')} maxLength={300} rows={3} /></label>
+      {problem && <p style={s.bad} role="alert">{problem}</p>}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
+        <button type="button" onClick={() => setOpen(false)} disabled={busy}>Cancel</button>
+      </div>
+    </form>
+  )
+}
+
+/**
  * WF-CUSTOMER-02. POS-CUST-008, -009, -010.
  *
  * Enough to serve the person, and a link to their bills. The "View in CRM" action (POS-CUST-013)
@@ -100,7 +157,10 @@ export function CustomerDetail() {
         <h1 style={s.title}>{data.name || 'No name'}</h1>
         <div style={s.muted}>{data.phoneDisplay}</div>
         {data.gstin && <div style={s.muted}>GSTIN {data.gstin}</div>}
+        {data.address && <div style={{ ...s.muted, whiteSpace: 'pre-line' }}>{data.address}</div>}
       </div>
+
+      <BusinessDetails customer={data} />
 
       <div style={s.tiles}>
         <Tile label="Visits" value={String(data.visitCount)} />
@@ -208,5 +268,8 @@ const s = {
   main: { minWidth: 0 },
   right: { textAlign: 'right', whiteSpace: 'nowrap' },
   muted: { color: 'var(--ink-soft)', fontSize: 12, textDecoration: 'none' },
-  bad: { color: 'var(--bad)', margin: 0 }
+  bad: { color: 'var(--bad)', margin: 0 },
+  linkButton: { justifySelf: 'start', background: 'none', border: 'none', padding: 0, color: 'var(--accent, #2563eb)', textDecoration: 'underline', cursor: 'pointer', fontSize: 14 },
+  form: { display: 'grid', gap: 10, padding: 14, border: '1px solid var(--line)', borderRadius: 14, background: 'var(--panel)' },
+  field: { display: 'grid', gap: 4, fontSize: 13 }
 }

@@ -123,6 +123,12 @@ export async function searchCustomers(q) {
   return data.data
 }
 
+/** Name, GSTIN and address -- a business buyer's tax invoices carry them. null clears one. */
+export async function saveCustomerDetails(id, details) {
+  const { data } = await api.patch(`/customers/${id}`, details)
+  return data.data
+}
+
 export async function loadCustomer(id) {
   const { data } = await api.get(`/customers/${id}`)
   return data.data

@@ -252,6 +252,16 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
             <span>{sale.customer.name ?? ''} {sale.customer.phoneMasked ?? ''}</span>
           </div>
         )}
+        {/* A tax invoice to a GST-registered business: the buyer as issued (Rule 46). */}
+        {sale.buyerGstin && (
+          <>
+            <Rule />
+            <div><b>Bill to</b></div>
+            {sale.buyerName && <div>{sale.buyerName}</div>}
+            {sale.buyerAddress && <div style={{ whiteSpace: 'pre-line' }}>{sale.buyerAddress}</div>}
+            <div>GSTIN {sale.buyerGstin}</div>
+          </>
+        )}
 
         <Rule />
 
