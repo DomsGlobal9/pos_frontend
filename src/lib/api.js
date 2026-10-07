@@ -370,6 +370,12 @@ export async function quoteBasket(body) {
   return data.data
 }
 
+/** The customer's points and store credit usable on this bill, from Inventory (§10). Always answers. */
+export async function loadWallet(customerId, billPaise) {
+  const { data } = await api.get('/sales/wallet', { params: { customerId, billPaise } })
+  return data.data
+}
+
 export async function loadDevices() {
   const { data } = await api.get('/devices')
   return data.data

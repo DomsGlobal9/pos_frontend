@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { useOutletContext, useLocation, useNavigate, Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { searchItems, completeSale, parkBill, quoteBasket, messageFor, rupees } from '../lib/api.js'
+import { searchItems, completeSale, parkBill, quoteBasket, loadWallet, messageFor, rupees } from '../lib/api.js'
 import { isTouchFirst } from '../lib/useMedia.js'
 import { basketTotals, lineTotal, unitPrice, offerOn, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
 import { addToOutbox, isNetworkFailure, outboxItems } from '../lib/outbox.js'
@@ -96,6 +96,8 @@ export default function Till() {
   const [quote, setQuote] = useState(null)
   const [couponCode, setCouponCode] = useState('')
   const quoteSeq = useRef(0)
+  // The customer's points and store credit, from Inventory, read when the payment screen opens (§10).
+  const [wallet, setWallet] = useState(null)
   const searchBox = useRef(null)
 
   // The shell already loads these and shows connection state in the header; asking again here
@@ -139,6 +141,34 @@ export default function Till() {
     }, 400)
     return () => clearTimeout(timer)
   }, [lines, customer, couponCode, shop?.inventoryConnected])
+
+  /*
+   * POINTS AND STORE CREDIT, read from Inventory the moment money is about to be taken (§10).
+   *
+   * Points are money: a figure that cannot be checked is not offered at all. Offline, or no answer,
+   * the panel says so in one line and the sale goes on in cash, UPI or card. In a connected shop the
+   * store credit offered is Inventory's too -- the till's own figure is only a cache of it.
+   */
+  const askingMoney = paying || keeping?.step === 'payment'
+  useEffect(() => {
+    if (!askingMoney || !customer || !shop?.inventoryConnected) { setWallet(null); return }
+    if (!navigator.onLine) { setWallet({ ok: false, reason: 'Points and store credit can\'t be used offline. Take the payment another way.' }); return }
+    let alive = true
+    setWallet(null)
+    loadWallet(customer.id, totals.totalPaise)
+      .then(r => { if (alive) setWallet(r) })
+      .catch(() => { if (alive) setWallet({ ok: false, reason: 'Points and store credit can\'t be used right now. Take the rest another way.' }) })
+    return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [askingMoney, customer?.id, shop?.inventoryConnected])
+  const fromInventory = !!(shop?.inventoryConnected && customer)
+  const w = wallet?.ok ? wallet.wallet : null
+  const walletProps = {
+    creditPaise: fromInventory ? (w?.credit?.usablePaise ?? 0) : (customer?.storeCreditPaise ?? 0),
+    points: w?.points && w.points.usablePaise > 0 ? w.points : null,
+    walletNote: wallet && !wallet.ok ? wallet.reason
+      : w?.points?.reason ?? w?.reason ?? null
+  }
 
   // Brought back from the Sync screen ("Open in till"): the basket as it was, with its own key.
   const location = useLocation()
@@ -754,7 +784,7 @@ export default function Till() {
         <PaymentPanel
           totalPaise={totals.totalPaise}
           enabledMethods={shop?.shop?.enabledPaymentMethods}
-          creditPaise={customer?.storeCreditPaise ?? 0}
+          {...walletProps}
           upi={{ upiId: shop?.shop?.upiId, name: shop?.shop?.shopName, note: 'Bill at the counter' }}
           onCancel={() => { setPaying(false); refocus() }}
           onConfirm={takePayment}
@@ -800,7 +830,7 @@ export default function Till() {
           mode="ADVANCE"
           totalPaise={totals.totalPaise}
           enabledMethods={shop?.shop?.enabledPaymentMethods}
-          creditPaise={customer?.storeCreditPaise ?? 0}
+          {...walletProps}
           upi={{ upiId: shop?.shop?.upiId, name: shop?.shop?.shopName, note: 'Bill at the counter' }}
           onCancel={() => { setKeeping(null); refocus() }}
           onConfirm={takePayment}

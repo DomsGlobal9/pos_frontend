@@ -27,7 +27,7 @@ import UpiQr from './UpiQr.jsx'
  *   ADVANCE  keeping goods for a customer: anything from nothing up to the bill (POS-ORD-002)
  *   COLLECT  money coming in later against a kept order: something, never more than is owed
  */
-const LABELS = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit' }
+const LABELS = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', POINTS: 'Points' }
 const NEEDS_REFERENCE = ['UPI', 'CARD']
 
 const COPY = {
@@ -36,12 +36,17 @@ const COPY = {
   COLLECT: { heading: 'Owed', confirm: 'Take payment', remaining: 'Still owed after this' }
 }
 
-export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT', creditPaise = 0, heading, upi }) {
+export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT', creditPaise = 0, heading, upi, points = null, walletNote = null }) {
+  // Contract §10. Points are offered only when Inventory says some can be used on THIS bill; the
+  // server holds them in Inventory at Complete, so this figure is a guide and Inventory has the last word.
+  const pointStep = points?.pointValuePaise ?? 100
+  const pointsUsable = points?.usablePaise ?? 0
   // POS-PAY-016. Store credit is offered only when this customer has some. The server takes it
   // from their live balance, so this figure is a guide and the server has the last word.
   const methods = [
     ...(enabledMethods?.length ? enabledMethods : ['CASH', 'UPI', 'CARD']).filter(m => LABELS[m] && m !== 'CREDIT'),
-    ...(creditPaise > 0 ? ['CREDIT'] : [])
+    ...(creditPaise > 0 ? ['CREDIT'] : []),
+    ...(pointsUsable > 0 ? ['POINTS'] : [])
   ]
   const copy = COPY[mode] ?? COPY.EXACT
 
@@ -59,12 +64,17 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
   // In ADVANCE mode a row left completely empty is simply "nothing paid now", not a mistake.
   const counted = mode === 'ADVANCE' ? rows.filter(r => String(r.amount ?? '').trim() !== '') : rows
   const creditUsed = rows.filter(r => r.method === 'CREDIT').reduce((sum, r) => sum + (toPaise(r.amount) ?? 0), 0)
+  const pointsUsed = rows.filter(r => r.method === 'POINTS').reduce((sum, r) => sum + (toPaise(r.amount) ?? 0), 0)
   const problems = useMemo(() => rows.map(row => (
     mode === 'ADVANCE' && String(row.amount ?? '').trim() === '' ? null
       : row.method === 'CREDIT' && creditUsed > creditPaise
         ? `Only ${rupees(creditPaise)} of store credit is available.`
-        : rowProblem(row)
-  )), [rows, mode, creditUsed, creditPaise])
+        : row.method === 'POINTS' && pointsUsed > pointsUsable
+          ? `Only ${rupees(pointsUsable)} in points can be used on this bill.`
+          : row.method === 'POINTS' && (toPaise(row.amount) ?? 0) % pointStep !== 0
+            ? `Points come in steps of ${rupees(pointStep)}.`
+            : rowProblem(row)
+  )), [rows, mode, creditUsed, creditPaise, pointsUsed, pointsUsable, pointStep])
 
   const amountsFit =
     mode === 'EXACT' ? remaining === 0
@@ -80,7 +90,9 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
     // payments is not a thing anyone does.
     const used = new Set(rows.map(r => r.method))
     const next = methods.find(m => !used.has(m)) ?? methods[0]
-    const amount = next === 'CREDIT' ? Math.min(Math.max(0, remaining), creditPaise) : Math.max(0, remaining)
+    const amount = next === 'CREDIT' ? Math.min(Math.max(0, remaining), creditPaise)
+      : next === 'POINTS' ? Math.floor(Math.min(Math.max(0, remaining), pointsUsable) / pointStep) * pointStep
+      : Math.max(0, remaining)
     setRows(current => [...current, blank(next, amount)])
   }
 
@@ -91,7 +103,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
     if (!canComplete) return
     setSaving(true)
     try {
-      await onConfirm(counted.map(toPayment))
+      await onConfirm(counted.map(row => toPayment(row, pointStep)))
     } finally {
       // Stays open on failure, with everything typed still there. A save that failed must never
       // look like a sale that happened.
@@ -102,6 +114,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
   return (
     <div style={s.backdrop} role="dialog" aria-label="Take payment">
       <form style={s.panel} onSubmit={confirm}>
+        {walletNote && <p style={s.muted} role="status">{walletNote}</p>}
         <div style={s.row}>
           <span>{heading ?? copy.heading}</span>
           <b style={s.big}>{rupees(totalPaise)}</b>
@@ -187,6 +200,12 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
               <p style={s.muted}>{rupees(creditPaise)} available. It comes off their balance when the sale is saved.</p>
             )}
 
+            {row.method === 'POINTS' && (
+              <p style={s.muted}>
+                {points.balance} points; up to {rupees(pointsUsable)} on this bill. Held in Inventory when the sale is saved.
+              </p>
+            )}
+
             {NEEDS_REFERENCE.includes(row.method) && (
               <>
                 <label style={s.label}>
@@ -261,19 +280,21 @@ function rowProblem(row) {
     if (tendered !== null && tendered < amount) return 'That is less than the amount being paid.'
     return null
   }
-  if (row.method === 'CREDIT') return null
+  if (row.method === 'CREDIT' || row.method === 'POINTS') return null
   if (!row.unconfirmed && !row.reference.trim()) {
     return `Add the ${LABELS[row.method]} reference, or tick "not confirmed yet".`
   }
   return null
 }
 
-function toPayment(row) {
+function toPayment(row, pointStep = 100) {
   const amountPaise = toPaise(row.amount) ?? 0
   const tenderedPaise = toPaise(row.tendered)
   return {
     method: row.method,
     amountPaise,
+    // How many points: the server asks Inventory to hold exactly these, and checks they are worth this.
+    ...(row.method === 'POINTS' ? { points: Math.round(amountPaise / pointStep) } : {}),
     ...(row.method === 'CASH' && tenderedPaise !== null ? { tenderedPaise } : {}),
     ...(NEEDS_REFERENCE.includes(row.method) && row.reference.trim() ? { reference: row.reference.trim() } : {}),
     ...(NEEDS_REFERENCE.includes(row.method) && row.unconfirmed ? { unconfirmed: true } : {})
