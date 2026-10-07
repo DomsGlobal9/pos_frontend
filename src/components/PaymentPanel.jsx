@@ -161,7 +161,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
                   onClick={() => {
                     const was = toPaise(row.amount)
                     const now = was === null ? null : fit(method, was)
-                    update(index, { method, unconfirmed: false, reference: '', tendered: '', ...(now !== null && now !== was ? { amount: now > 0 ? String(now / 100) : '' } : {}) })
+                    update(index, { method, unconfirmed: false, reference: '', cardLast4: '', approvalCode: '', tendered: '', ...(now !== null && now !== was ? { amount: now > 0 ? String(now / 100) : '' } : {}) })
                   }}
                 >
                   {LABELS[method]}
@@ -229,21 +229,50 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
 
             {NEEDS_REFERENCE.includes(row.method) && (
               <>
-                <label style={s.label}>
-                  {LABELS[row.method]} reference
-                  <input
-                    value={row.reference}
-                    onChange={e => update(index, { reference: e.target.value })}
-                    placeholder={row.unconfirmed ? 'Add it later' : 'Transaction or approval number'}
-                    disabled={row.unconfirmed}
-                  />
-                </label>
+                {/* PLAN-payments Step 1: what a real reference looks like, so a made-up one is caught here. */}
+                {row.method === 'UPI' ? (
+                  <label style={s.label}>
+                    UPI reference (12-digit UTR from the customer's app)
+                    <input
+                      value={row.reference}
+                      onChange={e => update(index, { reference: e.target.value.replace(/[^0-9 ]/g, '').slice(0, 15) })}
+                      inputMode="numeric"
+                      placeholder={row.unconfirmed ? 'Add it later' : '12 digits'}
+                      disabled={row.unconfirmed}
+                      aria-label="UPI reference"
+                    />
+                  </label>
+                ) : (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <label style={{ ...s.label, flex: 1 }}>
+                      Card last 4
+                      <input
+                        value={row.cardLast4}
+                        onChange={e => update(index, { cardLast4: e.target.value.replace(/[^0-9]/g, '').slice(0, 4) })}
+                        inputMode="numeric"
+                        placeholder={row.unconfirmed ? 'Later' : '4 digits'}
+                        disabled={row.unconfirmed}
+                        aria-label="Card last 4 digits"
+                      />
+                    </label>
+                    <label style={{ ...s.label, flex: 1 }}>
+                      Approval code
+                      <input
+                        value={row.approvalCode}
+                        onChange={e => update(index, { approvalCode: e.target.value.replace(/[^0-9a-zA-Z]/g, '').toUpperCase().slice(0, 6) })}
+                        placeholder={row.unconfirmed ? 'Later' : 'On the slip'}
+                        disabled={row.unconfirmed}
+                        aria-label="Card approval code"
+                      />
+                    </label>
+                  </div>
+                )}
                 {/* The whole reason this phase exists. */}
                 <label style={s.check}>
                   <input
                     type="checkbox"
                     checked={row.unconfirmed}
-                    onChange={e => update(index, { unconfirmed: e.target.checked, reference: '' })}
+                    onChange={e => update(index, { unconfirmed: e.target.checked, reference: '', cardLast4: '', approvalCode: '' })}
                     style={s.checkbox}
                   />
                   <span>
@@ -287,6 +316,8 @@ const blank = (method, amountPaise) => ({
   method,
   amount: amountPaise > 0 ? String(amountPaise / 100) : '',
   reference: '',
+  cardLast4: '',
+  approvalCode: '',
   tendered: '',
   unconfirmed: false
 })
@@ -302,8 +333,17 @@ function rowProblem(row) {
     return null
   }
   if (row.method === 'CREDIT' || row.method === 'POINTS') return null
-  if (!row.unconfirmed && !row.reference.trim()) {
-    return `Add the ${LABELS[row.method]} reference, or tick "not confirmed yet".`
+  if (row.unconfirmed) return null
+  if (row.method === 'UPI') {
+    const utr = row.reference.replace(/\s+/g, '')
+    if (!utr) return 'Add the UPI reference, or tick "not confirmed yet".'
+    if (!/^\d{12}$/.test(utr)) return 'A UPI reference is the 12-digit UTR in the customer\'s UPI app.'
+    return null
+  }
+  if (row.method === 'CARD') {
+    if (!/^\d{4}$/.test(row.cardLast4)) return 'Type the card\'s last 4 digits from the slip, or tick "not confirmed yet".'
+    if (!/^[A-Z0-9]{6}$/.test(row.approvalCode)) return 'Type the 6-character approval code from the slip.'
+    return null
   }
   return null
 }
@@ -317,7 +357,8 @@ function toPayment(row, pointStep = 100) {
     // How many points: the server asks Inventory to hold exactly these, and checks they are worth this.
     ...(row.method === 'POINTS' ? { points: Math.round(amountPaise / pointStep) } : {}),
     ...(row.method === 'CASH' && tenderedPaise !== null ? { tenderedPaise } : {}),
-    ...(NEEDS_REFERENCE.includes(row.method) && row.reference.trim() ? { reference: row.reference.trim() } : {}),
+    ...(row.method === 'UPI' && row.reference.trim() ? { reference: row.reference.replace(/\s+/g, '') } : {}),
+    ...(row.method === 'CARD' && !row.unconfirmed ? { cardLast4: row.cardLast4, approvalCode: row.approvalCode } : {}),
     ...(NEEDS_REFERENCE.includes(row.method) && row.unconfirmed ? { unconfirmed: true } : {})
   }
 }

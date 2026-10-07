@@ -9,6 +9,7 @@ import {
 import { newOnceKey } from '../lib/basket.js'
 import { waLink } from '../lib/whatsapp.js'
 import PaymentPanel from '../components/PaymentPanel.jsx'
+import ApprovalSheet from '../components/ApprovalSheet.jsx'
 import Receipt from '../components/Receipt.jsx'
 import { askYesNo } from '../components/Ask.jsx'
 
@@ -136,6 +137,8 @@ export function OrderDetail() {
   const { id } = useParams()
   const queryClient = useQueryClient()
   const [collecting, setCollecting] = useState(null)
+  // A UPI or card reference already on another bill: a manager may allow it (PLAN-payments Step 1).
+  const [approval, setApproval] = useState(null)
   const [busy, setBusy] = useState(false)
   const { shop } = useOutletContext() ?? {}
 
@@ -150,14 +153,18 @@ export function OrderDetail() {
     queryClient.invalidateQueries({ queryKey: ['home'] })
   }
 
-  async function collect(payments) {
+  async function collect(payments, yes) {
     try {
       // The counter, so a cash balance counts in the drawer it went into. POS-SHIFT-005.
-      await collectOnOrder(id, { onceKey: collecting.onceKey, payments, counterId: shop?.counters?.[0]?.id })
+      await collectOnOrder(id, { onceKey: collecting.onceKey, payments, counterId: shop?.counters?.[0]?.id, ...(yes ? { approval: yes } : {}) })
       toast.success('Payment taken.')
+      setApproval(null)
       setCollecting(null)
       refresh()
     } catch (err) {
+      const details = err?.response?.data?.details ?? err?.response?.data?.error?.details
+      if (details?.code === 'APPROVAL_REQUIRED' && !yes) { setApproval({ need: details, payments, error: '' }); return }
+      if (yes) { setApproval(a => (a ? { ...a, error: messageFor(err) } : a)); return }
       // Stays open with what was typed. A payment that failed must never look like one that worked.
       toast.error(messageFor(err))
     }
@@ -303,7 +310,16 @@ export function OrderDetail() {
           totalPaise={data.owedPaise}
           creditPaise={data.customer?.storeCreditPaise ?? 0}
           onCancel={() => setCollecting(null)}
-          onConfirm={collect}
+          onConfirm={(payments) => collect(payments)}
+        />
+      )}
+      {approval && (
+        <ApprovalSheet
+          need={approval.need}
+          error={approval.error}
+          busy={false}
+          onCancel={() => setApproval(null)}
+          onApprove={(yes) => collect(approval.payments, yes)}
         />
       )}
     </div>

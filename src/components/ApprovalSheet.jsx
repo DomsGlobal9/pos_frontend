@@ -113,6 +113,13 @@ function describe(need) {
     return `Refunding ${rupees(need.totalPaise)} on ${need.invoiceNo}, which is ${need.daysSince} days old. ` +
       `The shop takes returns for ${need.windowDays} days.`
   }
+  if (need.kind === 'DUPLICATE_REFERENCE') {
+    const d = need.references?.[0]
+    const what = d?.method === 'CARD' ? `Card payment ${d.reference}` : `UPI reference ${d?.reference ?? ''}`
+    return `${what} is ${d?.invoiceNo ? `already on bill ${d.invoiceNo}` : 'typed twice on this bill'}. ` +
+      'Usually it is the wrong number — go Back and check it with the customer. ' +
+      'Approve only if one payment really paid for both.'
+  }
   if (need.kind === 'PAY_LATER') {
     return `Selling on credit: ${rupees(need.owedPaise)} of a ${rupees(need.totalPaise)} bill will be owed, and the goods go home now.`
   }
