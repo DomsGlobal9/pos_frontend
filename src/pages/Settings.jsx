@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { QrCode, Boxes, Monitor, Image as ImageIcon } from 'lucide-react'
-import { setShopUpi, setShopLogo, messageFor } from '../lib/api.js'
+import { QrCode, Boxes, Monitor, Image as ImageIcon, Receipt } from 'lucide-react'
+import { setShopUpi, setShopLogo, setShopGst, messageFor } from '../lib/api.js'
 
 /**
  * Shop settings. POS-SET-003 (partly), POS-PAY-012.
@@ -20,6 +20,23 @@ export default function Settings() {
   const [busy, setBusy] = useState(false)
   const owner = (shop?.permissions ?? []).includes('settings:manage')
   const logo = shop?.shop?.logoUrl ?? null
+  const registration = shop?.shop?.gstRegistration ?? 'REGULAR'
+  const connected = shop?.inventoryConnected === true
+  const [busyGst, setBusyGst] = useState(false)
+
+  async function saveGst(value) {
+    if (value === registration) return
+    setBusyGst(true)
+    try {
+      await setShopGst(value)
+      toast.success('Saved. Bills from now on follow it; bills already given out stay as they were.')
+      queryClient.invalidateQueries({ queryKey: ['shop'] })
+    } catch (err) {
+      toast.error(messageFor(err))
+    } finally {
+      setBusyGst(false)
+    }
+  }
   const [busyLogo, setBusyLogo] = useState(false)
 
   async function saveLogo(value) {
@@ -74,6 +91,24 @@ export default function Settings() {
             {current && <button disabled={busy} onClick={() => save(null)}>Remove</button>}
           </div>
         ) : <p style={s.muted}>Only the owner can change this.</p>}
+      </section>
+
+      <section style={s.card} aria-label="GST registration">
+        <div style={s.head}><span style={s.icon}><Receipt size={18} aria-hidden="true" /></span><b>GST registration</b></div>
+        <p style={s.muted}>
+          Decides what every bill is: a tax invoice, a Bill of Supply (composition -- no GST charged), or a plain
+          receipt. Bills already given out keep what they were issued as.
+        </p>
+        <div style={s.actions} role="radiogroup" aria-label="How the shop is registered for GST">
+          {[['REGULAR', 'GST registered'], ['COMPOSITION', 'Composition'], ['UNREGISTERED', 'Not registered']].map(([value, label]) => (
+            <button key={value} role="radio" aria-checked={registration === value}
+              style={registration === value ? s.primary : undefined}
+              disabled={busyGst || connected || !owner} onClick={() => saveGst(value)}>{label}</button>
+          ))}
+        </div>
+        {connected
+          ? <p style={s.muted}>Set in Inventory (Settings → Name, logo and bill details). It reaches the till with the next item refresh.</p>
+          : !owner && <p style={s.muted}>Only the owner can change this.</p>}
       </section>
 
       <section style={s.card}>

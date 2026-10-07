@@ -354,6 +354,12 @@ export async function setShopUpi(upiId) {
   return data.data
 }
 
+/** The shop's GST registration: REGULAR | COMPOSITION | UNREGISTERED. Owner-only; not while connected. */
+export async function setShopGst(registration) {
+  const { data } = await api.put('/shop/gst', { registration })
+  return data.data
+}
+
 /** The logo on the bill: a JPEG data URL, an https address, or null to remove. Owner-only. */
 export async function setShopLogo(logoUrl) {
   const { data } = await api.put('/shop/logo', { logoUrl })

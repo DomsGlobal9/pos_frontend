@@ -1,3 +1,4 @@
+import { kindOf } from '../lib/gst.js'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { loadCreditNote, rupees, messageFor } from '../lib/api.js'
@@ -32,6 +33,8 @@ export default function CreditNote() {
   }
 
   const shop = note.shop ?? {}
+  // A credit note reverses what its bill charged: against a Bill of Supply or a receipt, no GST at all.
+  const taxBill = kindOf(note.originalSale) === 'TAX_INVOICE'
   const cgst = note.lines.reduce((n, l) => n + l.cgstPaise, 0)
   const sgst = note.lines.reduce((n, l) => n + l.sgstPaise, 0)
   const igst = note.lines.reduce((n, l) => n + l.igstPaise, 0)
@@ -98,7 +101,7 @@ export default function CreditNote() {
             <div>{line.description}</div>
             <div style={s.line}>
               <span style={s.soft}>
-                {line.qty} returned{line.hsn ? ` · HSN ${line.hsn}` : ''} · GST {line.taxRate}%
+                {line.qty} returned{line.hsn ? ` · HSN ${line.hsn}` : ''}{taxBill ? ` · GST ${line.taxRate}%` : ''}
               </span>
               <span>{rupees(line.amountPaise)}</span>
             </div>
@@ -107,7 +110,7 @@ export default function CreditNote() {
 
         <Rule />
 
-        <div style={s.line}><span>Taxable value</span><span>{rupees(note.totalPaise - note.roundOffPaise - note.taxPaise)}</span></div>
+        {taxBill && <div style={s.line}><span>Taxable value</span><span>{rupees(note.totalPaise - note.roundOffPaise - note.taxPaise)}</span></div>}
         {igst > 0 ? (
           <div style={s.line}><span>IGST reversed</span><span>{rupees(igst)}</span></div>
         ) : note.taxPaise > 0 && (
