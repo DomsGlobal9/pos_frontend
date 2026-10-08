@@ -351,9 +351,10 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
           <>
             <Rule />
             {/* A credit sale is a kept order that went home at once: it is owed, not waiting. */}
-            <div style={s.centre}><b>{sale.handoverDuePaise ? 'ON CREDIT' : 'KEPT FOR COLLECTION'}</b></div>
+            {/* Reprinted later it says where things stand now, not what they were (live, 8 Oct). */}
+            <div style={s.centre}><b>{keptHeading(sale)}</b></div>
             {sale.note && <div>{sale.note}</div>}
-            {sale.promisedAt && (
+            {sale.promisedAt && sale.fulfilment !== 'HANDED_OVER' && (
               <div style={s.line}>
                 <span>Collect on</span>
                 <span>{new Date(sale.promisedAt).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
@@ -471,4 +472,10 @@ function byRate(lines) {
     groups.set(rate, g)
   }
   return [...groups.values()].sort((a, b) => a.rate - b.rate)
+}
+
+/** What a kept order's bill is now: owed, settled, waiting, or collected. */
+function keptHeading(sale) {
+  if (sale.handoverDuePaise) return sale.owedPaise > 0 ? 'ON CREDIT' : 'CREDIT PAID IN FULL'
+  return sale.fulfilment === 'HANDED_OVER' ? 'COLLECTED' : 'KEPT FOR COLLECTION'
 }
