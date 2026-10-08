@@ -127,6 +127,16 @@ export default function Reports() {
                   <Bars rows={r.byCashier.map(c => ({ label: c.name, value: c.netPaise, note: `${c.bills} bills` }))} empty="No sales." />
                 </Card>
               )}
+              {/* Who served the customer, for incentives: net of returns on their bills, and before GST. */}
+              {!limited && r.bySalesperson?.some(p => p.name !== 'Not chosen') && (
+                <Card title="By salesperson">
+                  <Bars rows={r.bySalesperson.map(p => ({
+                    label: p.name,
+                    value: p.netPaise,
+                    note: `${p.bills} bills · ${rupees(p.netBeforeGstPaise)} before GST${p.returnsPaise ? ` · ${rupees(p.returnsPaise)} returned` : ''}`
+                  }))} />
+                </Card>
+              )}
               {!limited && r.byCounter.length > 1 && (
                 <Card title="By counter">
                   <Bars rows={r.byCounter.map(c => ({ label: c.name, value: c.netPaise, note: `${c.bills} bills` }))} />

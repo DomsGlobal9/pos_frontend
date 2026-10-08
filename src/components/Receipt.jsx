@@ -244,6 +244,7 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
           <span>Date</span><span>{new Date(sale.createdAt).toLocaleString('en-IN')}</span>
         </div>
         {sale.cashier?.name && <div style={s.line}><span>Cashier</span><span>{sale.cashier.name}</span></div>}
+        {sale.salespersonName && <div style={s.line}><span>Served by</span><span>{sale.salespersonName}</span></div>}
         {sale.customer && (
           <div style={s.line}>
             <span>Customer</span>
