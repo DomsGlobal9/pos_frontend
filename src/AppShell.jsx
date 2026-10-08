@@ -157,7 +157,7 @@ function UpdateReady() {
   if (!ready) return null
   return (
     <span className="chip" style={s.state} role="status">
-      A new version is ready — it updates when this bill is done.{' '}
+      A new version is ready — it updates by itself when the till is free.{' '}
       <button type="button" onClick={applyUpdate} style={{ padding: '0 6px' }}>Update now</button>
     </span>
   )
