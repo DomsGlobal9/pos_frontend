@@ -286,12 +286,12 @@ export function OrderDetail() {
           </div>
         )}
 
-        {kept && done && data.owedPaise > 0 && (
+        {kept && done && (data.owedPaise > 0 || writtenOffPaise > 0) && (
           <div style={s.actions}>
             <button style={s.primary} onClick={() => setCollecting({ onceKey: newOnceKey() })}>
-              Take payment
+              {data.owedPaise > 0 ? 'Take payment' : 'They paid after all'}
             </button>
-            {!writingOff && (
+            {!writingOff && data.owedPaise > 0 && (
               <button onClick={() => setWritingOff({ onceKey: newOnceKey(), reason: '' })}>Write off</button>
             )}
           </div>
@@ -351,7 +351,7 @@ export function OrderDetail() {
         <PaymentPanel
           mode="COLLECT"
           upiQr={!!(shop?.inventoryConnected && shop?.shop?.upiQrEnabled)}
-          totalPaise={data.owedPaise}
+          totalPaise={data.owedPaise + writtenOffPaise}
           creditPaise={data.customer?.storeCreditPaise ?? 0}
           onCancel={() => setCollecting(null)}
           onConfirm={(payments) => collect(payments)}
