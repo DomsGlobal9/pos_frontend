@@ -272,10 +272,15 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
             <div>{line.description}</div>
             <div style={s.line}>
               <span style={s.muted}>
-                {line.qty} × {rupees(line.unitPricePaise)}
-                {line.hsn ? ` · HSN ${line.hsn}` : ''}
-                {kindOf(sale) === 'TAX_INVOICE' ? ` · GST ${Number(line.taxRate)}%` : ''}
-                {line.discountPaise > 0 ? ` · −${rupees(line.discountPaise)}` : ''}
+                {/* Each part kept whole: on 80 mm "−₹300" broke after the minus sign (live, 8 Oct). */}
+                {[
+                  `${line.qty} × ${rupees(line.unitPricePaise)}`,
+                  line.hsn ? `HSN ${line.hsn}` : '',
+                  kindOf(sale) === 'TAX_INVOICE' ? `GST ${Number(line.taxRate)}%` : '',
+                  line.discountPaise > 0 ? `−${rupees(line.discountPaise)}` : ''
+                ].filter(Boolean).map((part, i) => (
+                  <Fragment key={i}>{i ? ' · ' : ''}<span style={{ whiteSpace: 'nowrap' }}>{part}</span></Fragment>
+                ))}
               </span>
               <b>{rupees(line.lineTotalPaise)}</b>
             </div>

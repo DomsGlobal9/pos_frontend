@@ -1096,7 +1096,7 @@ const s = {
   customerName: { fontWeight: 700, fontSize: 14 },
   customerClear: { minHeight: 30, minWidth: 30, padding: 0, borderRadius: 999, border: 'none', boxShadow: 'none', background: 'transparent', color: 'var(--brand-deep)', display: 'grid', placeItems: 'center' },
   linkish: { background: 'none', border: 'none', padding: 0, color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' },
-  servedBy: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-soft)', margin: '6px 0' },
+  servedBy: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-soft)', margin: '6px 0', whiteSpace: 'nowrap' },
   customerAdd: { minHeight: 40, padding: '0 14px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 999 },
   totalLabel: { fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.08em' },
   totalValue: { fontSize: 44, fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.02em' },
