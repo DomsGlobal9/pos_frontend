@@ -1,5 +1,5 @@
 import { HEADING, COMPOSITION_DECLARATION, kindOf, stateOf } from '../lib/gst.js'
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import QRCode from 'qrcode'
@@ -168,8 +168,6 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
    * go to one side, and a receipt recomputing it would make a reprint disagree with the original
    * the day that rule changes. A GST invoice has to say the same thing in five years.
    */
-  const cgst = sale.lines.reduce((sum, l) => sum + (l.cgstPaise ?? 0), 0)
-  const sgst = sale.lines.reduce((sum, l) => sum + (l.sgstPaise ?? 0), 0)
   const igst = sale.lines.reduce((sum, l) => sum + (l.igstPaise ?? 0), 0)
 
   return (
@@ -275,6 +273,7 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
               <span style={s.muted}>
                 {line.qty} × {rupees(line.unitPricePaise)}
                 {line.hsn ? ` · HSN ${line.hsn}` : ''}
+                {kindOf(sale) === 'TAX_INVOICE' ? ` · GST ${Number(line.taxRate)}%` : ''}
                 {line.discountPaise > 0 ? ` · −${rupees(line.discountPaise)}` : ''}
               </span>
               <b>{rupees(line.lineTotalPaise)}</b>
@@ -288,12 +287,18 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
         {sale.discountPaise > 0 && (
           <div style={s.line}><span>Discount</span><span>−{rupees(sale.discountPaise)}</span></div>
         )}
-        {igst > 0 ? (
-          <div style={s.line}><span>IGST</span><span>{rupees(igst)}</span></div>
-        ) : sale.taxPaise > 0 && (
+        {/* Rule 46: the taxable value, and each tax with its RATE -- one CGST/SGST (or IGST) pair per rate. */}
+        {sale.taxPaise > 0 && (
           <>
-            <div style={s.line}><span>CGST</span><span>{rupees(cgst)}</span></div>
-            <div style={s.line}><span>SGST</span><span>{rupees(sgst)}</span></div>
+            <div style={s.line}><span>Taxable value</span><span>{rupees(sale.totalPaise - sale.roundOffPaise - sale.taxPaise)}</span></div>
+            {byRate(sale.lines).map(g => igst > 0 ? (
+              <div key={g.rate} style={s.line}><span>IGST {g.rate}%</span><span>{rupees(g.igst)}</span></div>
+            ) : (
+              <Fragment key={g.rate}>
+                <div style={s.line}><span>CGST {g.rate / 2}%</span><span>{rupees(g.cgst)}</span></div>
+                <div style={s.line}><span>SGST {g.rate / 2}%</span><span>{rupees(g.sgst)}</span></div>
+              </Fragment>
+            ))}
           </>
         )}
         {sale.roundOffPaise !== 0 && (
@@ -447,4 +452,17 @@ const s = {
   line: { display: 'flex', justifyContent: 'space-between', gap: 8 },
   muted: { color: '#555', fontSize: 11 },
   pending: { fontSize: 10 }
+}
+
+/** The tax charged, grouped by the rate each line was charged at -- as stored, never worked out again. */
+function byRate(lines) {
+  const groups = new Map()
+  for (const l of lines) {
+    if (!l.taxPaise) continue
+    const rate = Number(l.taxRate)
+    const g = groups.get(rate) ?? { rate, cgst: 0, sgst: 0, igst: 0 }
+    g.cgst += l.cgstPaise ?? 0; g.sgst += l.sgstPaise ?? 0; g.igst += l.igstPaise ?? 0
+    groups.set(rate, g)
+  }
+  return [...groups.values()].sort((a, b) => a.rate - b.rate)
 }
