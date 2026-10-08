@@ -1,7 +1,7 @@
 import { Outlet, Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { health, loadShop, whoAmI } from './lib/api.js'
+import { health, loadShop, whoAmI, loadInventoryLink } from './lib/api.js'
 import { useDevice, isTouchFirst } from './lib/useMedia.js'
 import NavBar from './components/NavBar.jsx'
 import { useEffect, useState } from 'react'
@@ -59,6 +59,8 @@ export default function AppShell() {
   })
   const [online, setOnline] = useState(() => navigator.onLine)
   const { data: shop } = useQuery({ queryKey: ['shop'], queryFn: loadShop, staleTime: Infinity, enabled: gate === 'ok' })
+  // Sending to Inventory can stop mid-day while everything on the till is saved (live 8 Oct): looked at every minute.
+  const { data: link } = useQuery({ queryKey: ['inventory-link'], queryFn: loadInventoryLink, refetchInterval: 60_000, enabled: gate === 'ok' && shop?.inventoryConnected === true })
 
   // This device checks in when the till opens and every minute after. Never blocks anything.
   useEffect(() => {
@@ -124,7 +126,7 @@ export default function AppShell() {
               )}
             </div>
           </div>
-          <Connection status={status} offline={!online || unreachable} waiting={waiting.length} inventory={shop?.inventoryConnected === true} />
+          <Connection status={status} offline={!online || unreachable} waiting={waiting.length} inventory={shop?.inventoryConnected === true} inventoryStopped={!!link?.blocked} />
           <UpdateReady />
         </header>
 
@@ -163,7 +165,7 @@ function UpdateReady() {
   )
 }
 
-function Connection({ status, offline, waiting, inventory }) {
+function Connection({ status, offline, waiting, inventory, inventoryStopped }) {
   // Sales on this till that the server has not got. POS-SYNC-003: never "All saved" while any are.
   const held = waiting > 0 && (
     <Link to="/sync" className="chip warn" style={s.state}>
@@ -186,6 +188,14 @@ function Connection({ status, offline, waiting, inventory }) {
       <span className="chip bad" style={s.state}>
         <Dot color="var(--bad)" /> Saving is paused. Nothing you have entered is lost.
       </span>
+    )
+  }
+  // Saved here, but not reaching Inventory: never "All saved · Inventory connected" while that is so.
+  if (inventory && inventoryStopped) {
+    return (
+      <Link to="/inventory-link" className="chip warn" style={s.state}>
+        <Dot color="var(--warn)" /> All saved · Sending to Inventory has stopped
+      </Link>
     )
   }
   return (
