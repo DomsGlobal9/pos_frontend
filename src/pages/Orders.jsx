@@ -183,7 +183,8 @@ export function OrderDetail() {
       refresh()
     } catch (err) {
       const details = err?.response?.data?.details ?? err?.response?.data?.error?.details
-      if (details?.code === 'APPROVAL_REQUIRED' && !yes) { setApproval({ need: { ...details, invoiceNo: data.invoiceNo }, retry: writeOff, error: '' }); return }
+      // The manager is not asked again for the reason the cashier just gave (live, 8 Oct).
+      if (details?.code === 'APPROVAL_REQUIRED' && !yes) { setApproval({ need: { ...details, invoiceNo: data.invoiceNo }, retry: writeOff, reason: writingOff.reason, error: '' }); return }
       if (yes) { setApproval(a => (a ? { ...a, error: messageFor(err) } : a)); return }
       toast.error(messageFor(err))
     }
@@ -360,6 +361,7 @@ export function OrderDetail() {
       {approval && (
         <ApprovalSheet
           need={approval.need}
+          initialReason={approval.reason ?? ''}
           error={approval.error}
           busy={false}
           onCancel={() => setApproval(null)}
