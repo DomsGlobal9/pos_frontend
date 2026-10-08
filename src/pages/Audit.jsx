@@ -52,6 +52,7 @@ const LABEL = {
   'items.imported': 'Items imported from a file',
   'receipt.sent': 'Bill sent to the customer',
   'order.handed_over_with_due': 'Kept order handed over with money still owed',
+  'order.written_off': 'Balance written off as never paid',
   'api_key.created': 'Key made for your other software',
   'api_key.revoked': 'Key stopped',
   'webhook.created': 'Updates address added',

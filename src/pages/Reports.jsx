@@ -113,6 +113,11 @@ export default function Reports() {
                     Checked and never arrived · {rupees(r.neverArrived.amountPaise)} — the customer owes it again
                   </div>
                 )}
+                {r.writtenOff?.amountPaise > 0 && (
+                  <div style={{ ...s.subhead, color: 'var(--bad)' }}>
+                    Written off as never paid · {rupees(r.writtenOff.amountPaise)} ({r.writtenOff.count}) — not money taken
+                  </div>
+                )}
                 {r.paidOut.length > 0 && (
                   <>
                     <div style={s.subhead}>Given back on returns</div>
@@ -276,7 +281,7 @@ export default function Reports() {
   )
 }
 
-const APPROVAL = { DISCOUNT_OVER_LIMIT: 'Big discounts approved', PRICE_OVERRIDE: 'Price changes approved', RETURN: 'Returns approved', RETURN_OUTSIDE_WINDOW: 'Late returns approved', CASH_OUT: 'Cash out approved', PAYMENT_VOID: 'Payments marked not received', PAY_LATER: 'Sold on credit', DUPLICATE_REFERENCE: 'Repeated payment references allowed' }
+const APPROVAL = { DISCOUNT_OVER_LIMIT: 'Big discounts approved', PRICE_OVERRIDE: 'Price changes approved', RETURN: 'Returns approved', RETURN_OUTSIDE_WINDOW: 'Late returns approved', CASH_OUT: 'Cash out approved', PAYMENT_VOID: 'Payments marked not received', PAY_LATER: 'Sold on credit', DUPLICATE_REFERENCE: 'Repeated payment references allowed', WRITE_OFF: 'Balances written off' }
 
 function fmt(date) {
   const [y, m, d] = date.split('-').map(Number)

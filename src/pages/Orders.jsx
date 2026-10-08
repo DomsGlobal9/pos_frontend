@@ -3,7 +3,7 @@ import { Link, useOutletContext, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-  loadOrders, loadBill, collectOnOrder, markOrderReady, handOverOrder,
+  loadOrders, loadBill, collectOnOrder, writeOffOrder, markOrderReady, handOverOrder,
   rupees, messageFor
 } from '../lib/api.js'
 import { newOnceKey } from '../lib/basket.js'
@@ -101,7 +101,9 @@ export function Orders() {
                 <div style={s.tags}>
                   {order.owedPaise > 0
                     ? <span className="chip warn">{rupees(order.owedPaise)} due</span>
-                    : <span className="chip good">Paid</span>}
+                    : order.writtenOffPaise > 0
+                      ? <span className="chip warn">{rupees(order.writtenOffPaise)} written off</span>
+                      : <span className="chip good">Paid</span>}
                   <span className={`chip${order.fulfilment === 'READY' ? ' brand' : ''}`}>{WHERE[order.fulfilment]}</span>
                 </div>
                 {order.promisedAt && order.fulfilment !== 'HANDED_OVER' && (
@@ -140,6 +142,8 @@ export function OrderDetail() {
   // A UPI or card reference already on another bill: a manager may allow it (PLAN-payments Step 1).
   const [approval, setApproval] = useState(null)
   const [busy, setBusy] = useState(false)
+  // Giving up on what went home unpaid: a reason, and a manager's PIN for a cashier.
+  const [writingOff, setWritingOff] = useState(null)
   const { shop } = useOutletContext() ?? {}
 
   const { data, isLoading, isError, error } = useQuery({
@@ -163,9 +167,24 @@ export function OrderDetail() {
       refresh()
     } catch (err) {
       const details = err?.response?.data?.details ?? err?.response?.data?.error?.details
-      if (details?.code === 'APPROVAL_REQUIRED' && !yes) { setApproval({ need: details, payments, error: '' }); return }
+      if (details?.code === 'APPROVAL_REQUIRED' && !yes) { setApproval({ need: details, retry: (y) => collect(payments, y), error: '' }); return }
       if (yes) { setApproval(a => (a ? { ...a, error: messageFor(err) } : a)); return }
       // Stays open with what was typed. A payment that failed must never look like one that worked.
+      toast.error(messageFor(err))
+    }
+  }
+
+  async function writeOff(yes) {
+    try {
+      await writeOffOrder(id, { onceKey: writingOff.onceKey, reason: writingOff.reason, ...(yes ? { approval: yes } : {}) })
+      toast.success('Written off.')
+      setApproval(null)
+      setWritingOff(null)
+      refresh()
+    } catch (err) {
+      const details = err?.response?.data?.details ?? err?.response?.data?.error?.details
+      if (details?.code === 'APPROVAL_REQUIRED' && !yes) { setApproval({ need: { ...details, invoiceNo: data.invoiceNo }, retry: writeOff, error: '' }); return }
+      if (yes) { setApproval(a => (a ? { ...a, error: messageFor(err) } : a)); return }
       toast.error(messageFor(err))
     }
   }
@@ -230,6 +249,7 @@ export function OrderDetail() {
 
   const kept = data.kind === 'KEPT'
   const done = data.fulfilment === 'HANDED_OVER'
+  const writtenOffPaise = (data.payments ?? []).filter(p => p.status === 'WRITTEN_OFF').reduce((n, p) => n + p.amountPaise, 0)
 
   return (
     <div>
@@ -245,7 +265,9 @@ export function OrderDetail() {
           <div style={{ textAlign: 'right' }}>
             {data.owedPaise > 0
               ? <><div style={s.muted}>Still owed</div><div style={s.owedBig}>{rupees(data.owedPaise)}</div></>
-              : <div style={s.paid}>Paid in full</div>}
+              : writtenOffPaise > 0
+                ? <><div style={s.muted}>Written off</div><div style={s.owedBig}>{rupees(writtenOffPaise)}</div></>
+                : <div style={s.paid}>Paid in full</div>}
           </div>
         </div>
 
@@ -269,7 +291,28 @@ export function OrderDetail() {
             <button style={s.primary} onClick={() => setCollecting({ onceKey: newOnceKey() })}>
               Take payment
             </button>
+            {!writingOff && (
+              <button onClick={() => setWritingOff({ onceKey: newOnceKey(), reason: '' })}>Write off</button>
+            )}
           </div>
+        )}
+        {writingOff && (
+          <form style={s.writeOff} onSubmit={e => { e.preventDefault(); writeOff() }}>
+            <b>Write off {rupees(data.owedPaise)}?</b>
+            <span style={s.muted}>
+              For money that will never come. The bill and its GST stay as they are; the order leaves Due
+              and the bill says it was written off. It cannot be returned afterwards.
+            </span>
+            <label style={s.muted}>
+              Why
+              <input value={writingOff.reason} onChange={e => setWritingOff(w => ({ ...w, reason: e.target.value }))}
+                maxLength={200} placeholder="Moved away, not reachable for months" aria-label="Why it is written off" />
+            </label>
+            <div style={s.actions}>
+              <button type="submit" style={s.danger} disabled={writingOff.reason.trim().length < 3}>Write off {rupees(data.owedPaise)}</button>
+              <button type="button" onClick={() => setWritingOff(null)}>Cancel</button>
+            </div>
+          </form>
         )}
 
         {data.handoverDuePaise > 0 && (
@@ -320,7 +363,7 @@ export function OrderDetail() {
           error={approval.error}
           busy={false}
           onCancel={() => setApproval(null)}
-          onApprove={(yes) => collect(approval.payments, yes)}
+          onApprove={(yes) => approval.retry(yes)}
         />
       )}
     </div>
@@ -354,6 +397,8 @@ const s = {
   owedBig: { fontSize: 24, fontWeight: 700, color: 'var(--warn)' },
   paid: { color: 'var(--good)', fontWeight: 600 },
   actions: { display: 'flex', gap: 8, flexWrap: 'wrap' },
+  writeOff: { display: 'grid', gap: 8, padding: 12, border: '1px solid var(--line)', borderRadius: 12 },
+  danger: { background: 'var(--bad, #b42318)', color: '#fff', borderColor: 'var(--bad, #b42318)' },
   primary: { background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' },
   muted: { color: 'var(--ink-soft)', fontSize: 12, textDecoration: 'none' },
   bad: { color: 'var(--bad)', margin: 0 }

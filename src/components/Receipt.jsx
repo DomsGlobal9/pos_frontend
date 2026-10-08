@@ -318,7 +318,7 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
         {sale.payments.map(p => (
           <div key={p.id} style={s.line}>
             <span>
-              {METHOD[p.method] ?? p.method}
+              {p.status === 'WRITTEN_OFF' ? 'Written off' : (METHOD[p.method] ?? p.method)}
               {/*
                 * Printed on the customer's copy on purpose. If the shop is still checking whether
                 * a transfer landed, the person who made it should be able to see that from their
@@ -476,6 +476,9 @@ function byRate(lines) {
 
 /** What a kept order's bill is now: owed, settled, waiting, or collected. */
 function keptHeading(sale) {
-  if (sale.handoverDuePaise) return sale.owedPaise > 0 ? 'ON CREDIT' : 'CREDIT PAID IN FULL'
+  if (sale.handoverDuePaise) {
+    if (sale.owedPaise > 0) return 'ON CREDIT'
+    return sale.payments?.some(p => p.status === 'WRITTEN_OFF') ? 'BALANCE WRITTEN OFF' : 'CREDIT PAID IN FULL'
+  }
   return sale.fulfilment === 'HANDED_OVER' ? 'COLLECTED' : 'KEPT FOR COLLECTION'
 }

@@ -141,6 +141,11 @@ export async function loadOrders(tab = 'ALL', q = '') {
 }
 
 /** POS-ORD-012. Idempotent on onceKey. */
+export async function writeOffOrder(id, body) {
+  const { data } = await api.post(`/orders/${id}/write-off`, body)
+  return data.data
+}
+
 export async function collectOnOrder(id, body) {
   const { data } = await api.post(`/orders/${id}/collect`, body)
   return data.data
