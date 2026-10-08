@@ -154,7 +154,7 @@ export default function Reports() {
                 <Line label={`Prices changed (${r.discounts.priceOverrides})`} value={r.discounts.priceOverrides ? `${rupees(r.discounts.priceOverridesGivenPaise)} below the tag` : '—'} />
                 {Object.keys(r.discounts.approvals).length > 0 && (
                   <div style={s.chips}>
-                    {Object.entries(r.discounts.approvals).map(([k, n]) => <span key={k} className="chip brand">{APPROVAL[k] ?? k} · {n}</span>)}
+                    {Object.entries(r.discounts.approvals).map(([k, n]) => <span key={k} className="chip brand">{APPROVAL[k] ?? 'Other approvals'} · {n}</span>)}
                   </div>
                 )}
               </Card>
@@ -276,7 +276,7 @@ export default function Reports() {
   )
 }
 
-const APPROVAL = { DISCOUNT_OVER_LIMIT: 'Big discounts approved', PRICE_OVERRIDE: 'Price changes approved', RETURN: 'Returns approved', RETURN_OUTSIDE_WINDOW: 'Late returns approved', CASH_OUT: 'Cash out approved' }
+const APPROVAL = { DISCOUNT_OVER_LIMIT: 'Big discounts approved', PRICE_OVERRIDE: 'Price changes approved', RETURN: 'Returns approved', RETURN_OUTSIDE_WINDOW: 'Late returns approved', CASH_OUT: 'Cash out approved', PAYMENT_VOID: 'Payments marked not received', PAY_LATER: 'Sold on credit', DUPLICATE_REFERENCE: 'Repeated payment references allowed' }
 
 function fmt(date) {
   const [y, m, d] = date.split('-').map(Number)
