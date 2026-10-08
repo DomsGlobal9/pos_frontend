@@ -120,6 +120,9 @@ function describe(need) {
       'Usually it is the wrong number — go Back and check it with the customer. ' +
       'Approve only if one payment really paid for both.'
   }
+  if (need.kind === 'WRITE_OFF') {
+    return `Writing off ${rupees(need.owedPaise)} owed on ${need.invoiceNo} as never to be paid. The bill stays as it is.`
+  }
   if (need.kind === 'PAY_LATER') {
     return `Selling on credit: ${rupees(need.owedPaise)} of a ${rupees(need.totalPaise)} bill will be owed, and the goods go home now.`
   }
