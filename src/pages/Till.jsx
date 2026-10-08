@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { useOutletContext, useLocation, useNavigate, Link } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { searchItems, completeSale, parkBill, quoteBasket, loadWallet, messageFor, rupees } from '../lib/api.js'
+import { searchItems, completeSale, parkBill, quoteBasket, loadWallet, messageFor, rupees, loadTillStaff } from '../lib/api.js'
 import { isTouchFirst } from '../lib/useMedia.js'
 import { basketTotals, estimatedTaxablePaise, lineTotal, unitPrice, offerOn, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
 import { addToOutbox, isNetworkFailure, outboxItems } from '../lib/outbox.js'
@@ -64,6 +64,9 @@ export default function Till() {
    * normal Saturday -- so nothing below may treat it as a missing value to be chased.
    */
   const [customer, setCustomer] = useState(draft.customer ?? null)
+  // Who served the customer, for incentives -- not the cashier. Optional; nobody is the default.
+  const [salesperson, setSalesperson] = useState(draft.salesperson ?? null)
+  const { data: tillStaff } = useQuery({ queryKey: ['till-staff'], queryFn: loadTillStaff, staleTime: 10 * 60_000, retry: false })
   const [askingCustomer, setAskingCustomer] = useState(false)
 
   /*
@@ -196,7 +199,7 @@ export default function Till() {
 
   // Saved together. A reload mid-sale keeps the same key, so resubmitting the same basket
   // replays instead of charging twice.
-  useEffect(() => { saveDraft(lines, onceKey, { customer, billDiscountPaise, couponCode }) }, [lines, onceKey, customer, billDiscountPaise, couponCode])
+  useEffect(() => { saveDraft(lines, onceKey, { customer, salesperson, billDiscountPaise, couponCode }) }, [lines, onceKey, customer, salesperson, billDiscountPaise, couponCode])
 
   // The box takes focus back whenever nothing is in the way. A scanner fires into whatever has
   // focus, so anything else means a scanned saree lands in the void.
@@ -410,6 +413,7 @@ export default function Till() {
   function startAgain() {
     setLines([])
     setCustomer(null)
+    setSalesperson(null)
     setBillDiscountPaise(0)
     setCouponCode('')
     setQuote(null)
@@ -443,6 +447,7 @@ export default function Till() {
         ...(l.overridePricePaise ? { overridePricePaise: l.overridePricePaise } : {})
       })),
       ...(customer ? { customerId: customer.id } : {}),
+      ...(salesperson ? { salespersonId: salesperson.id } : {}),
       ...(billDiscountPaise ? { billDiscountPaise } : {}),
       // The quote's id, never its figures. The server re-reads what it held (§9).
       ...(quote?.id ? { quoteId: quote.id } : {}),
@@ -595,6 +600,7 @@ export default function Till() {
         payload: {
           lines,
           ...(customer ? { customer } : {}),
+          ...(salesperson ? { salesperson } : {}),
           ...(billDiscountPaise ? { billDiscountPaise } : {}),
           onceKey
         }
@@ -612,6 +618,7 @@ export default function Till() {
   function restore(payload) {
     setLines(Array.isArray(payload?.lines) ? payload.lines : [])
     setCustomer(payload?.customer ?? null)
+    setSalesperson(payload?.salesperson ?? null)
     setBillDiscountPaise(payload?.billDiscountPaise ?? 0)
     setOnceKey(payload?.onceKey || newOnceKey())
     setShowHeld(false)
@@ -809,6 +816,22 @@ export default function Till() {
                 </button>
               )}
             </div>
+            {tillStaff?.staff?.length > 0 && (
+              <label style={s.servedBy}>
+                Served by
+                <select
+                  value={salesperson?.id ?? ''}
+                  onChange={e => {
+                    const p = tillStaff.staff.find(x => x.id === e.target.value)
+                    setSalesperson(p ? { id: p.id, name: p.name } : null)
+                  }}
+                  aria-label="Served by"
+                >
+                  <option value="">Nobody chosen</option>
+                  {tillStaff.staff.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </label>
+            )}
             {needsBuyer && (
               <div style={s.muted} role="note">
                 Rs 50,000 or more: GST rules ask for the customer's name and address on this bill.{' '}
@@ -1073,6 +1096,7 @@ const s = {
   customerName: { fontWeight: 700, fontSize: 14 },
   customerClear: { minHeight: 30, minWidth: 30, padding: 0, borderRadius: 999, border: 'none', boxShadow: 'none', background: 'transparent', color: 'var(--brand-deep)', display: 'grid', placeItems: 'center' },
   linkish: { background: 'none', border: 'none', padding: 0, color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' },
+  servedBy: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-soft)', margin: '6px 0' },
   customerAdd: { minHeight: 40, padding: '0 14px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 999 },
   totalLabel: { fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.08em' },
   totalValue: { fontSize: 44, fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.02em' },

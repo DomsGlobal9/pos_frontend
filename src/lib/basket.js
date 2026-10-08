@@ -120,6 +120,7 @@ export function loadDraft() {
       return {
         lines: parsed.lines, onceKey: parsed.onceKey,
         customer: parsed.customer ?? null,
+        salesperson: parsed.salesperson?.id ? parsed.salesperson : null,
         billDiscountPaise: Number.isInteger(parsed.billDiscountPaise) ? parsed.billDiscountPaise : 0,
         couponCode: typeof parsed.couponCode === 'string' ? parsed.couponCode : ''
       }
