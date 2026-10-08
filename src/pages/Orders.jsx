@@ -320,7 +320,9 @@ export function OrderDetail() {
           <p style={s.muted}>
             {data.owedPaise > 0
               ? `Handed over with ${rupees(data.handoverDuePaise)} still owed.`
-              : `Handed over with ${rupees(data.handoverDuePaise)} owed, since paid.`}
+              : writtenOffPaise > 0
+                ? `Handed over with ${rupees(data.handoverDuePaise)} owed; ${rupees(writtenOffPaise)} written off.`
+                : `Handed over with ${rupees(data.handoverDuePaise)} owed, since paid.`}
           </p>
         )}
 
