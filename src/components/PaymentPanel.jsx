@@ -67,12 +67,14 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
   const allocated = rows.reduce((sum, r) => sum + (toPaise(r.amount) ?? 0), 0)
   const remaining = totalPaise - allocated
 
-  // In ADVANCE mode a row left completely empty is simply "nothing paid now", not a mistake.
-  const counted = advanceLike(mode) ? rows.filter(r => String(r.amount ?? '').trim() !== '') : rows
+  // In ADVANCE mode a row left empty -- or a 0 typed for "nothing today" (live, 8 Oct) -- is simply
+  // "nothing paid now", not a mistake.
+  const nothing = (r) => String(r.amount ?? '').trim() === '' || toPaise(r.amount) === 0
+  const counted = advanceLike(mode) ? rows.filter(r => !nothing(r)) : rows
   const creditUsed = rows.filter(r => r.method === 'CREDIT').reduce((sum, r) => sum + (toPaise(r.amount) ?? 0), 0)
   const pointsUsed = rows.filter(r => r.method === 'POINTS').reduce((sum, r) => sum + (toPaise(r.amount) ?? 0), 0)
   const problems = useMemo(() => rows.map(row => (
-    advanceLike(mode) && String(row.amount ?? '').trim() === '' ? null
+    advanceLike(mode) && nothing(row) ? null
       : row.method === 'CREDIT' && creditUsed > creditPaise
         ? `Only ${rupees(creditPaise)} of store credit is available.`
         : row.method === 'POINTS' && pointsUsed > pointsUsable
