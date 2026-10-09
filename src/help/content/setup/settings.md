@@ -1,6 +1,6 @@
 ---
 title: Settings
-summary: The shop's UPI ID for the payment QR, its GST registration when the till is not linked to Inventory, and the logo on the bill. Everything else — name, address, GSTIN, prices — comes from Inventory.
+summary: Which ways customers pay (cash, UPI, card), the shop's UPI ID for the payment QR, its GST registration when the till is not linked to Inventory, and the logo on the bill. Everything else — name, address, GSTIN, prices — comes from Inventory.
 for: The owner
 minutes: 2
 app: /settings
@@ -12,6 +12,12 @@ keywords: settings upi id vpa qr gst registration composition logo bill shop det
 
 
 ![The Settings page: UPI payments, GST registration and Logo on the bill.](1-settings.webp "Only the owner can change these.")
+
+## Ways customers pay
+
+Tick **Cash**, **UPI** and **Card on a swiping machine** for the ways the shop takes, and **Save**. The
+payment screen then offers only those, and a way switched off is refused on every till. At least one
+stays on. Points and store credit are not here: they come with the Inventory link.
 
 ## UPI payments
 

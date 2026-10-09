@@ -47,6 +47,7 @@ const LABEL = {
   'staff.changed': 'Person changed',
   'device.updated': 'Device changed',
   'shop.upi_set': 'UPI ID set',
+  'shop.payment_methods_set': 'Ways to pay changed',
   'shop.logo_set': 'Logo changed',
   'sale.offers_applied': 'Offers applied',
   'items.imported': 'Items imported from a file',

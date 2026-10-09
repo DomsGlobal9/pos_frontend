@@ -6,8 +6,9 @@ minutes: 3
 keywords: payment methods how to pay cash upi card swiping machine pos machine gpay phonepe paytm emi amex wallet points store credit split payment mixed payment cheque
 ---
 
-The customer can pay any way they like. Cash, UPI and card are on for every shop; points and store
-credit come with the [Inventory link](/help/behind/inventory-link).
+The customer can pay any way they like. The owner chooses which of cash, UPI and card the shop takes in
+[Settings → Ways customers pay](/help/setup/settings#ways-customers-pay); the till offers only those. Points
+and store credit come with the [Inventory link](/help/behind/inventory-link).
 
 | How they pay | What you do on the till | How the till keeps it honest |
 |---|---|---|

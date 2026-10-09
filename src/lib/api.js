@@ -360,6 +360,11 @@ export async function loadPublicReceipt(token) {
   return data.data
 }
 
+export async function setShopPaymentMethods(methods) {
+  const { data } = await api.put('/shop/payment-methods', { methods })
+  return data.data
+}
+
 export async function setShopUpi(upiId) {
   const { data } = await api.put('/shop/upi', { upiId })
   return data.data
