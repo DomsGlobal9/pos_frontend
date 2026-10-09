@@ -287,7 +287,7 @@ export function OrderDetail() {
           </div>
         )}
 
-        {kept && done && (data.owedPaise > 0 || writtenOffPaise > 0) && (
+        {done && (data.owedPaise > 0 || writtenOffPaise > 0) && (
           <div style={s.actions}>
             <button style={s.primary} onClick={() => setCollecting({ onceKey: newOnceKey() })}>
               {data.owedPaise > 0 ? 'Take payment' : 'They paid after all'}
