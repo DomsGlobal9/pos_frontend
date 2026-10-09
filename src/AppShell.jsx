@@ -7,9 +7,9 @@ import { useDevice, isTouchFirst } from './lib/useMedia.js'
 import NavBar from './components/NavBar.jsx'
 import { useEffect, useState } from 'react'
 import { checkIn } from './lib/device.js'
-import { applyUpdate, updateReady } from './lib/update.js'
+import { applyUpdate, updateReady, tillIsIdle } from './lib/update.js'
 import { useOutbox, flush, outboxItems } from './lib/outbox.js'
-import { onSession, tillToken, personOut } from './lib/session.js'
+import { onSession, tillToken, staffToken, personOut } from './lib/session.js'
 import { OpenTill, WhoAtTill } from './components/TillGate.jsx'
 
 /**
@@ -24,6 +24,8 @@ import { OpenTill, WhoAtTill } from './components/TillGate.jsx'
  * The header carries the shop name and the honest connection state, because POS-SYNC-001/002 say a
  * user should always be able to tell whether their work is safe without going looking for it.
  */
+const IDLE_SIGN_OUT_MS = 10 * 60 * 1000
+
 export default function AppShell() {
   const device = useDevice()
   const bottomNav = isTouchFirst(device)
@@ -62,6 +64,33 @@ export default function AppShell() {
   const { data: shop } = useQuery({ queryKey: ['shop'], queryFn: loadShop, staleTime: Infinity, enabled: gate === 'ok' })
   // Sending to Inventory can stop mid-day while everything on the till is saved (live 8 Oct): looked at every minute.
   const { data: link } = useQuery({ queryKey: ['inventory-link'], queryFn: loadInventoryLink, refetchInterval: 60_000, enabled: gate === 'ok' && shop?.inventoryConnected === true })
+
+  /*
+   * A TILL LEFT ALONE ASKS FOR A PIN AGAIN (found 9 Oct: the live till sat signed in as the owner, and a
+   * name-and-PIN turn lasts 12 hours -- anyone at the counter could approve, discount or write off as them).
+   * Ten minutes with no tap or key (a scanner types), and only when nothing is in progress. The last touch
+   * is shared by every tab: Switch clears them all, so a forgotten tab must not sign out a busy one.
+   */
+  useEffect(() => {
+    const KEY = 'pos.lastTouch'
+    let wrote = 0
+    const touch = () => {
+      const now = Date.now()
+      if (now - wrote > 5_000) { wrote = now; try { localStorage.setItem(KEY, String(now)) } catch { /* private window */ } }
+    }
+    touch()
+    window.addEventListener('pointerdown', touch, true)
+    window.addEventListener('keydown', touch, true)
+    const t = setInterval(() => {
+      let last = wrote
+      try { last = Math.max(last, Number(localStorage.getItem(KEY)) || 0) } catch { /* this tab's own */ }
+      if (staffToken() && Date.now() - last > IDLE_SIGN_OUT_MS && tillIsIdle()) {
+        personOut()
+        toast('Signed out after 10 minutes with nothing happening. Choose your name to carry on.', { id: 'idle-out', duration: 10_000 })
+      }
+    }, 30_000)
+    return () => { clearInterval(t); window.removeEventListener('pointerdown', touch, true); window.removeEventListener('keydown', touch, true) }
+  }, [])
 
   // This device checks in when the till opens and every minute after. Never blocks anything.
   useEffect(() => {
