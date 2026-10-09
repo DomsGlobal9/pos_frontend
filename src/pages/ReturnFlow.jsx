@@ -332,7 +332,7 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
 
       {/* POS-RET-004, -005. The window, and whether a manager will be needed, before anything else. */}
       <p style={info.window.outside ? s.warn : s.muted}>
-        Sold {info.window.daysSince === 0 ? 'today' : `${info.window.daysSince} ${info.window.daysSince === 1 ? 'day' : 'days'} ago`}
+        Sold {info.window.daysSince === 0 ? 'within the last 24 hours' : `${info.window.daysSince} ${info.window.daysSince === 1 ? 'day' : 'days'} ago`}
         {info.window.outside
           ? ` — past the ${info.window.days}-day return window.`
           : info.window.days === null ? ' · this shop takes returns any time.' : ` · returns within ${info.window.days} days.`}
