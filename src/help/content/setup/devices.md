@@ -11,8 +11,11 @@ keywords: devices tablet computer phone counter printer paper width 80mm 58mm a4
 **More → Settings → Devices**. Each device that has opened the till is listed, with when it was last seen
 and whether it holds sales not yet sent.
 
-Press **Change** to set its **Device name** (*Front counter tablet*), its **Counter**, and its **Paper
+Press [[1]] **Change** to set its **Device name** (*Front counter tablet*), its **Counter**, and its **Paper
 width** — 80 mm, 58 mm or A4 — so bills print to fit.
+
+
+![The Devices page. Change is marked 1.](1-devices.webp "Each device shows when it was last seen.")
 
 :::tip A device holding unsent sales
 It was offline. Open the till on it once it is online; the sales send themselves. See

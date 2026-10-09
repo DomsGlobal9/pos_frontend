@@ -376,7 +376,7 @@ function rowProblem(row) {
   if (row.method === 'CREDIT' || row.method === 'POINTS') return null
   if (row.unconfirmed) return null
   if (row.method === 'UPI' && row.qrId) {
-    return row.qrPaid ? null : 'Waiting for the customer to pay the QR -- or tick "not confirmed yet" and let them go.'
+    return row.qrPaid ? null : 'Waiting for the customer to pay the QR — or tick "not confirmed yet" and let them go.'
   }
   if (row.method === 'UPI') {
     const utr = row.reference.replace(/\s+/g, '')

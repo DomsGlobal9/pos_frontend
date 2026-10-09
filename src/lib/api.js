@@ -62,9 +62,9 @@ export const changeStaff = (id, body) => api.patch(`/staff/${id}`, body).then(r 
  */
 export function messageFor(error) {
   if (error?.response?.data?.message) return error.response.data.message
-  if (error?.code === 'ECONNABORTED') return 'That took too long. Nothing has been charged -- try once more.'
+  if (error?.code === 'ECONNABORTED') return 'That took too long. Nothing has been charged — try once more.'
   if (error?.code === 'ERR_NETWORK') return 'No connection to the till server. Check the internet, then try again.'
-  return 'Something went wrong. Nothing has been charged -- try once more.'
+  return 'Something went wrong. Nothing has been charged — try once more.'
 }
 
 /**

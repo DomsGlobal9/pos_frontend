@@ -41,7 +41,7 @@ export default function RazorpayQr({ amountPaise, onChange }) {
         const s = await loadUpiQr(qr.qrId)
         if (live.current !== qr.qrId) return
         if (s.status === 'PAID') { setState('paid'); onChange({ qrId: qr.qrId, paid: true, utr: s.utr ?? s.paymentId }) }
-        else if (s.status === 'PAID_WRONG_AMOUNT') { setState('wrong'); setNote(`The customer paid ${rupees(s.paidPaise)}, not ${rupees(amountPaise)}. Check with them -- this payment is not counted.`) }
+        else if (s.status === 'PAID_WRONG_AMOUNT') { setState('wrong'); setNote(`The customer paid ${rupees(s.paidPaise)}, not ${rupees(amountPaise)}. Check with them — this payment is not counted.`) }
         else if (s.status === 'CLOSED') { setState('idle'); setQr(null); onChange(null) }
       } catch { /* a missed poll is retried in 2 s */ }
     }, 2000)

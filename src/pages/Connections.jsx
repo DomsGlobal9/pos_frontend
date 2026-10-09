@@ -105,7 +105,7 @@ function Keys() {
     } catch (err) { toast.error(messageFor(err)) } finally { setBusy(false) }
   }
   async function stop(k) {
-    if (!await askYesNo(`Stop "${k.name}"?`, { note: 'Software using it stops working at once. This cannot be undone -- make a new key instead.', confirmLabel: 'Stop the key', danger: true })) return
+    if (!await askYesNo(`Stop "${k.name}"?`, { note: 'Software using it stops working at once. This cannot be undone — make a new key instead.', confirmLabel: 'Stop the key', danger: true })) return
     try {
       await revokeApiKey(k.id)
       toast('Key stopped.')
