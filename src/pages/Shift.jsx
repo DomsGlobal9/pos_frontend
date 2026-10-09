@@ -6,6 +6,7 @@ import { loadShift, openShift, moveCash, closeShift, rupees, messageFor } from '
 import { newOnceKey } from '../lib/basket.js'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
 import { useOutbox } from '../lib/outbox.js'
+import useEscape from '../lib/useEscape.js'
 
 /**
  * WF-SHIFT-01 and WF-CASH-01. POS-SHIFT-001..009.
@@ -203,6 +204,7 @@ const REASONS = {
  * A cashier's cash OUT opens the manager sheet, in place, exactly like a big discount.
  */
 function CashSheet({ direction, counterId, onDone, onCancel }) {
+  useEscape(onCancel)
   const [amount, setAmount] = useState('')
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(false)
@@ -270,6 +272,8 @@ function CashSheet({ direction, counterId, onDone, onCancel }) {
  * normal; the attempt is on the audit trail either way.
  */
 function CloseSheet({ shiftId, onDone, onCancel }) {
+  // Once closed, Esc is Done: Back would show the shift open again.
+  useEscape(() => (result ? onDone() : onCancel()))
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
   const [askNote, setAskNote] = useState(false)

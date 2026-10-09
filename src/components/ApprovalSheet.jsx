@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { rupees } from '../lib/api.js'
+import useEscape from '../lib/useEscape.js'
 
 /**
  * A manager saying yes, in place. POS-APR-001, -002, -003, -006.
@@ -17,6 +18,7 @@ import { rupees } from '../lib/api.js'
  * "something" without seeing that it is 26% off a silk saree is not approving anything.
  */
 export default function ApprovalSheet({ need, error, busy, onApprove, onCancel, initialReason = '' }) {
+  useEscape(onCancel)
   const [reason, setReason] = useState(initialReason)
   const [pin, setPin] = useState('')
   const reasonBox = useRef(null)

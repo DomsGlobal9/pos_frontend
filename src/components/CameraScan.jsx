@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { BrowserMultiFormatReader } from '@zxing/browser'
 import { X } from 'lucide-react'
+import useEscape from '../lib/useEscape.js'
 
 /**
  * Scanning a barcode with the phone's own camera. POS-SELL-004.
@@ -17,6 +18,7 @@ import { X } from 'lucide-react'
  * camera is a phone whose camera app will not open.
  */
 export default function CameraScan({ onCode, onClose }) {
+  useEscape(onClose)
   const video = useRef(null)
   const [problem, setProblem] = useState(null)
 

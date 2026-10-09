@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import useEscape from '../lib/useEscape.js'
 import { rupees } from '../lib/api.js'
 import UpiQr from './UpiQr.jsx'
 import RazorpayQr from './RazorpayQr.jsx'
@@ -125,6 +126,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
    * Leaving while a QR is up: close it first. If the customer paid in that very moment, the panel stays
    * -- that money is this bill's, and walking away from it would leave a payment with no bill.
    */
+  useEscape(() => cancel())
   async function cancel() {
     for (const [index, row] of rows.entries()) {
       if (row.qrId && !row.qrPaid) {

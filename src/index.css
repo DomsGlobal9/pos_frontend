@@ -217,3 +217,15 @@ html, body { max-width: 100%; overflow-x: hidden; }
   /* Full width and side by side: both are reachable with one thumb. */
   .ask-buttons button { flex: 1; min-width: 0; }
 }
+
+/*
+ * EVERY POPUP FITS THE SCREEN (9 Oct, seen on a laptop: the Customer box and the More menu ran off the
+ * bottom). The box inside any dialog is never taller than the screen, and scrolls inside when it must.
+ * On a computer a bottom sheet (data-sheet) sits in the middle with round corners, like the payment box;
+ * on a phone it stays a sheet from the bottom, where a thumb is.
+ */
+[role="dialog"] > * { max-height: calc(100dvh - 32px); overflow-y: auto; overscroll-behavior: contain; }
+@media (min-width: 768px) {
+  [role="dialog"][data-sheet] { align-items: center !important; padding: 16px !important; }
+  [role="dialog"][data-sheet] > * { border-radius: 16px !important; }
+}

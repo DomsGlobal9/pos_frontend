@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { findCustomerByPhone, createCustomer, saveCustomerDetails, rupees, messageFor } from '../lib/api.js'
+import useEscape from '../lib/useEscape.js'
 
 /**
  * WF-CUST-01. POS-CUST-002, -004, -005, -006, -010.
@@ -17,6 +18,7 @@ import { findCustomerByPhone, createCustomer, saveCustomerDetails, rupees, messa
  * number becomes a permanent record that splits someone else's history.
  */
 export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = false }) {
+  useEscape(onClose)
   const [phone, setPhone] = useState('')
   const [name, setName] = useState('')
   // A tax invoice of Rs 50,000 or more names the customer and gives their address (GST rule 46).
@@ -84,7 +86,7 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
   }
 
   return (
-    <div style={s.backdrop} role="dialog" aria-label="Customer" onClick={onClose}>
+    <div style={s.backdrop} role="dialog" data-sheet aria-label="Customer" onClick={onClose}>
       <div style={s.sheet} onClick={e => e.stopPropagation()}>
         <div style={s.head}>
           <b>Customer</b>
