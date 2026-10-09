@@ -4,6 +4,7 @@ import { rupees } from '../lib/api.js'
 import UpiQr from './UpiQr.jsx'
 import RazorpayQr from './RazorpayQr.jsx'
 import { closeUpiQr } from '../lib/api.js'
+import toast from 'react-hot-toast'
 
 /**
  * WF-PAY-01. POS-PAY-001..010.
@@ -95,6 +96,22 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
 
   const update = (index, patch) =>
     setRows(current => current.map((row, i) => (i === index ? { ...row, ...patch } : row)))
+
+  /*
+   * A scan landing in a money box (found 9 Oct: the next saree scanned with this box open made the amount
+   * 8498901234599991). Eight or more rupee digits is a crore -- never one payment at a counter -- so it is
+   * a barcode. The box empties and lets go: the rest of the scan lands nowhere, and its Enter cannot
+   * complete a sale with an empty amount (putting the old amount back would sell without that saree).
+   */
+  const money = (index, field) => e => {
+    if (/^\d{8,}/.test(e.target.value)) {
+      update(index, { [field]: '' })
+      e.target.blur()
+      toast.error('That was a barcode. To add an item, press Back first.', { id: 'scan-in-pay' })
+      return
+    }
+    update(index, { [field]: e.target.value })
+  }
 
   // What a row can hold on this method: store credit and points only as far as the customer has them
   // (points in whole steps). Switching a row to Points keeps no amount it could never take.
@@ -208,7 +225,8 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
                 ref={index === 0 ? firstBox : undefined}
                 inputMode="decimal"
                 value={row.amount}
-                onChange={e => update(index, { amount: e.target.value })}
+                onChange={money(index, 'amount')}
+                onFocus={e => e.target.select()}
                 aria-label={`Amount for payment ${index + 1}`}
               />
             </label>
@@ -220,7 +238,8 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
                   <input
                     inputMode="decimal"
                     value={row.tendered}
-                    onChange={e => update(index, { tendered: e.target.value })}
+                    onChange={money(index, 'tendered')}
+                onFocus={e => e.target.select()}
                     placeholder="Optional"
                   />
                 </label>
