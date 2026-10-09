@@ -335,7 +335,7 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
         Sold {info.window.daysSince === 0 ? 'today' : `${info.window.daysSince} ${info.window.daysSince === 1 ? 'day' : 'days'} ago`}
         {info.window.outside
           ? ` — past the ${info.window.days}-day return window.`
-          : ` · returns within ${info.window.days} days.`}
+          : info.window.days === null ? ' · this shop takes returns any time.' : ` · returns within ${info.window.days} days.`}
         {info.approvalNeeded && ' A manager will need to approve it.'}
       </p>
 
