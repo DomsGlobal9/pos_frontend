@@ -110,7 +110,7 @@ export default function PaymentChecks() {
             <div style={s.detail}>
               <div>
                 <b>{rupees(payment.amountPaise)}</b>
-                <span style={s.muted}> · {payment.method}</span>
+                <span style={s.muted}> · {({ CASH: 'Cash', UPI: 'UPI', CARD: 'Card' })[payment.method] ?? payment.method}</span>
               </div>
               <div style={s.muted}>
                 <Link to={`/bills/${payment.saleId}`} style={s.link}>{payment.invoiceNo}</Link>

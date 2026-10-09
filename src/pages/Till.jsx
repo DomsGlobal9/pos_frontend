@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { searchItems, completeSale, parkBill, quoteBasket, loadWallet, messageFor, rupees, loadTillStaff } from '../lib/api.js'
 import { isTouchFirst } from '../lib/useMedia.js'
+import { askYesNo } from '../components/Ask.jsx'
 import { basketTotals, estimatedTaxablePaise, lineTotal, unitPrice, offerOn, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
 import { addToOutbox, isNetworkFailure, outboxItems } from '../lib/outbox.js'
 import { checkIn } from '../lib/device.js'
@@ -899,33 +900,49 @@ export default function Till() {
       )}
 
       {showMore && (
-        <div style={s.moreBackdrop} role="dialog" aria-label="More actions" onClick={() => { setShowMore(false); refocus() }}>
-          <div style={s.moreSheet} onClick={e => e.stopPropagation()}>
+        /*
+         * MORE FOR THIS BILL (redone 9 Oct, seen on a laptop): it was nine identical buttons rising from
+         * the bottom, cut off below the screen, far from the More button, saying nothing about what each
+         * did -- and Clear bill emptied an ₹81,500 bill at one touch. Now: a titled menu beside the
+         * button on a computer (a scrolling sheet on a phone), each choice with a line saying what it
+         * does, grouped, and Clear bill apart and asking first.
+         */
+        <div style={{ ...s.moreBackdrop, ...(stacked ? {} : s.moreBackdropDesk) }} role="dialog" aria-label="More actions" onClick={() => { setShowMore(false); refocus() }}>
+          <div style={{ ...s.moreSheet, ...(stacked ? s.moreSheetPhone : s.moreSheetDesk) }} onClick={e => e.stopPropagation()}>
+            <div style={s.moreHead}>
+              <b>More for this bill</b>
+              <button type="button" style={s.moreClose} aria-label="Close" onClick={() => { setShowMore(false); refocus() }}>×</button>
+            </div>
             {lines.length > 0 && (
-              <button onClick={() => { setShowMore(false); askDiscount() }}>
-                {totals.discountPaise > 0 ? 'Change discount' : 'Discount'}
-              </button>
+              <>
+                <div style={s.moreGroup}>Price</div>
+                <MoreItem label={totals.discountPaise > 0 ? 'Change discount' : 'Discount'} hint="Take an amount or a percent off the whole bill."
+                  onClick={() => { setShowMore(false); askDiscount() }} />
+                {shop?.inventoryConnected && (
+                  <MoreItem label={couponCode ? `Coupon ${couponCode}` : 'Coupon code'} hint="The customer has a code from an offer."
+                    onClick={() => { setShowMore(false); askCoupon() }} />
+                )}
+                <div style={s.moreGroup}>Goes home later, or paid later</div>
+                <MoreItem label="Keep for customer" hint="Kept in the shop — tailor, fall and pico — with an advance." onClick={startKeeping} />
+                <MoreItem label="Sell on credit" hint="Goes home now, the rest is paid later (udhaar)." onClick={startCredit} />
+              </>
             )}
-            {lines.length > 0 && shop?.inventoryConnected && (
-              <button onClick={() => { setShowMore(false); askCoupon() }}>
-                {couponCode ? `Coupon ${couponCode}` : 'Coupon code'}
-              </button>
-            )}
+            <div style={s.moreGroup}>Show or put aside</div>
             {lines.length > 0 && (
-              <button onClick={startKeeping}>Keep for customer</button>
+              <MoreItem label="Estimate" hint="A quotation to show or send — not a bill." onClick={() => { setShowMore(false); setShowEstimate(true) }} />
             )}
+            {lines.length > 0 && <MoreItem label="Park this bill" hint="Put it aside and bill the next customer." onClick={parkCurrent} />}
+            <MoreItem label="Parked bills" hint="Bring back a bill that was put aside." onClick={() => { setShowMore(false); setShowHeld(true) }} />
             {lines.length > 0 && (
-              <button onClick={startCredit}>Sell on credit</button>
+              <div style={s.moreDanger}>
+                <MoreItem danger label="Clear bill" hint="Take everything off. Nothing is sold."
+                  onClick={async () => {
+                    setShowMore(false)
+                    if (await askYesNo('Clear this bill?', { note: `${lines.length} ${lines.length === 1 ? 'line' : 'lines'}, ${rupees(totals.totalPaise)}, come off. Nothing was sold.`, confirmLabel: 'Clear bill', danger: true })) startAgain()
+                    else refocus()
+                  }} />
+              </div>
             )}
-            {lines.length > 0 && (
-              <button onClick={() => { setShowMore(false); setShowEstimate(true) }}>Estimate</button>
-            )}
-            {lines.length > 0 && <button onClick={parkCurrent}>Park this bill</button>}
-            <button onClick={() => { setShowMore(false); setShowHeld(true) }}>Parked bills</button>
-            {lines.length > 0 && (
-              <button onClick={() => { setShowMore(false); startAgain() }} style={s.clearBtn}>Clear bill</button>
-            )}
-            <button onClick={() => { setShowMore(false); refocus() }}>Close</button>
           </div>
         </div>
       )}
@@ -1078,10 +1095,23 @@ const s = {
     display: 'flex', alignItems: 'flex-end', justifyContent: 'center'
   },
   moreSheet: {
-    background: 'var(--panel)', borderRadius: '20px 20px 0 0', boxShadow: 'var(--shadow-lift)',
-    padding: 18, width: 440, maxWidth: '100%', display: 'grid', gap: 8,
-    paddingBottom: 'calc(18px + env(safe-area-inset-bottom, 0px))'
+    background: 'var(--panel)', boxShadow: 'var(--shadow-lift)',
+    padding: 14, width: 400, maxWidth: '100%', display: 'grid', gap: 4, alignContent: 'start',
+    overflowY: 'auto', overscrollBehavior: 'contain'
   },
+  // A phone: a sheet from the bottom that never runs off the screen.
+  moreSheetPhone: { borderRadius: '20px 20px 0 0', maxHeight: '85vh', paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))' },
+  // A computer: a menu just above the More button, bottom right.
+  moreBackdropDesk: { alignItems: 'flex-end', justifyContent: 'flex-end', padding: '0 20px 92px', background: 'rgba(16, 24, 14, 0.18)' },
+  moreSheetDesk: { borderRadius: 16, maxHeight: 'calc(100vh - 120px)', width: 360 },
+  moreHead: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 4px 6px', fontSize: 15 },
+  moreClose: { minHeight: 34, minWidth: 34, padding: 0, fontSize: 20, lineHeight: 1, border: 'none', boxShadow: 'none', background: 'none', color: 'var(--ink-soft)' },
+  moreGroup: { fontSize: 11.5, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--ink-soft)', padding: '10px 6px 2px' },
+  moreItem: { display: 'grid', gap: 2, textAlign: 'left', justifyItems: 'start', padding: '10px 12px', minHeight: 52, borderRadius: 12, border: '1px solid var(--line)', boxShadow: 'none', background: 'var(--panel)', width: '100%' },
+  moreItemLabel: { fontWeight: 650, fontSize: 15 },
+  moreItemHint: { fontSize: 12.5, color: 'var(--ink-soft)', fontWeight: 400, lineHeight: 1.35 },
+  moreItemDanger: { color: 'var(--bad)', borderColor: 'color-mix(in srgb, var(--bad) 35%, var(--line))' },
+  moreDanger: { marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--line)' },
   clearBtn: { color: 'var(--bad)' },
   priceBtn: {
     minHeight: 34, padding: '0 8px', border: '1px dashed var(--line-strong)', background: 'none', boxShadow: 'none',
@@ -1147,4 +1177,14 @@ const so = {
   muted: { margin: 0, color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.5 },
   btn: { minHeight: 'var(--tap)', fontSize: 16, fontWeight: 700, background: 'var(--accent)', color: '#fff', border: '1px solid var(--accent)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' },
   link: { color: 'var(--accent)', fontWeight: 600, fontSize: 14 }
+}
+
+/** One choice in More: what it is, and a line saying what it does. The name alone is what a screen reader reads. */
+function MoreItem({ label, hint, onClick, danger = false }) {
+  return (
+    <button type="button" onClick={onClick} aria-label={label} title={hint} style={{ ...s.moreItem, ...(danger ? s.moreItemDanger : {}) }}>
+      <span style={s.moreItemLabel}>{label}</span>
+      <span style={s.moreItemHint} aria-hidden="true">{hint}</span>
+    </button>
+  )
 }
