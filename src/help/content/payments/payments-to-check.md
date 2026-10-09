@@ -17,9 +17,12 @@ keywords: payments to check pending upi not confirmed being checked bank stateme
 
 Look for the amount and UTR in the shop's bank app or statement.
 
-- Found it: press **It arrived**. The bill is fully paid.
-- Not there after a day: press **Never arrived**, with a few words why. The customer owes that amount
+- Found it: press [[1]] **It arrived**. The bill is fully paid.
+- Not there after a day: press [[2]] **Never arrived**, with a few words why. The customer owes that amount
   again, and the bill shows under **Orders → Due**.
+
+
+![Payments to check. It arrived is marked 1 and Never arrived 2.](1-list.webp "Tap the bill number to open the bill.")
 
 :::warning Never ask the customer to pay again before checking
 A UPI that has not shown yet usually lands within minutes. Asking twice is how a customer pays twice.

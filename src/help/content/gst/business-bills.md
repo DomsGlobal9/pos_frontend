@@ -20,6 +20,9 @@ The tax invoice prints:
 
 > **Bill to** · Lakshmi Boutique · 4 Market Road, Pune 411001 · GSTIN 27AAPFU0939F1ZV
 
+
+![A tax invoice with Bill to marked 1: the business name, address and GSTIN.](1-bill-to.webp "Each line still shows its HSN and GST rate.")
+
 ## Frozen on the bill
 
 The buyer is kept on the bill as it was that day. Changing the customer's details later never changes a

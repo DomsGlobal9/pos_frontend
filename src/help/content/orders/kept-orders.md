@@ -29,6 +29,8 @@ ticket.
 - **Due** — money still owed (kept orders, credit sales, and any bill whose UPI never arrived).
 - **Complete** — handed over and paid.
 
+![The Orders screen. Waiting is marked 1, Ready 2 and Due 3.](1-orders.webp "Each order shows what is owed and where it is.")
+
 ## 3. When it is ready
 
 Open the order, press **Mark ready**, then **WhatsApp: it's ready** — the message is written for you,

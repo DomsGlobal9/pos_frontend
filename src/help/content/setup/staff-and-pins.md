@@ -12,7 +12,7 @@ keywords: staff add person pin password role cashier manager owner forgot pin re
 
 ## Add a person
 
-1. Press **Add person**.
+1. Press [[1]] **Add person**.
 2. Type their **Name** and choose their role:
    - **Cashier** — makes bills; needs a manager for the things in [What needs a manager](/help/setup/manager-approval).
    - **Manager** — everything a cashier does, and approves with their PIN.
@@ -22,6 +22,9 @@ keywords: staff add person pin password role cashier manager owner forgot pin re
 5. Press **Save**. *They can now take the till with their PIN.*
 
 Everyone with a PIN appears on **Who's at the till?** and in **Served by**.
+
+
+![The Staff page. Add person is marked 1.](1-staff.webp "Everyone with a PIN is listed.")
 
 ## A forgotten PIN
 

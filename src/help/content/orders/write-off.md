@@ -13,10 +13,13 @@ chasing it, without pretending the money came.
 
 1. Open the bill under **Orders → Due**.
 2. Press **Write off**.
-3. In **Why**, write the reason: *Moved away, not reachable for months*.
-4. Press **Write off ₹2,700**.
+3. In [[1]] **Why**, write the reason: *Moved away, not reachable for months*.
+4. Press [[2]] **Write off ₹2,700**.
 5. A cashier sees **Manager approval needed**, with their reason already filled in — the manager types
    their PIN.
+
+
+![The write-off form. Why it is written off is marked 1 and Write off ₹549 2.](1-reason.webp "A cashier is asked for a manager next.")
 
 ## 2. What changes
 
@@ -30,6 +33,9 @@ chasing it, without pretending the money came.
 :::warning The bill does not change
 The GST invoice stays exactly as issued: the goods went, the tax is owed either way.
 :::
+
+
+![The order after the write-off. Written off ₹549 is marked 1 and They paid after all 2. The bill below says BALANCE WRITTEN OFF.](2-written-off.webp "No money is counted for the written-off part.")
 
 ## 3. If they pay after all
 

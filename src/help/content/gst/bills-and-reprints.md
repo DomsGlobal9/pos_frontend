@@ -10,8 +10,11 @@ keywords: bills find bill search reprint duplicate copy pdf whatsapp share recei
 
 ## 1. Find it
 
-**More → Bills**. Search by bill number (the last digits are enough), customer name or phone, and narrow
+**More → Bills**. In [[1]] **Find a bill**, search by bill number (the last digits are enough), customer name or phone, and narrow
 by when or how it was paid. Or scan the QR printed on the bill.
+
+
+![The Bills list. Find a bill is marked 1.](1-bills.webp "Narrow it by when, or how it was paid.")
 
 ## 2. Print, PDF or WhatsApp
 

@@ -14,11 +14,13 @@ Scan the QR on the customer's bill, or **More → Bills** and search. Open it an
 
 ## 2. Choose what comes back
 
-1. Scan the piece coming back, or set **Quantity coming back** on its line. **All of it** returns the whole
-   bill.
-2. Choose a **Reason**: wrong size, damaged, changed mind…
+1. Scan the piece coming back, or press **+** on its line [[1]]. **All of it** returns the whole bill.
+2. Under **Why**, tap **Wrong size**, **Damaged**, **Colour not as expected** or **Changed mind** — or type
+   the reason [[2]].
 
 The till shows what goes back: the money, and the GST taken back with it.
+
+![The return screen. The quantity coming back is marked 1 and the reason 2. Record return is at the bottom.](1-return.webp "The top says how old the bill is and the return window.")
 
 ## 3. How the money goes back
 
@@ -30,7 +32,7 @@ Choose the **Refund method**: cash, UPI, card or store credit. The till only off
 
 ## 4. Approve and finish
 
-A cashier is asked for a manager's PIN (*Cashiers need a manager for any return*). A manager or the owner
+Press **Record return**. A cashier is asked for a manager's PIN (*Cashiers need a manager for any return*). A manager or the owner
 goes straight through. After the shop's return window (7 days) it is recorded as a late return, with the reason.
 
 The till makes a **credit note** (CN/2026-27/0006) — print or share it like a bill. The pieces go back into

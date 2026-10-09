@@ -21,6 +21,11 @@ customer detail.
 
 ## What a tax invoice shows
 
+![A tax invoice. Taxable value is marked 1, CGST 2.5% 2 and SGST 2.5% 3.](1-tax-invoice.webp "Each line shows its HSN and GST rate too.")
+
+[[1]] **Taxable value**, [[2]] **CGST** and [[3]] **SGST**, each with its rate.
+
+
 - The shop's name, address, phone and **GSTIN**.
 - A bill number like **INV/2026-27/0042** — one unbroken series per financial year. From the 10,000th bill
   of a year it is written **INV/26-27/10000**, so it never passes the 16 characters GST allows.

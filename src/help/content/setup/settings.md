@@ -10,6 +10,9 @@ keywords: settings upi id vpa qr gst registration composition logo bill shop det
 
 **More → Settings**. Only the owner can change these.
 
+
+![The Settings page: UPI payments, GST registration and Logo on the bill.](1-settings.webp "Only the owner can change these.")
+
 ## UPI payments
 
 Type the shop's **UPI ID** (for example *lakshmisilks@okaxis*) and **Save**. The payment screen then shows

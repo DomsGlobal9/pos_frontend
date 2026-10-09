@@ -18,7 +18,10 @@ Scan the piece coming back, or set its quantity.
 
 ## 3. What goes out
 
-In **Find the replacement**, scan or search the new piece and **Add** it.
+In [[2]] **Find the replacement**, scan or search the new piece and **Add** it.
+
+
+![The exchange screen. What comes back is marked 1 and Find the replacement 2.](1-exchange.webp "The difference is worked out as you add.")
 
 ## 4. The difference
 

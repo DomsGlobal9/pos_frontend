@@ -13,11 +13,13 @@ slip. Nothing changes here.
 
 ## 2. Record it on the till
 
-1. Press **Take payment**, choose **Card**.
-2. Type the **Card last 4 digits** (on the slip, after the stars: ****4321).
-3. Type the **Card approval code** (on the slip as *Appr code*, *Auth code* or *Approval*; 6 letters or
+1. Press **Take payment**, choose [[1]] **Card**.
+2. Type the [[2]] **Card last 4** (on the slip, after the stars: ****4321).
+3. Type the [[3]] **Approval code** (on the slip as *Appr code*, *Auth code* or *Approval*; 6 letters or
    numbers).
 4. Press **Complete sale**.
+
+![The payment box on Card. Card is marked 1, Card last 4 digits 2 and Card approval code 3.](1-card.webp "Both are on the slip the machine prints.")
 
 :::note Any machine, any bank
 The till never talks to the machine, so Pine Labs, Paytm, PhonePe, Ezetap or a bank's own machine all work

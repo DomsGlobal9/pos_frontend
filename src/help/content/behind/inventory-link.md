@@ -10,6 +10,9 @@ keywords: inventory link connect key refresh items catalogue sending stopped wai
 
 **More → Inventory link** (also under **Settings**).
 
+
+![The Inventory link page.](1-link.webp "A connected till shows what is waiting, being applied and last sent.")
+
 ## What comes from Inventory
 
 Items, prices, offers, GST rates, stock, the shop's name, address, phone and GSTIN, the logo, the discount

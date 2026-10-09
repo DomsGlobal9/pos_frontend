@@ -12,6 +12,9 @@ When a bill reaches ₹50,000 before GST, a line appears above the total:
 
 > *Rs 50,000 or more: GST rules ask for the customer's name and address on this bill.* **Add customer**
 
+
+![A bill over ₹50,000. The GST note is marked 1 and its Add customer button 2.](1-notice.webp "Take payment still works.")
+
 ## 1. Add their name and address
 
 1. Press **Add customer** (or **Add them** if a customer is already on the bill).

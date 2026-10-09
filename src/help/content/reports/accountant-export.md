@@ -10,8 +10,11 @@ keywords: accountant export excel csv gst return gstr-1 hsn summary b2b b2c down
 
 **More → Connections → Sales for your accountant**.
 
-1. Choose **From** and **To**.
-2. Press **Download Excel** (or **Download CSV**).
+1. Choose [[1]] **From** and [[2]] **To**.
+2. Press [[3]] **Download Excel** (or **Download CSV**).
+
+
+![Sales for your accountant. From is marked 1, To 2 and Download Excel 3.](1-export.webp "The CSV is the same bills in one sheet.")
 
 ## The four sheets
 

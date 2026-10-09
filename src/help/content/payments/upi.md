@@ -14,7 +14,12 @@ Press **Take payment**, choose **UPI**. The screen shows the shop's own UPI QR f
 ## 2. Type the UTR
 
 On the customer's phone, the payment shows a **12-digit number** (UTR, UPI reference or transaction ID).
-Type it in **UPI reference** and press **Complete sale**.
+Type it in [[2]] **UPI reference** and press **Complete sale**.
+
+
+![The payment box on UPI. UPI is marked 1, UPI reference 2 and Not confirmed yet 3. A QR for the exact amount is shown.](1-upi.webp "The QR already has the amount in it.")
+
+[[1]] **UPI**, [[2]] the 12-digit UTR, [[3]] **Not confirmed yet** when it has not shown up.
 
 :::tip Why the UTR?
 It is the proof the money came. It goes on the bill, reaches Inventory, and the till stops the same UTR

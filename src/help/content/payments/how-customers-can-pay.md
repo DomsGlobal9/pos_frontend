@@ -24,6 +24,8 @@ credit come with the [Inventory link](/help/behind/inventory-link).
 ₹1,000 in cash and the rest on UPI: fill the first, press **Split — add another payment**, fill the
 second. The two must add up to the bill.
 
+![The payment box with ₹500 in cash. Split, add another payment is marked 1.](1-split.webp "The rest goes in the second payment.")
+
 ## Not sure the UPI came?
 
 Tick **Not confirmed yet**. The bill is made, the customer can go, and the payment waits on

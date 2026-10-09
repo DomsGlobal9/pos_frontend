@@ -21,6 +21,8 @@ Each counter's drawer is counted and closed: see [Shift and the drawer](/help/da
 - **Given back** — refunds on returns.
 - **Cash** — what each drawer should hold and what it was counted at.
 
+
+![The Close the day page with the day's sales, money in, money given back and the drawers.](1-day.webp "Every shift must be closed first.")
 Press **Close the day**.
 
 ## A closed day is frozen

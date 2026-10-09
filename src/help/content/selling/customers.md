@@ -11,9 +11,11 @@ keywords: customer phone number add customer find customer visits spent owes poi
 ## Add a customer at the till
 
 1. On **Sell**, press **Add customer**.
-2. Type their 10-digit mobile number and press Enter.
-3. Someone known: press **Use** with their name. Someone new: type a name if you like and press **Add and use**.
+2. Type their 10-digit mobile number in [[1]] and press Enter.
+3. Someone known: press [[2]] **Use** with their name. Someone new: type a name if you like and press **Add and use**.
 
+
+![The customer box. The phone number is marked 1 and Use Meena 2.](1-add.webp "A new customer shows a name box and Add and use instead.")
 The same number is always the same customer, even if two counters add them at once.
 
 :::note Never needed for a cash sale
