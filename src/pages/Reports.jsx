@@ -233,7 +233,7 @@ export default function Reports() {
 
               {/* POS-RPT-009 */}
               {!limited && (
-                <Card title="Money owed on kept orders">
+                <Card title="Money owed">
                   <Line label={`${r.dues.count} ${r.dues.count === 1 ? 'order' : 'orders'} owing, as of now`} value={rupees(r.dues.totalPaise)} strong />
                   {r.dues.oldest.length > 0 && (
                     <ul style={s.list} className="card-list">
