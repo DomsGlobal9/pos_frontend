@@ -10,12 +10,16 @@ keywords: bill billing sale new sale scan barcode find item add item quantity re
 
 ## 1. Put the items on the bill
 
-1. Scan the tag. Or type the code or the name in **Find an item** and press Enter.
-2. To sell more than one of the same piece, press **+** (**One more**). **−** takes one off, **×** removes
-   the line.
+1. [[1]] Scan the tag. Or type the code or the name in **Find an item** and press Enter. [[2]] scans with the camera.
+2. To sell more than one of the same piece, press [[1]] **+** (**One more**). **−** takes one off, [[3]] **×**
+   removes the line. [[2]] The price opens a price change (it needs a manager).
 
 The price, the offer and the GST come from Inventory. An offer shows under the line in green, for example
 *offer −₹300*.
+
+![The sell screen. The Find an item box is marked 1 and the camera button 2.](1-find-item.webp "Phones and tablets can scan with the camera.")
+
+![Two items on the bill. One more is marked 1, the price 2 and remove 3.](2-lines.webp "Each line shows the item, its colour and size, and its code.")
 
 :::tip No scanner?
 Tap the camera button (**Scan with camera**) to scan a tag with a phone or tablet camera.
@@ -26,6 +30,10 @@ Tap the camera button (**Scan with camera**) to scan a tag with a phone or table
 Press **Add customer**, type their 10-digit mobile number. A known customer comes up by name; a new one is
 added with a name if you type it. A customer is needed for points, credit, kept orders and business bills
 — never for a plain cash sale. See [Customers](/help/selling/customers).
+
+[[1]] **Add customer**, [[2]] **Served by**, then [[3]] **Take payment**.
+
+![Add customer is marked 1, Served by with a name chosen 2, and Take payment 3.](3-customer-served-by.webp "Both are optional for a cash sale.")
 
 ## 3. Who served them
 
@@ -39,6 +47,9 @@ sales. See [Served by](/help/selling/served-by).
    the notes they handed over (₹3,000, ₹4,000); the till shows the change.
 3. Press **Complete sale**.
 
+
+![The payment box. Cash is marked 1, Exact 2 and Complete sale 3.](4-take-payment.webp "Cash shows the change when you type the notes handed over.")
+
 Two ways at once (₹1,000 cash and the rest UPI)? **Split — add another payment**. See
 [How customers can pay](/help/payments/how-customers-can-pay).
 
@@ -47,11 +58,17 @@ Two ways at once (₹1,000 cash and the rest UPI)? **Split — add another payme
 The bill appears on the screen: **Print**, **PDF**, or **Share** on WhatsApp (when there is a customer).
 Then press **Next sale**.
 
+[[1]] **Print**, [[2]] **PDF**, [[3]] **Next sale**.
+
+![The finished bill on screen. Print is marked 1, PDF 2 and Next sale 3.](5-the-bill.webp "The bill shows the GST rates and the taxable value on a tax invoice.")
+
 ## More on the bill
 
 **More** at the bottom has: **Discount**, **Coupon code**, **Keep for customer**, **Sell on credit**,
 **Estimate** (a quotation to show the customer, not a bill), **Park this bill**, **Parked bills** and
 **Clear bill**.
+
+![The More for this bill menu with each choice and a line saying what it does; Clear bill is apart at the bottom.](6-more.webp "Clear bill asks before it empties the bill.")
 
 ## Common problems
 

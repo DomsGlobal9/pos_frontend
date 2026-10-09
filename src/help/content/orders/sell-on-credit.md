@@ -13,9 +13,13 @@ keywords: credit sale udhaar pay later khata owed balance due on credit regular 
 3. Take what they pay today, if anything. **Nothing is fine too**: leave it empty or type 0. The screen
    shows **Owed on credit**.
 4. Press **Sell on credit**.
+
+![The credit sale payment box with ₹300 paid now. Owed on credit is marked 1 and Sell on credit 2.](1-owed.webp "Nothing paid now is fine too.")
 5. A cashier sees **Manager approval needed** — the manager types their PIN. A manager or owner goes
    straight through.
 
+
+![Manager approval needed. Why is marked 1, Manager PIN 2 and Approve 3.](2-approval.webp "The cashier stays signed in.")
 The bill prints **ON CREDIT** and **Balance due**.
 
 :::note Example

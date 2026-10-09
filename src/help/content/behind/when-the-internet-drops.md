@@ -17,6 +17,9 @@ Make the bill as usual and press **Complete sale**. The till says:
 
 The chip at the top says **1 sale waiting to send · No connection**.
 
+
+![Sale saved on this till is marked 1, and the 1 sale waiting to send chip 2.](1-saved.webp "Next sale works straight away.")
+
 ## When the internet is back
 
 The till sends the waiting sales by itself, oldest first. Each gets its bill number then, and is dated

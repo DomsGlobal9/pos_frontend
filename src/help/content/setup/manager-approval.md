@@ -10,6 +10,9 @@ When a cashier tries one of these, the till shows **Manager approval needed** wi
 The manager writes or checks **Why**, types their PIN in **Manager PIN** and presses **Approve**. The
 cashier stays signed in and the bill stays as it was. The approval is recorded with both names.
 
+
+![Manager approval needed. Why is marked 1, Manager PIN 2 and Approve 3.](1-approval.webp "The cashier stays signed in.")
+
 | What | Who can do it alone |
 |---|---|
 | A discount above the shop's limit | Managers, owner |

@@ -25,8 +25,10 @@ Only an owner or a manager with a password can do this. Cashiers have only a PIN
 
 The screen now says **Who's at the till?** with everyone's name.
 
-1. Tap your name.
+1. Tap [[1]] your name.
 2. Type your 4-digit PIN.
+
+![Who's at the till? with everyone's name. Dev cashier is marked 1.](1-who.webp "Close the till on this device is at the bottom.")
 
 ## 3. Hand over to the next person
 

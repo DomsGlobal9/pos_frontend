@@ -10,6 +10,10 @@ keywords: menu tabs home sell orders customers more header all saved inventory c
 
 ## The tabs at the bottom
 
+![The till with Sell marked 1 in the menu, the All saved chip at the top marked 2, and the ? help button marked 3.](1-around.webp "On a computer the tabs are down the left; on a phone they are along the bottom.")
+
+[[1]] The tabs, [[2]] the chip that says your work is safe, [[3]] help for this screen.
+
 - **Home**: today's sales, the drawer, orders that need attention, and your recent bills.
 - **Sell**: make a bill. This is where a cashier spends the day.
 - **Orders**: things kept for customers, and bills where money is still owed.

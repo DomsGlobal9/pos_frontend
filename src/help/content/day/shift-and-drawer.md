@@ -13,8 +13,11 @@ shift open on that counter.
 
 ## 1. Open a shift
 
-**More → Shift and drawer**. Count the cash in the drawer and type it in **Cash in the drawer now**. Last
+**More → Shift and drawer**. Count the cash in the drawer and type it in [[1]] **Cash in the drawer now**. Last
 night's count is offered — if it is right, just press **Open shift**.
+
+
+![No shift open. Cash in the drawer now is marked 1 and Open shift 2.](1-open.webp "Last count is offered for you.")
 
 :::tip Typing a different amount
 Tap the box and type: the offered figure is replaced, not added to.
@@ -25,6 +28,9 @@ Tap the box and type: the offered figure is replaced, not added to.
 - **Cash in** — cash put into the drawer that is not a sale (change brought from the bank).
 - **Cash out** — cash taken out (paying the tailor, buying tea). Say what for. A cashier needs a manager's
   PIN.
+
+
+![An open shift. Cash in is marked 1, Cash out 2 and Close shift 3.](2-during.webp "Managers and the owner also see what should be in the drawer.")
 
 ## 3. Close the shift
 

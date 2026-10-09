@@ -10,6 +10,9 @@ keywords: reports sales today how it was paid gst by rate cashier counter top se
 
 **More → Reports**. Choose the days at the top — today, or any period up to 92 days.
 
+
+![The Reports page for today: sales, how it was paid, cashiers, GST and more.](1-reports.webp "Choose the days at the top.")
+
 ## What is on it
 
 - **Sales** — bills, net sales, average bill, discounts and offers, returns.

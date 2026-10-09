@@ -13,6 +13,11 @@ keywords: collect balance due owed take payment remind whatsapp part payment ins
 **Orders → Due**, or the customer's card under **Customers**, or search the name or bill number in
 **Orders**.
 
+
+![A credit order. Take payment is marked 1, Write off 2 and the WhatsApp reminder 3.](1-order.webp "The bill is under it, with Balance due.")
+
+[[1]] **Take payment**, [[2]] **Write off**, [[3]] the WhatsApp reminder.
+
 ## 2. Remind them
 
 On the order, **WhatsApp: remind about ₹2,000** opens WhatsApp with the message written: the amount, the
