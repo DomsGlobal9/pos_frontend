@@ -1,4 +1,5 @@
-import { Outlet, Link } from 'react-router-dom'
+import { Outlet, Link, useLocation } from 'react-router-dom'
+import { HelpCircle } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { health, loadShop, whoAmI, loadInventoryLink } from './lib/api.js'
@@ -128,6 +129,7 @@ export default function AppShell() {
           </div>
           <Connection status={status} offline={!online || unreachable} waiting={waiting.length} inventory={shop?.inventoryConnected === true} inventoryStopped={!!link?.blocked} />
           <UpdateReady />
+          <HelpButton />
         </header>
 
         <div style={s.content} className="shell-content">
@@ -137,6 +139,20 @@ export default function AppShell() {
 
       {bottomNav && <NavBar device={device} />}
     </div>
+  )
+}
+
+/**
+ * The guide for THIS screen (as Inventory's): /help?from=<where you are> opens the page whose `app:`
+ * is that screen. A new tab, so a bill in progress is never left.
+ */
+function HelpButton() {
+  const { pathname } = useLocation()
+  return (
+    <a href={`/help?from=${encodeURIComponent(pathname)}`} target="_blank" rel="noreferrer" style={s.help}
+      aria-label="Help for this screen" title="Help for this screen">
+      <HelpCircle size={20} aria-hidden="true" />
+    </a>
   )
 }
 
@@ -209,6 +225,7 @@ function Connection({ status, offline, waiting, inventory, inventoryStopped }) {
 const Dot = ({ color }) => <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 99, background: color, display: 'inline-block' }} />
 
 const s = {
+  help: { display: 'grid', placeItems: 'center', minWidth: 40, minHeight: 40, borderRadius: 999, color: 'var(--brand-deep)', flexShrink: 0 },
   page: { height: '100%', display: 'flex', background: 'var(--bg)' },
   main: { flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0 },
   header: {

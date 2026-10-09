@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import AppShell from './AppShell.jsx'
 import AskHost from './components/Ask.jsx'
@@ -26,6 +27,11 @@ import Staff from './pages/Staff.jsx'
 import Items from './pages/Items.jsx'
 import Labels from './pages/Labels.jsx'
 import ShopSetup from './pages/ShopSetup.jsx'
+// The guide loads on its own, only when opened: the till never downloads it otherwise.
+const HelpLayout = lazy(() => import('./pages/help/HelpLayout.jsx'))
+const HelpHome = lazy(() => import('./pages/help/HelpHome.jsx'))
+const HelpArticle = lazy(() => import('./pages/help/HelpArticle.jsx'))
+const helpPage = (el) => <Suspense fallback={null}>{el}</Suspense>
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -39,6 +45,16 @@ const router = createBrowserRouter([
   { path: '/r/:token', element: <PublicReceipt /> },
   // Setting up a new shop -- ScaleEzy staff, with the setup key. Outside the till: no sign-in.
   { path: '/setup', element: <ShopSetup /> },
+  // The guide, outside the till: readable when the till is locked or not yet opened. The "?" in the
+  // header opens /help?from=<this screen> and the page about that screen opens itself.
+  {
+    path: '/help',
+    element: helpPage(<HelpLayout />),
+    children: [
+      { index: true, element: helpPage(<HelpHome />) },
+      { path: ':section/:slug', element: helpPage(<HelpArticle />) }
+    ]
+  },
   {
     path: '/',
     element: <AppShell />,
