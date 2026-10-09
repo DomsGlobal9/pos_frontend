@@ -11,6 +11,7 @@ import { applyUpdate, updateReady, tillIsIdle } from './lib/update.js'
 import { useOutbox, flush, outboxItems } from './lib/outbox.js'
 import { onSession, tillToken, staffToken, personOut } from './lib/session.js'
 import { OpenTill, WhoAtTill } from './components/TillGate.jsx'
+import './lib/useEscape.js' // Esc and Tab in popups, on every screen
 
 /**
  * The shell every screen sits in. POS-CORE-001.
