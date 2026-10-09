@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { loadVariants, rupees, messageFor } from '../lib/api.js'
+import useEscape from '../lib/useEscape.js'
 
 /**
  * WF-PRODUCT-01. POS-SELL-006, -007, -008.
@@ -17,13 +18,14 @@ import { loadVariants, rupees, messageFor } from '../lib/api.js'
  * and the piece may be in the customer's hand already.
  */
 export default function VariantSheet({ group, name, onPick, onClose }) {
+  useEscape(onClose)
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['variants', group],
     queryFn: () => loadVariants(group)
   })
 
   return (
-    <div style={s.backdrop} role="dialog" aria-label={`Choose ${name}`} onClick={onClose}>
+    <div style={s.backdrop} role="dialog" data-sheet aria-label={`Choose ${name}`} onClick={onClose}>
       <div style={s.sheet} onClick={e => e.stopPropagation()}>
         <div style={s.head}>
           <b>{name}</b>

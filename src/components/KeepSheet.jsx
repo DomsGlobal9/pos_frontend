@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import useEscape from '../lib/useEscape.js'
 
 /**
  * Keeping the goods for a customer: when they will collect, and what to remember. POS-ORD-004, -005.
@@ -11,6 +12,7 @@ import { useEffect, useRef, useState } from 'react'
  * look overdue by Wednesday.
  */
 export default function KeepSheet({ customer, onNext, onCancel }) {
+  useEscape(onCancel)
   const [date, setDate] = useState('')
   const [note, setNote] = useState('')
   const noteBox = useRef(null)

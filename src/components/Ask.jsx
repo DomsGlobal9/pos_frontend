@@ -49,6 +49,7 @@ export default function AskHost() {
   const [value, setValue] = useState('')
   const box = useRef(null)
   const panel = useRef(null)
+  const no = useRef(null)
 
   useEffect(() => {
     deliver = next => { setQuestion(next); setValue(next.defaultValue ?? '') }
@@ -57,7 +58,8 @@ export default function AskHost() {
   }, [])
 
   // The text box takes focus, so a question can be answered and dismissed without a mouse.
-  useEffect(() => { if (question?.kind === 'text') box.current?.select() }, [question])
+  // A yes/no puts focus on Cancel (found 9 Oct: nothing had it, so Escape did nothing): Esc backs out, a stray Enter is harmless.
+  useEffect(() => { if (question?.kind === 'text') box.current?.select(); else if (question) no.current?.focus() }, [question])
 
   function answer(result) {
     question?.resolve(result)
@@ -108,7 +110,7 @@ export default function AskHost() {
         )}
 
         <div className="ask-buttons">
-          <button type="button" onClick={cancel}>Cancel</button>
+          <button ref={no} type="button" onClick={cancel}>Cancel</button>
           <button
             type="submit"
             style={danger

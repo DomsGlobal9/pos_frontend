@@ -11,6 +11,7 @@ import { checkIn } from '../lib/device.js'
 import PaymentPanel from '../components/PaymentPanel.jsx'
 import Receipt from '../components/Receipt.jsx'
 import VariantSheet from '../components/VariantSheet.jsx'
+import useEscape from '../lib/useEscape.js'
 import ShiftBar from '../components/ShiftBar.jsx'
 import { Search, ScanBarcode, UserPlus, User, X, Camera } from 'lucide-react'
 // Loaded only when the camera is opened: the barcode reader is large, and the sell screen's own
@@ -827,6 +828,8 @@ export default function Till() {
                     setSalesperson(p ? { id: p.id, name: p.name } : null)
                   }}
                   aria-label="Served by"
+                  // Never narrower than its words (seen 9 Oct: "Nobody choser" on a phone); it drops below instead.
+                  style={{ flex: '1 0 auto' }}
                 >
                   <option value="">Nobody chosen</option>
                   {tillStaff.staff.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -909,6 +912,7 @@ export default function Till() {
          */
         <div style={{ ...s.moreBackdrop, ...(stacked ? {} : s.moreBackdropDesk) }} role="dialog" aria-label="More actions" onClick={() => { setShowMore(false); refocus() }}>
           <div style={{ ...s.moreSheet, ...(stacked ? s.moreSheetPhone : s.moreSheetDesk) }} onClick={e => e.stopPropagation()}>
+            <OnEscape run={() => { setShowMore(false); refocus() }} />
             <div style={s.moreHead}>
               <b>More for this bill</b>
               <button type="button" style={s.moreClose} aria-label="Close" onClick={() => { setShowMore(false); refocus() }}>×</button>
@@ -1126,7 +1130,7 @@ const s = {
   customerName: { fontWeight: 700, fontSize: 14 },
   customerClear: { minHeight: 30, minWidth: 30, padding: 0, borderRadius: 999, border: 'none', boxShadow: 'none', background: 'transparent', color: 'var(--brand-deep)', display: 'grid', placeItems: 'center' },
   linkish: { background: 'none', border: 'none', padding: 0, color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' },
-  servedBy: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-soft)', margin: '6px 0', whiteSpace: 'nowrap' },
+  servedBy: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-soft)', margin: '6px 0', whiteSpace: 'nowrap' },
   customerAdd: { minHeight: 40, padding: '0 14px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 999 },
   totalLabel: { fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.08em' },
   totalValue: { fontSize: 44, fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.02em' },
@@ -1180,6 +1184,8 @@ const so = {
 }
 
 /** One choice in More: what it is, and a line saying what it does. The name alone is what a screen reader reads. */
+function OnEscape({ run }) { useEscape(run); return null }
+
 function MoreItem({ label, hint, onClick, danger = false }) {
   return (
     <button type="button" onClick={onClick} aria-label={label} title={hint} style={{ ...s.moreItem, ...(danger ? s.moreItemDanger : {}) }}>

@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { loadHeldBills, recallBill, discardHeldBill, messageFor } from '../lib/api.js'
 import { askYesNo } from './Ask.jsx'
+import useEscape from '../lib/useEscape.js'
 
 /**
  * WF-HELD-01. POS-SELL-020, -021.
@@ -13,6 +14,7 @@ import { askYesNo } from './Ask.jsx'
  * the Sell screen rather than under Orders.
  */
 export default function HeldSheet({ basketIsEmpty, onRecalled, onClose }) {
+  useEscape(onClose)
   const queryClient = useQueryClient()
   // Always read fresh when opened: a bill parked a moment ago -- here or at another till -- must be
   // on the list. With the app's 30-second cache it was not, and a cashier would think it was lost.
@@ -49,7 +51,7 @@ export default function HeldSheet({ basketIsEmpty, onRecalled, onClose }) {
   const bills = data ?? []
 
   return (
-    <div style={s.backdrop} role="dialog" aria-label="Parked bills" onClick={onClose}>
+    <div style={s.backdrop} role="dialog" data-sheet aria-label="Parked bills" onClick={onClose}>
       <div style={s.sheet} onClick={e => e.stopPropagation()}>
         <div style={s.head}>
           <b>Parked bills</b>

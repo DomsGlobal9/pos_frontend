@@ -1,6 +1,7 @@
 import { rupees } from '../lib/api.js'
 import { lineTotal, offerOn, unitPrice } from '../lib/basket.js'
 import { waLink } from '../lib/whatsapp.js'
+import useEscape from '../lib/useEscape.js'
 
 /**
  * An ESTIMATE of the basket on the till -- "what would these come to?" -- on paper, before anyone
@@ -13,6 +14,7 @@ import { waLink } from '../lib/whatsapp.js'
 const VALID_DAYS = 7
 
 export default function Estimate({ shop, lines, totals, offers, customer, onClose }) {
+  useEscape(onClose)
   const today = new Date()
   const until = new Date(today.getTime() + VALID_DAYS * 86_400_000)
   const day = (d) => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
