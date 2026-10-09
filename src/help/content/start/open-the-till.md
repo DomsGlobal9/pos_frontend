@@ -47,6 +47,8 @@ Nobody can read a PIN back. Ask the owner or a manager to set a new one in **Mor
 :::
 
 :::faq The till went back to "Who's at the till?" on its own
-A person's turn ends after a while for safety, or when someone pressed **Switch**. Take it again with
-your PIN. Nothing on the bill is lost.
+After **10 minutes** with nobody touching the till, it asks for a name and PIN again, so nobody can
+use a manager's or owner's name while they are away. It never does this with items on the bill, a box
+open, or a return part-done. It also happens after 12 hours, or when someone pressed **Switch**. Take it
+again with your PIN. Nothing on the bill is lost.
 :::
