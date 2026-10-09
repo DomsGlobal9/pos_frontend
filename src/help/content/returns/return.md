@@ -35,6 +35,8 @@ Choose the **Refund method**: cash, UPI, card or store credit. The till only off
 Press **Record return**. A cashier is asked for a manager's PIN (*Cashiers need a manager for any return*). A manager or the owner
 goes straight through. After the shop's return window it is recorded as a late return, with the reason. The window is 7 days unless
 the owner set another in Inventory (Settings → Returns and exchanges); left empty there, returns have no limit.
+Days are counted as full 24 hours from the bill's time, the same as Inventory: with 7, a bill is late from
+exactly 8 × 24 hours after it was made.
 The return screen shows which applies.
 
 The till makes a **credit note** (CN/2026-27/0006) — print or share it like a bill. The pieces go back into
