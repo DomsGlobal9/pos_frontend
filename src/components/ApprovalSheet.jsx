@@ -45,7 +45,7 @@ export default function ApprovalSheet({ need, error, busy, onApprove, onCancel, 
             ref={reasonBox}
             value={reason}
             onChange={e => setReason(e.target.value)}
-            placeholder="Regular customer, damaged piece, bulk order…"
+            placeholder={EXAMPLE[need.kind] ?? 'A few words on why'}
             aria-label="Reason"
           />
         </label>
@@ -147,4 +147,17 @@ const s = {
   muted: { margin: 0, color: 'var(--ink-soft)', fontSize: 12 },
   actions: { display: 'flex', gap: 8, justifyContent: 'flex-end' },
   confirm: { background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' }
+}
+
+/** An example reason that fits what is being approved -- one sample for all read oddly on a write-off. */
+const EXAMPLE = {
+  DISCOUNT_OVER_LIMIT: 'Regular customer, bulk order…',
+  PRICE_OVERRIDE: 'Damaged piece, last one in stock…',
+  RETURN: 'Wrong size, unworn…',
+  RETURN_OUTSIDE_WINDOW: 'Was travelling, tags still on…',
+  CASH_OUT: 'Paid the tailor, bought tea…',
+  PAYMENT_VOID: 'Not on the bank statement…',
+  PAY_LATER: 'Regular customer, pays Saturday…',
+  DUPLICATE_REFERENCE: 'One payment for two bills…',
+  WRITE_OFF: 'Moved away, not reachable for months…'
 }
