@@ -23,6 +23,9 @@ Inventory's guide: [How offers work](https://inventory.scaleezy.com/help/offers/
 [Till rules](https://inventory.scaleezy.com/help/offers/till-rules)), a cashier gives it alone. Above it, the till asks for a manager's PIN with a reason. See
 [Manager approval](/help/setup/manager-approval).
 
+
+![Money off the whole bill, with 10% typed in the box marked 1.](1-discount.webp "End with % for a percentage, or type rupees.")
+
 ## Change the price of one item
 
 Tap the price on the line (**Change the price of …**) and type the new price. A cashier always needs a

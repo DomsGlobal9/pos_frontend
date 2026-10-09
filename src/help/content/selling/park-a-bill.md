@@ -11,6 +11,9 @@ keywords: park hold bill aside later recall bring back parked bills waiting cust
 **More → Park this bill**. The till says *Parked as "…"* and the screen is clear for the next customer.
 The customer, the salesperson and any discount go with it.
 
+
+![The More for this bill menu. Park this bill is marked 1 and Parked bills 2.](1-park.webp "Parked bills is there even when the till is empty.")
+
 ## 2. Bring it back
 
 **More → Parked bills**, tap the bill. It comes back exactly as it was.

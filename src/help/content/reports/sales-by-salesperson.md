@@ -15,6 +15,9 @@ For each person:
 - **net** — their sales less the returns against their bills,
 - **before GST** — the same without the tax, since an incentive is usually a percentage of the goods.
 
+
+![The By salesperson card: each person with their bills, sales before GST and returns.](1-card.webp "The bar shows each share of the sales.")
+
 Bills with nobody chosen are a line of their own, **Not chosen**, at the bottom. All the lines add up to
 the period's sales after returns.
 

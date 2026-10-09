@@ -52,7 +52,7 @@ const loginOf = (text) => {
 
 function shopProblems(shop) {
   const e = {}
-  if (!/^[A-Za-z0-9_-]{2,64}$/.test(shop.clientId.trim())) e.clientId = 'Letters, numbers, - and _ only -- the id Inventory uses, like sphl.'
+  if (!/^[A-Za-z0-9_-]{2,64}$/.test(shop.clientId.trim())) e.clientId = 'Letters, numbers, - and _ only — the id Inventory uses, like sphl.'
   if (shop.shopName.trim().length < 2) e.shopName = 'The name customers see on the bill.'
   if (shop.gstin.trim() && !/^[0-9]{2}[A-Z0-9]{13}$/.test(shop.gstin.trim())) e.gstin = '15 characters, starting with the 2-digit state code.'
   return e

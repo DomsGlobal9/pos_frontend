@@ -384,7 +384,7 @@ export default function Till() {
 
   async function askDiscount() {
     const typed = await askText('Money off the whole bill', billDiscountPaise ? String(billDiscountPaise / 100) : '', {
-      note: `In rupees. End with % for a percentage -- 10% of ${rupees(totals.subtotalPaise)} is ${rupees(Math.round(totals.subtotalPaise / 10))}.`,
+      note: `In rupees. End with % for a percentage — 10% of ${rupees(totals.subtotalPaise)} is ${rupees(Math.round(totals.subtotalPaise / 10))}.`,
       placeholder: '0',
       inputMode: 'decimal',
       confirmLabel: 'Take it off'
