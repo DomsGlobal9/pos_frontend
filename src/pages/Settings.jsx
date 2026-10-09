@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { QrCode, Boxes, Monitor, Image as ImageIcon, Receipt } from 'lucide-react'
-import { setShopUpi, setShopLogo, setShopGst, messageFor } from '../lib/api.js'
+import { QrCode, Boxes, Monitor, Image as ImageIcon, Receipt, Wallet } from 'lucide-react'
+import { setShopUpi, setShopLogo, setShopGst, setShopPaymentMethods, messageFor } from '../lib/api.js'
 
 /**
  * Shop settings. POS-SET-003 (partly), POS-PAY-012.
@@ -57,6 +57,29 @@ export default function Settings() {
     if (file) await saveLogo(await toJpeg(file).catch(err => { toast.error(err.message); return null }) ?? undefined)
   }
 
+  /*
+   * WAYS TO PAY (found 9 Oct, writing the help: they were fixed at setup, with no screen to change).
+   * Cash, UPI and card only -- points and store credit are the customer's own balance. At least one stays on.
+   */
+  const PAY = [['CASH', 'Cash'], ['UPI', 'UPI'], ['CARD', 'Card on a swiping machine']]
+  const onNow = shop?.shop?.enabledPaymentMethods?.length ? shop.shop.enabledPaymentMethods : ['CASH', 'UPI', 'CARD']
+  const [pay, setPay] = useState(null)
+  const chosen = pay ?? onNow
+  const [busyPay, setBusyPay] = useState(false)
+  async function savePay() {
+    setBusyPay(true)
+    try {
+      await setShopPaymentMethods(chosen)
+      toast.success('Saved. The payment screen offers only these.')
+      queryClient.invalidateQueries({ queryKey: ['shop'] })
+      setPay(null)
+    } catch (err) {
+      toast.error(messageFor(err))
+    } finally {
+      setBusyPay(false)
+    }
+  }
+
   async function save(value) {
     setBusy(true)
     try {
@@ -89,6 +112,30 @@ export default function Settings() {
           <div style={s.actions}>
             <button style={s.primary} disabled={busy || !upi.trim() || upi.trim().toLowerCase() === current} onClick={() => save(upi.trim())}>Save</button>
             {current && <button disabled={busy} onClick={() => save(null)}>Remove</button>}
+          </div>
+        ) : <p style={s.muted}>Only the owner can change this.</p>}
+      </section>
+
+      <section style={s.card} aria-label="Ways customers pay">
+        <div style={s.head}><span style={s.icon}><Wallet size={18} aria-hidden="true" /></span><b>Ways customers pay</b></div>
+        <p style={s.muted}>
+          What the payment screen offers. Points and store credit come with the Inventory link and are not
+          switched here. Turned off, a way is refused on every till.
+        </p>
+        {PAY.map(([key, label]) => (
+          <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 15 }}>
+            <input type="checkbox" checked={chosen.includes(key)} disabled={!owner || busyPay}
+              onChange={e => setPay(e.target.checked ? [...chosen, key] : chosen.filter(m => m !== key))} />
+            {label}
+          </label>
+        ))}
+        {owner ? (
+          <div>
+            <button style={s.primary} onClick={savePay}
+              disabled={busyPay || chosen.length === 0 || [...chosen].sort().join() === [...onNow].sort().join()}>
+              {busyPay ? 'Saving…' : 'Save'}
+            </button>
+            {chosen.length === 0 && <p style={s.muted}>Keep at least one switched on.</p>}
           </div>
         ) : <p style={s.muted}>Only the owner can change this.</p>}
       </section>
