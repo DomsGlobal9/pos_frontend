@@ -51,7 +51,15 @@ another way.
 :::
 
 :::faq Cheques or bank transfer?
-The till does not take cheques or bank transfers (NEFT, IMPS, RTGS) yet.
+The owner switches them on in **Settings → Ways customers pay**. Then the payment screen offers
+**Cheque** (type the 6-digit cheque number and the bank) and **Bank transfer** (NEFT, IMPS, RTGS; type
+the UTR if the customer has it).
+
+Neither counts as money until the bank says so. The bill is saved and the customer can go, and the
+payment waits under **More → Payments to check**. Press **It cleared** (a cheque) or **It arrived** (a
+transfer) when you see it in the bank. If a cheque bounces, press **It bounced**: the customer owes that
+amount again, and the bill shows it. The customer's receipt prints the cheque number and says it is
+being checked.
 :::
 
 :::faq "The law … allows under ₹2,00,000 in cash on one bill"

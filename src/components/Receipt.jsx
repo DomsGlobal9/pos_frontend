@@ -320,6 +320,8 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
           <div key={p.id} style={s.line}>
             <span>
               {p.status === 'WRITTEN_OFF' ? 'Written off' : (METHOD[p.method] ?? p.method)}
+              {/* A cheque names itself: the customer's copy is their proof of which cheque it was. */}
+              {p.method === 'CHEQUE' && p.reference ? ` ${p.reference}` : ''}
               {/*
                 * Printed on the customer's copy on purpose. If the shop is still checking whether
                 * a transfer landed, the person who made it should be able to see that from their
@@ -430,7 +432,7 @@ const PRINT_CSS = `
 }
 `
 
-const METHOD = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', EXCHANGE: 'Exchange credit', POINTS: 'Points' }
+const METHOD = { CASH: 'Cash', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', EXCHANGE: 'Exchange credit', POINTS: 'Points' }
 
 const s = {
   tools: { display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' },

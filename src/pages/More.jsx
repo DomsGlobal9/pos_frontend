@@ -17,7 +17,7 @@ import { askYesNo } from '../components/Ask.jsx'
  */
 const ROWS = [
   { to: '/bills', label: 'Bills', hint: 'Find a sale, open it, print it again', live: true, Icon: Receipt },
-  { to: '/payment-checks', label: 'Payments to check', hint: 'UPI and card taken without confirmation', live: true, Icon: ShieldCheck },
+  { to: '/payment-checks', label: 'Payments to check', hint: 'UPI and card not yet confirmed, cheques and bank transfers', live: true, Icon: ShieldCheck },
   { to: '/activity', label: 'Activity', hint: 'Discounts, price changes, approvals', live: true, Icon: History },
   { to: '/shift', label: 'Shift and drawer', hint: 'Open, cash in and out, close', live: true, Icon: Wallet },
   { to: '/day-close', label: 'Close the day', hint: 'Sales, payments, cash and what is still open', live: true, Icon: CalendarCheck },
