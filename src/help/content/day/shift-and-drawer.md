@@ -35,7 +35,8 @@ Tap the box and type: the offered figure is replaced, not added to.
 ## 3. Close the shift
 
 1. Press **Close shift**.
-2. **Count the drawer**: count every note and coin, type the total in **Counted**.
+2. **Count the drawer**: count every note and coin, type the total in **Counted**. Or press **Count note by note**,
+   type how many of each note (₹500, ₹200 … ₹10) and the coins in rupees, and the till adds them up for you.
 3. Press **Close shift**.
 
 Only now the till shows **The till expected** and the **Difference** — *Exact*, *₹63.71 short* or
