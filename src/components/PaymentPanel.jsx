@@ -31,7 +31,9 @@ import toast from 'react-hot-toast'
  *   ADVANCE  keeping goods for a customer: anything from nothing up to the bill (POS-ORD-002)
  *   COLLECT  money coming in later against a kept order: something, never more than is owed
  */
-const LABELS = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', POINTS: 'Points' }
+const LABELS = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', POINTS: 'Points', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque' }
+// Counted only when the bank says so (10 Oct): always waits under Payment checks, never "confirmed" here.
+const CLEARS_LATER = ['BANK_TRANSFER', 'CHEQUE']
 const NEEDS_REFERENCE = ['UPI', 'CARD']
 
 const COPY = {
@@ -215,7 +217,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
                   onClick={() => {
                     const was = toPaise(row.amount)
                     const now = was === null ? null : fit(method, was)
-                    update(index, { method, unconfirmed: false, reference: '', cardLast4: '', approvalCode: '', tendered: '', ...(now !== null && now !== was ? { amount: now > 0 ? String(now / 100) : '' } : {}) })
+                    update(index, { method, unconfirmed: false, reference: '', cardLast4: '', approvalCode: '', chequeNo: '', bank: '', tendered: '', ...(now !== null && now !== was ? { amount: now > 0 ? String(now / 100) : '' } : {}) })
                   }}
                 >
                   {LABELS[method]}
@@ -350,6 +352,34 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
               </>
             )}
 
+            {row.method === 'CHEQUE' && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <label style={{ ...s.label, flex: 1 }}>
+                  Cheque number
+                  <input value={row.chequeNo} inputMode="numeric" placeholder="6 digits" aria-label="Cheque number"
+                    onChange={e => update(index, { chequeNo: e.target.value.replace(/[^0-9]/g, '').slice(0, 6) })} />
+                </label>
+                <label style={{ ...s.label, flex: 1 }}>
+                  Bank
+                  <input value={row.bank} placeholder="HDFC, SBI…" aria-label="Cheque bank"
+                    onChange={e => update(index, { bank: e.target.value.replace(/[^A-Za-z0-9 .@_-]/g, '').slice(0, 30) })} />
+                </label>
+              </div>
+            )}
+            {row.method === 'BANK_TRANSFER' && (
+              <label style={s.label}>
+                UTR from the bank (if they have it)
+                <input value={row.reference} placeholder="12 to 22 letters and numbers" aria-label="Bank transfer UTR"
+                  onChange={e => update(index, { reference: e.target.value.replace(/[^0-9A-Za-z]/g, '').toUpperCase().slice(0, 22) })} />
+              </label>
+            )}
+            {CLEARS_LATER.includes(row.method) && (
+              <p style={s.muted}>
+                Counted when it {row.method === 'CHEQUE' ? 'clears' : 'arrives'}: the bill is saved and the customer can go, and
+                it waits under Payment checks until you mark it.
+              </p>
+            )}
+
             {problems[index] && <p style={s.problem}>{problems[index]}</p>}
           </div>
         ))}
@@ -384,6 +414,8 @@ const blank = (method, amountPaise) => ({
   qrPaid: false,
   cardLast4: '',
   approvalCode: '',
+  chequeNo: '',
+  bank: '',
   tendered: '',
   unconfirmed: false
 })
@@ -399,6 +431,14 @@ function rowProblem(row) {
     return null
   }
   if (row.method === 'CREDIT' || row.method === 'POINTS') return null
+  if (row.method === 'CHEQUE') {
+    if (!/^\d{6}$/.test(row.chequeNo ?? '')) return 'Type the 6-digit cheque number.'
+    if ((row.bank ?? '').trim().length < 2) return 'Type the bank the cheque is drawn on.'
+    return null
+  }
+  if (row.method === 'BANK_TRANSFER') {
+    return !row.reference || /^[A-Z0-9]{12,22}$/.test(row.reference) ? null : 'A UTR is 12 to 22 letters and numbers. Leave it empty if they do not have it.'
+  }
   if (row.unconfirmed) return null
   if (row.method === 'UPI' && row.qrId) {
     return row.qrPaid ? null : 'Waiting for the customer to pay the QR — or tick "not confirmed yet" and let them go.'
@@ -430,6 +470,9 @@ function toPayment(row, pointStep = 100) {
     ...(row.method === 'UPI' && row.qrId ? { qrId: row.qrId } : {}),
     ...(row.method === 'UPI' && !row.qrId && row.reference.trim() ? { reference: row.reference.replace(/\s+/g, '') } : {}),
     ...(row.method === 'CARD' && !row.unconfirmed ? { cardLast4: row.cardLast4, approvalCode: row.approvalCode } : {}),
+    // "004512 / HDFC": Inventory keeps letters, digits, spaces and . / @ _ - only.
+    ...(row.method === 'CHEQUE' ? { reference: `${row.chequeNo} / ${row.bank.trim()}` } : {}),
+    ...(row.method === 'BANK_TRANSFER' && row.reference ? { reference: row.reference } : {}),
     ...(NEEDS_REFERENCE.includes(row.method) && row.unconfirmed ? { unconfirmed: true } : {})
   }
 }

@@ -64,6 +64,8 @@ export default function Bills() {
           <option value="">Any payment</option>
           <option value="CASH">Cash</option>
           <option value="UPI">UPI</option>
+          <option value="BANK_TRANSFER">Bank transfer</option>
+          <option value="CHEQUE">Cheque</option>
           <option value="CARD">Card</option>
         </select>
       </div>
@@ -112,7 +114,7 @@ export default function Bills() {
   )
 }
 
-const pretty = (m) => ({ CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', POINTS: 'Points', BALANCE: 'Balance', EXCHANGE: 'Exchange credit' }[m] ?? m)
+const pretty = (m) => ({ CASH: 'Cash', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', POINTS: 'Points', BALANCE: 'Balance', EXCHANGE: 'Exchange credit' }[m] ?? m)
 
 function dateRange(when) {
   if (!when) return {}

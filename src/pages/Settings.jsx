@@ -61,7 +61,7 @@ export default function Settings() {
    * WAYS TO PAY (found 9 Oct, writing the help: they were fixed at setup, with no screen to change).
    * Cash, UPI and card only -- points and store credit are the customer's own balance. At least one stays on.
    */
-  const PAY = [['CASH', 'Cash'], ['UPI', 'UPI'], ['CARD', 'Card on a swiping machine']]
+  const PAY = [['CASH', 'Cash'], ['UPI', 'UPI'], ['CARD', 'Card on a swiping machine'], ['BANK_TRANSFER', 'Bank transfer (NEFT, IMPS, RTGS)'], ['CHEQUE', 'Cheque']]
   const onNow = shop?.shop?.enabledPaymentMethods?.length ? shop.shop.enabledPaymentMethods : ['CASH', 'UPI', 'CARD']
   const [pay, setPay] = useState(null)
   const chosen = pay ?? onNow

@@ -20,7 +20,7 @@ import { askYesNo } from '../components/Ask.jsx'
  *   Open in till  puts the basket back on the Sell screen with its own key, to change and complete
  *   Remove        drops it from this till, after saying plainly what that means
  */
-const METHOD = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit' }
+const METHOD = { CASH: 'Cash', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit' }
 const time = (iso) => new Date(iso).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 
 export default function Sync() {

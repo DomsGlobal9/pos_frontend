@@ -33,11 +33,16 @@ export default function PaymentChecks() {
 
   async function settle(payment, arrived) {
     let body
-    if (arrived) {
+    if (arrived && payment.method === 'CHEQUE') {
+      // Its number and bank were taken at the counter: clearing needs nothing more.
+      body = { arrived }
+    } else if (arrived) {
       // Asked for, not demanded: the whole point is that a reference may still not exist.
       const reference = await askText(`Reference for the ${rupees(payment.amountPaise)} ${payment.method} payment, if you have one:`, '', {
         note: payment.method === 'UPI'
           ? 'The 12-digit UTR from the bank statement or the customer UPI app. Leave it empty if there is none — the money still counts as arrived.'
+          : payment.method === 'BANK_TRANSFER'
+          ? 'The UTR from the bank statement (12 to 22 letters and numbers). Leave it empty if there is none — the money still counts as arrived.'
           : 'For a card: last 4 and approval code, like 4321/AB12C3. Leave it empty if there is none — the money still counts as arrived.',
         confirmLabel: 'It arrived'
       })
@@ -45,9 +50,10 @@ export default function PaymentChecks() {
       body = { arrived, ...(reference.trim() ? { reference: reference.trim() } : {}) }
     } else {
       // Always a reason: this makes the customer owe the money again, on a bill already closed.
-      const why = await askText(`Why do you say this ${rupees(payment.amountPaise)} ${payment.method} payment never arrived?`, '', {
-        note: 'For example: not in the bank statement. The customer will owe it again.',
-        placeholder: 'not in the bank statement',
+      const cheque = payment.method === 'CHEQUE'
+      const why = await askText(cheque ? `Why did this ${rupees(payment.amountPaise)} cheque not clear?` : `Why do you say this ${rupees(payment.amountPaise)} ${payment.method} payment never arrived?`, '', {
+        note: cheque ? 'For example: bounced, insufficient funds. The customer will owe it again.' : 'For example: not in the bank statement. The customer will owe it again.',
+        placeholder: cheque ? 'bounced, insufficient funds' : 'not in the bank statement',
         confirmLabel: 'It never arrived',
         danger: true
       })
@@ -110,7 +116,7 @@ export default function PaymentChecks() {
             <div style={s.detail}>
               <div>
                 <b>{rupees(payment.amountPaise)}</b>
-                <span style={s.muted}> · {({ CASH: 'Cash', UPI: 'UPI', CARD: 'Card' })[payment.method] ?? payment.method}</span>
+                <span style={s.muted}> · {({ CASH: 'Cash', UPI: 'UPI', CARD: 'Card', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque' })[payment.method] ?? payment.method}</span>
               </div>
               <div style={s.muted}>
                 <Link to={`/bills/${payment.saleId}`} style={s.link}>{payment.invoiceNo}</Link>
@@ -123,14 +129,14 @@ export default function PaymentChecks() {
                 disabled={busy === payment.id}
                 onClick={() => settle(payment, true)}
               >
-                It arrived
+                {payment.method === 'CHEQUE' ? 'It cleared' : 'It arrived'}
               </button>
               <button
                 disabled={busy === payment.id}
                 style={s.never}
                 onClick={() => settle(payment, false)}
               >
-                Never arrived
+                {payment.method === 'CHEQUE' ? 'It bounced' : 'Never arrived'}
               </button>
             </div>
           </li>
