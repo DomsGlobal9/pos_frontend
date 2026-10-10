@@ -275,7 +275,8 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
                 {/* Each part kept whole: on 80 mm "−₹300" broke after the minus sign (live, 8 Oct). */}
                 {[
                   `${line.qty} × ${rupees(line.unitPricePaise)}`,
-                  line.hsn ? `HSN ${line.hsn}` : '',
+                  // A service's code is a SAC, and every SAC starts 99 (fall & pico, 10 Oct).
+                  line.hsn ? `${String(line.hsn).startsWith('99') ? 'SAC' : 'HSN'} ${line.hsn}` : '',
                   kindOf(sale) === 'TAX_INVOICE' ? `GST ${Number(line.taxRate)}%` : '',
                   line.discountPaise > 0 ? `−${rupees(line.discountPaise)}` : ''
                 ].filter(Boolean).map((part, i) => (
