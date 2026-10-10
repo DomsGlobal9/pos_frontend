@@ -126,7 +126,10 @@ function describe(need) {
     return `Writing off ${rupees(need.owedPaise)} owed on ${need.invoiceNo} as never to be paid. The bill stays as it is.`
   }
   if (need.kind === 'PAY_LATER') {
-    return `Selling on credit: ${rupees(need.owedPaise)} of a ${rupees(need.totalPaise)} bill will be owed, and the goods go home now.`
+    const earlier = need.alreadyOwedPaise > 0
+      ? ` They already owe ${rupees(need.alreadyOwedPaise)} on ${need.alreadyOwedBills === 1 ? 'another bill' : `${need.alreadyOwedBills} other bills`}.`
+      : ''
+    return `Selling on credit: ${rupees(need.owedPaise)} of a ${rupees(need.totalPaise)} bill will be owed, and the goods go home now.${earlier}`
   }
   return 'Something on this bill needs a manager.'
 }
