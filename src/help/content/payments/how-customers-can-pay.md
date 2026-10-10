@@ -50,6 +50,12 @@ They are kept by Inventory, and the till could not reach it, or the till is offl
 another way.
 :::
 
-:::faq Cheques?
-The till does not take cheques.
+:::faq Cheques or bank transfer?
+The till does not take cheques or bank transfers (NEFT, IMPS, RTGS) yet.
+:::
+
+:::faq "The law … allows under ₹2,00,000 in cash on one bill"
+Income Tax section 269ST does not allow a shop to take ₹2,00,000 or more in cash for one bill, and the
+fine is the whole amount. The till stops at ₹1,99,999 in cash. Take the rest by UPI or card. For a bill
+paid in parts (kept for the customer, or sold on credit), all the cash on that bill counts together.
 :::
