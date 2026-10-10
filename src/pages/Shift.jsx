@@ -275,6 +275,14 @@ function CloseSheet({ shiftId, onDone, onCancel }) {
   // Once closed, Esc is Done: Back would show the shift open again.
   useEscape(() => (result ? onDone() : onCancel()))
   const [amount, setAmount] = useState('')
+  // Count note by note (10 Oct): adding 500s, 200s and coins in the head is where a false "short" comes from.
+  const [notes, setNotes] = useState(null)
+  function countNote(key, value) {
+    const next = { ...notes, [key]: value }
+    setNotes(next)
+    const rupeesIn = NOTES.reduce((sum, n) => sum + n * (parseInt(next[n], 10) || 0), 0) + (Number(next.coins) || 0)
+    setAmount(String(Math.round(rupeesIn * 100) / 100))
+  }
   const [note, setNote] = useState('')
   const [askNote, setAskNote] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -319,7 +327,7 @@ function CloseSheet({ shiftId, onDone, onCancel }) {
     <div style={s.backdrop} role="dialog" aria-label="Close shift">
       <form style={s.sheet} onSubmit={submit}>
         <b style={{ fontSize: 17 }}>Count the drawer</b>
-        <p style={{ ...s.muted, margin: 0 }}>Count every note and coin, then type the total. The till tells you what it expected after.</p>
+        <p style={{ ...s.muted, margin: 0 }}>Count every note and coin, then type the total, or count note by note below. The till tells you what it expected after.</p>
         {waiting.length > 0 && (
           <p style={{ margin: 0, padding: '8px 10px', borderRadius: 10, background: 'var(--warn-tint)', color: 'var(--warn)', fontSize: 14 }}>
             {waiting.length === 1 ? '1 sale on this till has' : `${waiting.length} sales on this till have`} not been sent yet, so the
@@ -328,8 +336,26 @@ function CloseSheet({ shiftId, onDone, onCancel }) {
         )}
         <label style={s.label}>
           Counted
-          <input ref={box} inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} aria-label="Counted cash" />
+          <input ref={box} inputMode="decimal" value={amount} onChange={e => { setNotes(null); setAmount(e.target.value) }} aria-label="Counted cash" />
         </label>
+        {notes ? (
+          <div style={s.notes}>
+            {NOTES.map(n => (
+              <label key={n} style={s.noteRow}>
+                <span style={s.noteName}>₹{n} ×</span>
+                <input inputMode="numeric" value={notes[n] ?? ''} onChange={e => countNote(n, e.target.value.replace(/\D/g, ''))}
+                  onFocus={e => e.target.select()} aria-label={`How many ₹${n} notes`} placeholder="0" />
+              </label>
+            ))}
+            <label style={s.noteRow}>
+              <span style={s.noteName}>Coins ₹</span>
+              <input inputMode="decimal" value={notes.coins ?? ''} onChange={e => countNote('coins', e.target.value)}
+                onFocus={e => e.target.select()} aria-label="Coins, in rupees" placeholder="0" />
+            </label>
+          </div>
+        ) : (
+          <button type="button" style={s.linkBtn} onClick={() => setNotes({})}>Count note by note</button>
+        )}
         {askNote && (
           <label style={s.label}>
             It doesn't match. Count again, or say what happened
@@ -344,6 +370,8 @@ function CloseSheet({ shiftId, onDone, onCancel }) {
     </div>
   )
 }
+
+const NOTES = [500, 200, 100, 50, 20, 10]
 
 export function Difference({ paise }) {
   if (paise === null || paise === undefined) return <span style={s.muted}>—</span>
@@ -396,6 +424,10 @@ const s = {
     background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 20, boxShadow: 'var(--shadow-lift)', padding: 22,
     width: 420, maxWidth: '100%', display: 'grid', gap: 12
   },
+  notes: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 },
+  noteRow: { display: 'flex', alignItems: 'center', gap: 8 },
+  noteName: { minWidth: 58, fontSize: 14, color: 'var(--ink-soft)', whiteSpace: 'nowrap' },
+  linkBtn: { justifySelf: 'start', background: 'none', border: 'none', padding: 0, minHeight: 0, color: 'var(--accent)', fontWeight: 600, cursor: 'pointer' },
   sheetActions: { display: 'flex', gap: 8, justifyContent: 'flex-end' },
   muted: { color: 'var(--ink-soft)', fontSize: 12, margin: 0 },
   bad: { color: 'var(--bad)' }
