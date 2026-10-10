@@ -523,8 +523,9 @@ const s = {
   },
   blockHead: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   remove: { minHeight: 36, padding: '0 10px', fontSize: 13, fontWeight: 400 },
-  methods: { display: 'flex', gap: 6 },
-  method: { flex: 1, minHeight: 48 },
+  // A grid that wraps (10 Oct: five ways to pay pushed the box off its own left edge in one row).
+  methods: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(86px, 1fr))', gap: 6 },
+  method: { minHeight: 48, minWidth: 0 },
   methodOn: { background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' },
   label: { display: 'grid', gap: 6, fontSize: 13, color: 'var(--ink-soft)' },
   quick: { display: 'flex', gap: 8, flexWrap: 'wrap' },

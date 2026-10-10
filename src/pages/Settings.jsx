@@ -98,7 +98,7 @@ export default function Settings() {
     <div style={s.page}>
       <h1 style={{ margin: 0 }}>Settings</h1>
 
-      <section style={s.card}>
+      <section style={s.card} aria-label="UPI payments">
         <div style={s.head}><span style={s.icon}><QrCode size={18} aria-hidden="true" /></span><b>UPI payments</b></div>
         <p style={s.muted}>
           With your UPI ID here, the payment screen shows a QR code with the amount already filled in. The customer
@@ -111,7 +111,7 @@ export default function Settings() {
         {owner ? (
           <div style={s.actions}>
             <button style={s.primary} disabled={busy || !upi.trim() || upi.trim().toLowerCase() === current} onClick={() => save(upi.trim())}>Save</button>
-            {current && <button disabled={busy} onClick={() => save(null)}>Remove</button>}
+            {current && <button disabled={busy} onClick={() => save(null)} aria-label="Remove the UPI QR">Remove</button>}
           </div>
         ) : <p style={s.muted}>Only the owner can change this.</p>}
       </section>
@@ -162,7 +162,7 @@ export default function Settings() {
         )}
       </section>
 
-      <section style={s.card}>
+      <section style={s.card} aria-label="Logo on the bill">
         <div style={s.head}><span style={s.icon}><ImageIcon size={18} aria-hidden="true" /></span><b>Logo on the bill</b></div>
         <p style={s.muted}>
           Printed at the top of every bill and credit note, and on the PDF sent on WhatsApp. It prints about 4 cm across,
@@ -177,7 +177,7 @@ export default function Settings() {
         ) : owner ? (
           <div style={s.actions}>
             <input type="file" accept="image/*" aria-label="Choose a logo picture" onChange={pickLogo} disabled={busyLogo} />
-            {logo && <button disabled={busyLogo} onClick={() => saveLogo(null)}>Remove</button>}
+            {logo && <button disabled={busyLogo} onClick={() => saveLogo(null)} aria-label="Remove the logo">Remove</button>}
           </div>
         ) : <p style={s.muted}>Only the owner can change this.</p>}
       </section>

@@ -96,7 +96,8 @@ button:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
  * Screens mark their primary action with the accent as background. That now means the brand, and
  * this gives it a hover and a shadow without every screen restating them.
  */
-button[style*="var(--accent)"]:hover:not(:disabled) { background: var(--brand-hover) !important; }
+/* Not on a chosen one (10 Oct: hovering a chosen payment method gave dark green text on dark green). */
+button[style*="var(--accent)"]:not([aria-pressed="true"]):hover:not(:disabled) { background: var(--brand-hover) !important; }
 button[style*="var(--accent)"] { box-shadow: 0 1px 2px rgba(22, 75, 30, 0.2), 0 6px 16px -8px rgba(22, 75, 30, 0.45); }
 
 /* Pressed states (method pickers, reason chips): lime wash rather than a heavy block. */
