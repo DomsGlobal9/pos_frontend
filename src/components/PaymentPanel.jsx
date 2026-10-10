@@ -75,8 +75,12 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
   const counted = advanceLike(mode) ? rows.filter(r => !nothing(r)) : rows
   const creditUsed = rows.filter(r => r.method === 'CREDIT').reduce((sum, r) => sum + (toPaise(r.amount) ?? 0), 0)
   const pointsUsed = rows.filter(r => r.method === 'POINTS').reduce((sum, r) => sum + (toPaise(r.amount) ?? 0), 0)
+  // Income-tax 269ST: under ₹2,00,000 in cash on one bill. Said here too, so a sale made offline is warned.
+  const cashUsed = rows.filter(r => r.method === 'CASH').reduce((sum, r) => sum + (toPaise(r.amount) ?? 0), 0)
   const problems = useMemo(() => rows.map(row => (
     advanceLike(mode) && nothing(row) ? null
+      : row.method === 'CASH' && cashUsed >= 20_000_000
+        ? 'The law (Income Tax, section 269ST) allows under ₹2,00,000 in cash on one bill. Take the rest by UPI or card.'
       : row.method === 'CREDIT' && creditUsed > creditPaise
         ? `Only ${rupees(creditPaise)} of store credit is available.`
         : row.method === 'POINTS' && pointsUsed > pointsUsable
@@ -84,7 +88,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
           : row.method === 'POINTS' && (toPaise(row.amount) ?? 0) % pointStep !== 0
             ? `Points come in steps of ${rupees(pointStep)}.`
             : rowProblem(row)
-  )), [rows, mode, creditUsed, creditPaise, pointsUsed, pointsUsable, pointStep])
+  )), [rows, mode, cashUsed, creditUsed, creditPaise, pointsUsed, pointsUsable, pointStep])
 
   const amountsFit =
     mode === 'EXACT' ? remaining === 0
