@@ -185,8 +185,13 @@ export default function DayClose() {
             )}
             {f.cash.countedPaise !== null ? (
               <>
-                <Line label={`Counted (${f.cash.shiftsClosed} shift${f.cash.shiftsClosed === 1 ? '' : 's'})`} value={f.cash.countedPaise} />
-                <div style={s.line}><span>Difference</span><Difference paise={f.cash.variancePaise} /></div>
+                {/* Each shift is counted against its OWN figures, which can start on an earlier day (live 12 Oct:
+                    a shift open since 8 Oct, counted ₹91,995, sat under "should be ₹17,634" marked Exact). */}
+                <Line label={`Counted at ${f.cash.shiftsClosed === 1 ? 'the shift' : `${f.cash.shiftsClosed} shifts`} closed today`} value={f.cash.countedPaise} />
+                <div style={s.line}><span>Against what {f.cash.shiftsClosed === 1 ? 'that shift' : 'those shifts'} expected</span><Difference paise={f.cash.variancePaise} /></div>
+                {f.cash.countedPaise !== f.cash.positionPaise && (
+                  <p style={s.muted}>A shift is counted for the whole shift, which can start before today or still be open, so it need not match the line above.</p>
+                )}
               </>
             ) : <p style={s.muted}>No shift has been counted for this day yet.</p>}
           </section>
