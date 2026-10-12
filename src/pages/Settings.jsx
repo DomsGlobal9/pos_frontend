@@ -255,7 +255,8 @@ function WhatsAppSettings({ shop }) {
             Sending from: <b>{account?.phone ?? '—'}</b> · {account ? (LINK[account.status] ?? account.status) : 'Could not be checked just now'}
           </p>
           <p style={s.muted}>
-            The shop's own number, linked once in Inventory → Settings → WhatsApp and used by every ScaleEzy app.
+            The shop's own number, linked once in Inventory → Settings → WhatsApp and used by every ScaleEzy app
+            (shop id <code>{w.sendsAs}</code>).
             {!connected && account && ' Until it is connected, cashiers share bills from their own phone (Share).'}
           </p>
           <p style={s.muted}>
