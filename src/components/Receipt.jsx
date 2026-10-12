@@ -350,6 +350,12 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
           * A kept order's receipt is also the customer's claim ticket: what is being done, when to
           * come, and what they still owe. They will bring this back to collect.
           */}
+        {/* A counter bill still owed: a cheque that bounced, a UPI that never arrived (live 12 Oct). */}
+        {sale.kind !== 'KEPT' && sale.owedPaise > 0 && (
+          <div style={{ ...s.line, fontWeight: 700 }}>
+            <span>Balance due</span><span>{rupees(sale.owedPaise)}</span>
+          </div>
+        )}
         {sale.kind === 'KEPT' && (
           <>
             <Rule />

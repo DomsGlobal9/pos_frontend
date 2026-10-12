@@ -6,6 +6,8 @@ import { loadAwaitingCheck, resolvePayment, rupees, messageFor } from '../lib/ap
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
 import { askText } from '../components/Ask.jsx'
 
+const NAME = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque' }
+
 /**
  * WF-PAY-02. POS-PAY-010, -011.
  *
@@ -33,12 +35,15 @@ export default function PaymentChecks() {
 
   async function settle(payment, arrived) {
     let body
-    if (arrived && payment.method === 'CHEQUE') {
-      // Its number and bank were taken at the counter: clearing needs nothing more.
+    // Plain words, never BANK_TRANSFER (live 12 Oct).
+    const what = NAME[payment.method] ?? payment.method
+    if (arrived && (payment.method === 'CHEQUE' || payment.reference)) {
+      // A cheque's number and bank, or a reference typed at the counter: nothing more to ask (live 12 Oct:
+      // the box asked again for a UTR the bill already had).
       body = { arrived }
     } else if (arrived) {
       // Asked for, not demanded: the whole point is that a reference may still not exist.
-      const reference = await askText(`Reference for the ${rupees(payment.amountPaise)} ${payment.method} payment, if you have one:`, '', {
+      const reference = await askText(`Reference for the ${rupees(payment.amountPaise)} ${what} payment, if you have one:`, '', {
         note: payment.method === 'UPI'
           ? 'The 12-digit UTR from the bank statement or the customer UPI app. Leave it empty if there is none — the money still counts as arrived.'
           : payment.method === 'BANK_TRANSFER'
@@ -51,10 +56,10 @@ export default function PaymentChecks() {
     } else {
       // Always a reason: this makes the customer owe the money again, on a bill already closed.
       const cheque = payment.method === 'CHEQUE'
-      const why = await askText(cheque ? `Why did this ${rupees(payment.amountPaise)} cheque not clear?` : `Why do you say this ${rupees(payment.amountPaise)} ${payment.method} payment never arrived?`, '', {
+      const why = await askText(cheque ? `Why did this ${rupees(payment.amountPaise)} cheque not clear?` : `Why do you say this ${rupees(payment.amountPaise)} ${what} payment never arrived?`, '', {
         note: cheque ? 'For example: bounced, insufficient funds. The customer will owe it again.' : 'For example: not in the bank statement. The customer will owe it again.',
         placeholder: cheque ? 'bounced, insufficient funds' : 'not in the bank statement',
-        confirmLabel: 'It never arrived',
+        confirmLabel: cheque ? 'It bounced' : 'It never arrived',
         danger: true
       })
       if (why === null) return
@@ -68,7 +73,7 @@ export default function PaymentChecks() {
     setBusy(payment.id)
     try {
       await resolvePayment(payment.id, { ...body, ...(approval ? { approval } : {}) })
-      toast.success(body.arrived ? 'Marked as received.' : 'Marked as never arrived.')
+      toast.success(body.arrived ? 'Marked as received.' : payment.method === 'CHEQUE' ? 'Marked as bounced. The customer owes it again.' : 'Marked as never arrived.')
       setNeed(null)
       queryClient.invalidateQueries({ queryKey: ['awaiting-check'] })
       queryClient.invalidateQueries({ queryKey: ['bill', payment.saleId] })
@@ -116,7 +121,7 @@ export default function PaymentChecks() {
             <div style={s.detail}>
               <div>
                 <b>{rupees(payment.amountPaise)}</b>
-                <span style={s.muted}> · {({ CASH: 'Cash', UPI: 'UPI', CARD: 'Card', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque' })[payment.method] ?? payment.method}</span>
+                <span style={s.muted}> · {NAME[payment.method] ?? payment.method}</span>
               </div>
               <div style={s.muted}>
                 <Link to={`/bills/${payment.saleId}`} style={s.link}>{payment.invoiceNo}</Link>
