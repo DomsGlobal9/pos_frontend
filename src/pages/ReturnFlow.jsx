@@ -1,11 +1,11 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-  loadReturnInfo, quoteReturn, recordReturn, recordExchange, searchItems, rupees, messageFor, loadWallet
+  loadReturnInfo, quoteReturn, recordReturn, recordExchange, searchItems, rupees, messageFor, loadWallet, quoteBasket
 } from '../lib/api.js'
-import { basketTotals, newOnceKey } from '../lib/basket.js'
+import { basketTotals, newOnceKey, offerOn } from '../lib/basket.js'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
 import CustomerSheet from '../components/CustomerSheet.jsx'
 import VariantSheet from '../components/VariantSheet.jsx'
@@ -104,6 +104,32 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
     queryFn: () => loadReturnInfo(id)
   })
 
+  /*
+   * THE NEW GOODS' OFFERS, asked of Inventory as at the counter (12 Oct: an exchange charged the tag,
+   * so the customer paid Rs 1,300 more than buying the same saree). Latest answer wins; no answer is
+   * the tag price, never a refusal. Only the quote's id goes with the exchange -- the server re-reads it.
+   */
+  const [newQuote, setNewQuote] = useState(null)
+  const newQuoteSeq = useRef(0)
+  const exchangeCustomerId = info?.customer?.id ?? customer?.id
+  useEffect(() => {
+    if (!shop?.inventoryConnected || newLines.length === 0) { setNewQuote(null); return }
+    const seq = ++newQuoteSeq.current
+    const timer = setTimeout(async () => {
+      try {
+        const r = await quoteBasket({ lines: newLines.map(l => ({ itemId: l.id, qty: l.qty })), ...(exchangeCustomerId ? { customerId: exchangeCustomerId } : {}) })
+        if (seq !== newQuoteSeq.current) return
+        setNewQuote(r.ok ? {
+          id: r.quote.quoteId,
+          byCode: Object.fromEntries(r.quote.lines.filter(l => !l.unpriced).map(l => [l.itemCode, { qty: l.qty, discountPaise: l.discountPaise ?? 0 }]))
+        } : null)
+      } catch {
+        if (seq === newQuoteSeq.current) setNewQuote(null)
+      }
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [newLines, exchangeCustomerId, shop?.inventoryConnected])
+
   const selection = useMemo(
     () => Object.entries(pick).filter(([, qty]) => qty > 0).map(([saleLineId, qty]) => ({ saleLineId, qty })),
     [pick]
@@ -144,7 +170,7 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
   // the money share is refunded here (contract §10.5). On any other bill the two are the same.
   const credit = selection.length > 0 && quote ? (quote.moneyBackPaise ?? quote.totalPaise) : 0
   const pointsBack = selection.length > 0 && quote ? (quote.pointsBack ?? 0) : 0
-  const newTotal = basketTotals(newLines).totalPaise
+  const newTotal = basketTotals(newLines, 0, newQuote?.byCode).totalPaise
   // Positive: the customer pays. Negative: the shop gives back. Only meaningful in an exchange.
   const difference = exchange ? newTotal - credit : -credit
   const giveBack = Math.max(0, -difference)
@@ -217,6 +243,7 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
       newSale: {
         counterId: shop?.counters?.[0]?.id,
         lines: newLines.map(l => ({ itemId: l.id, qty: l.qty })),
+        ...(newQuote?.id ? { quoteId: newQuote.id } : {}),
         payments: extra.payments ?? []
       },
       ...(extra.approval ? { approval: extra.approval } : {})
@@ -283,7 +310,8 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
       const at = current.findIndex(l => l.id === item.id)
       if (at >= 0) return current.map((l, i) => (i === at ? { ...l, qty: l.qty + 1 } : l))
       return [...current, {
-        id: item.id, name: item.name, colour: item.colour, size: item.size,
+        // The code too: the quote's offers are matched by it (offerOn).
+        id: item.id, code: item.code, name: item.name, colour: item.colour, size: item.size,
         pricePaise: item.pricePaise, taxRate: item.taxRate, qty: 1
       }]
     })
@@ -431,7 +459,10 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
               <li key={l.id} style={s.line}>
                 <div style={s.lineText}>
                   <div>{[l.name, l.colour, l.size].filter(Boolean).join(', ')}</div>
-                  <div style={s.muted}>{rupees(l.pricePaise)} each</div>
+                  <div style={s.muted}>
+                    {rupees(l.pricePaise)} each
+                    {offerOn(l, newQuote?.byCode) > 0 && <span style={{ color: 'var(--good)', marginLeft: 8 }}>offer −{rupees(offerOn(l, newQuote?.byCode))}</span>}
+                  </div>
                 </div>
                 <div style={s.stepper}>
                   <button type="button" aria-label={`One fewer ${l.name}`} onClick={() => changeNew(l.id, l.qty - 1)}>−</button>
