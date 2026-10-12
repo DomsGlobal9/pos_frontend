@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { QrCode, Boxes, Monitor, Image as ImageIcon, Receipt, Wallet } from 'lucide-react'
-import { setShopUpi, setShopLogo, setShopGst, setShopPaymentMethods, messageFor } from '../lib/api.js'
+import { QrCode, Boxes, Monitor, Image as ImageIcon, Receipt, Wallet, MessageCircle } from 'lucide-react'
+import { setShopUpi, setShopLogo, setShopGst, setShopPaymentMethods, setShopWhatsappAutoBill, messageFor } from '../lib/api.js'
 
 /**
  * Shop settings. POS-SET-003 (partly), POS-PAY-012.
@@ -116,6 +116,8 @@ export default function Settings() {
         ) : <p style={s.muted}>Only the owner can change this.</p>}
       </section>
 
+      <WhatsAppSettings shop={shop} owner={owner} />
+
       <section style={s.card} aria-label="Ways customers pay">
         <div style={s.head}><span style={s.icon}><Wallet size={18} aria-hidden="true" /></span><b>Ways customers pay</b></div>
         <p style={s.muted}>
@@ -218,6 +220,75 @@ function toJpeg(file) {
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('That file is not a picture the browser can read.')) }
     img.src = url
   })
+}
+
+/*
+ * WHATSAPP (12 Oct): what this till sends bills from, and whether they go by themselves. The number is
+ * the one the shop linked in Inventory (Settings -> WhatsApp) -- one link per shop, shared by every
+ * ScaleEzy app; the till only reads it and never links a number of its own.
+ */
+const LINK = {
+  CONNECTED: 'Connected',
+  LINKING: 'Being linked',
+  DISCONNECTED: 'Disconnected — the phone is offline or WhatsApp was closed on it',
+  LOGGED_OUT: 'Logged out — link it again in Inventory',
+  NOT_LINKED: 'No number linked'
+}
+function WhatsAppSettings({ shop, owner }) {
+  const queryClient = useQueryClient()
+  const [busy, setBusy] = useState(false)
+  const w = shop?.whatsapp
+  if (!w) return null
+  const account = w.account
+  const connected = account?.status === 'CONNECTED'
+
+  async function toggle(on) {
+    setBusy(true)
+    try {
+      await setShopWhatsappAutoBill(on)
+      toast.success(on ? 'Bills now go on WhatsApp by themselves.' : 'Bills go on WhatsApp only when someone presses it.')
+      queryClient.invalidateQueries({ queryKey: ['shop'] })
+    } catch (err) {
+      toast.error(messageFor(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section style={s.card} aria-label="WhatsApp">
+      <div style={s.head}><span style={s.icon}><MessageCircle size={18} aria-hidden="true" /></span><b>WhatsApp</b></div>
+      {!w.configured ? (
+        <p style={s.muted}>
+          This till is not connected to ScaleEzy WhatsApp yet, so cashiers share bills from their own phone
+          (Share). Ask ScaleEzy to switch it on.
+        </p>
+      ) : (
+        <>
+          <p style={{ margin: 0 }}>
+            Sending from: <b>{account?.phone ?? '—'}</b> · {account ? (LINK[account.status] ?? account.status) : 'Could not be checked just now'}
+          </p>
+          <p style={s.muted}>
+            The shop's own number, linked once in Inventory → Settings → WhatsApp and used by every ScaleEzy app.
+            {!connected && account && ' Until it is connected, cashiers share bills from their own phone (Share).'}
+          </p>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 15 }}>
+            <input type="checkbox" checked={!!w.autoBill} disabled={!owner || busy} onChange={e => toggle(e.target.checked)}
+              style={{ marginTop: 3 }} />
+            <span>
+              Send the bill on WhatsApp by itself after every sale with a customer
+              <span style={{ ...s.muted, display: 'block' }}>
+                To the customer on the bill, as a PDF. WhatsApp allows a newly linked number about 40 messages a day
+                for its first two weeks, then 200; past that they wait for the next day. Anyone who replies STOP
+                gets nothing more.
+              </span>
+            </span>
+          </label>
+          {!owner && <p style={s.muted}>Only the owner can change this.</p>}
+        </>
+      )}
+    </section>
+  )
 }
 
 const s = {

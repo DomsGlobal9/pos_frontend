@@ -48,6 +48,7 @@ const LABEL = {
   'device.updated': 'Device changed',
   'shop.upi_set': 'UPI ID set',
   'shop.payment_methods_set': 'Ways to pay changed',
+  'shop.whatsapp_auto_bill_set': 'WhatsApp bills switched on or off',
   'shop.logo_set': 'Logo changed',
   'sale.offers_applied': 'Offers applied',
   'items.imported': 'Items imported from a file',

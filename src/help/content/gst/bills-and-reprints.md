@@ -23,8 +23,18 @@ Open the bill:
 - **Print** — on whatever printer the counter has (80 mm or A4).
 - **PDF** — a file to save or attach.
 - **Share** — opens WhatsApp with a thank-you message and the bill's link (when there is a customer).
+- **WhatsApp** — instead of Share, when the shop's own number is linked: the till sends the bill PDF
+  itself, from the shop's number, and the bill shows when it was sent, delivered and read.
 
 The link opens the bill on the customer's own phone, any time — without your till.
+
+:::tip Bills on WhatsApp by themselves
+The owner can switch this on in **More → Settings → WhatsApp**: after every sale with a customer on the
+bill, the till sends the bill PDF from the shop's own number. Settings shows the number in use. It is
+linked once, in Inventory → Settings → WhatsApp, and used by every ScaleEzy app. A newly linked number
+sends about 40 messages a day for its first two weeks, then 200; past that, bills wait for the next day.
+Anyone who replies STOP gets nothing more.
+:::
 
 :::note Reprints say DUPLICATE
 Every copy after the first prints **DUPLICATE · COPY 2** (3, 4…) at the top, so two identical bills never
