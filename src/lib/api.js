@@ -360,11 +360,6 @@ export async function loadPublicReceipt(token) {
   return data.data
 }
 
-export async function setShopWhatsappAutoBill(on) {
-  const { data } = await api.put('/shop/whatsapp-auto-bill', { on })
-  return data.data
-}
-
 export async function setShopPaymentMethods(methods) {
   const { data } = await api.put('/shop/payment-methods', { methods })
   return data.data
