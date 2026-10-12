@@ -353,6 +353,9 @@ export function OrderDetail() {
       {collecting && (
         <PaymentPanel
           mode="COLLECT"
+          // The shop's own ways to pay and UPI QR, as at the counter (live 12 Oct: a balance had no QR, and Card showed even if off).
+          enabledMethods={shop?.shop?.enabledPaymentMethods}
+          upi={{ upiId: shop?.shop?.upiId, name: shop?.shop?.shopName, note: `Balance on ${data.invoiceNo}` }}
           upiQr={!!(shop?.inventoryConnected && shop?.shop?.upiQrEnabled)}
           totalPaise={data.owedPaise + writtenOffPaise}
           creditPaise={data.customer?.storeCreditPaise ?? 0}
