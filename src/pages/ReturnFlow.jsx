@@ -53,7 +53,10 @@ function ExchangePayment({ shop, owner, difference, onCancel, onConfirm }) {
     <PaymentPanel
       totalPaise={difference}
       heading="Difference to pay"
+      confirmLabel="Complete exchange"
       enabledMethods={shop?.shop?.enabledPaymentMethods}
+      // The shop's UPI QR for the difference, as at the counter (live 12 Oct: there was none).
+      upi={{ upiId: shop?.shop?.upiId, name: shop?.shop?.shopName, note: 'Exchange difference' }}
       creditPaise={connected ? (w?.credit?.usablePaise ?? 0) : (owner?.storeCreditPaise ?? 0)}
       points={w?.points && w.points.usablePaise > 0 ? { ...w.points, customerName: w.customerName } : null}
       walletNote={walletNote}

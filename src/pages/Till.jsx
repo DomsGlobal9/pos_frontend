@@ -738,7 +738,7 @@ export default function Till() {
                       {rupees(unitPrice(line))} each
                     </button>
                     {line.overridePricePaise && <span style={s.wasPrice}>was {rupees(line.pricePaise)}</span>}
-                    <button style={{ ...s.remove, marginLeft: 'auto' }} onClick={() => setQty(line.id, 0)} aria-label="Remove">×</button>
+                    <button style={{ ...s.remove, marginLeft: 'auto' }} onClick={() => setQty(line.id, 0)} aria-label={`Remove ${line.name}`}>×</button>
                   </div>
                 </li>
               ))}
@@ -791,7 +791,7 @@ export default function Till() {
                       {offerOn(line, offers) > 0 && <div style={s.offer}>offer −{rupees(offerOn(line, offers))}</div>}
                     </td>
                     <td style={s.td}>
-                      <button style={s.remove} onClick={() => setQty(line.id, 0)} aria-label="Remove">×</button>
+                      <button style={s.remove} onClick={() => setQty(line.id, 0)} aria-label={`Remove ${line.name}`}>×</button>
                     </td>
                   </tr>
                 ))}

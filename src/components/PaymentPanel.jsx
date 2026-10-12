@@ -46,7 +46,7 @@ const COPY = {
 // Credit and advance take the same rules: whatever is paid now, nothing included, up to the bill.
 const advanceLike = (mode) => mode === 'ADVANCE' || mode === 'CREDIT'
 
-export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT', creditPaise = 0, heading, upi, points = null, walletNote = null, upiQr = false }) {
+export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT', creditPaise = 0, heading, confirmLabel, upi, points = null, walletNote = null, upiQr = false }) {
   // Contract §10. Points are offered only when Inventory says some can be used on THIS bill; the
   // server holds them in Inventory at Complete, so this figure is a guide and Inventory has the last word.
   const pointStep = points?.pointValuePaise ?? 100
@@ -203,7 +203,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
             {rows.length > 1 && (
               <div style={s.blockHead}>
                 <span style={s.muted}>Payment {index + 1}</span>
-                <button type="button" style={s.remove} onClick={() => removeRow(index)}>Remove</button>
+                <button type="button" style={s.remove} onClick={() => removeRow(index)} aria-label={`Remove payment ${index + 1}`}>Remove</button>
               </div>
             )}
 
@@ -338,6 +338,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
                   <input
                     type="checkbox"
                     checked={row.unconfirmed}
+                    aria-label="Not confirmed yet"
                     onChange={e => update(index, { unconfirmed: e.target.checked, reference: '', cardLast4: '', approvalCode: '' })}
                     style={s.checkbox}
                   />
@@ -398,7 +399,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
         <div style={s.actions}>
           <button type="button" onClick={cancel}>Back</button>
           <button type="submit" style={s.confirm} disabled={!canComplete}>
-            {saving ? 'Saving…' : copy.confirm}
+            {saving ? 'Saving…' : confirmLabel ?? copy.confirm}
           </button>
         </div>
       </form>
