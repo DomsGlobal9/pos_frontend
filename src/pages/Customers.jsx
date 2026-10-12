@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { searchCustomers, loadCustomer, saveCustomerDetails, rupees, messageFor } from '../lib/api.js'
+import { askText } from '../components/Ask.jsx'
 
 /**
  * WF-CUSTOMERS-01. POS-CUST-007.
@@ -67,6 +68,26 @@ export function Customers() {
       </ul>
     </div>
   )
+}
+
+/*
+ * A misspelt name, fixed where it shows (12 Oct: only the business-buyer form could, which no cashier
+ * would open for "Lakshmi" typed "Lakhsmi"). The phone stays: it is how Inventory knows them.
+ */
+function ChangeName({ customer }) {
+  const queryClient = useQueryClient()
+  async function change() {
+    const typed = await askText('Their name', customer.name ?? '', { confirmLabel: 'Save', placeholder: 'As they want it on bills' })
+    if (typed === null || typed.trim() === (customer.name ?? '')) return
+    try {
+      await saveCustomerDetails(customer.id, { name: typed.trim() || null })
+      await queryClient.invalidateQueries({ queryKey: ['customer', customer.id] })
+      toast.success('Saved. Their next bills carry it.')
+    } catch (err) {
+      toast.error(messageFor(err))
+    }
+  }
+  return <button type="button" style={s.linkButton} onClick={change}>{customer.name ? 'Change name' : 'Add name'}</button>
 }
 
 /**
@@ -155,7 +176,9 @@ export function CustomerDetail() {
 
       <div>
         <h1 style={s.title}>{data.name || 'No name'}</h1>
-        <div style={s.muted}>{data.phoneDisplay}</div>
+        <div style={s.muted}>
+          {data.phoneDisplay} · <ChangeName customer={data} />
+        </div>
         {data.gstin && <div style={s.muted}>GSTIN {data.gstin}</div>}
         {data.address && <div style={{ ...s.muted, whiteSpace: 'pre-line' }}>{data.address}</div>}
       </div>
