@@ -5,7 +5,7 @@ import { Link, useOutletContext, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { loadCreditNote, rupees, messageFor, sendCreditNote, loadCreditNoteSends } from '../lib/api.js'
-import { SEND } from './BillDetail.jsx'
+import { SEND, sendsRefetch } from './BillDetail.jsx'
 
 /**
  * The credit note. POS-RET-006, WF-RETURN-01 success.
@@ -46,7 +46,7 @@ export default function CreditNote() {
     queryFn: () => loadCreditNote(id)
   })
   // What was sent from the shop's number, and how far it got -- as on a bill.
-  const { data: sends } = useQuery({ queryKey: ['sends', id], queryFn: () => loadCreditNoteSends(id), enabled: whatsappReady })
+  const { data: sends } = useQuery({ queryKey: ['sends', id], queryFn: () => loadCreditNoteSends(id), enabled: whatsappReady, refetchInterval: sendsRefetch })
 
   if (isLoading) return <p style={s.state}>Opening the credit note…</p>
   if (isError) {
