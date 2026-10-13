@@ -1,8 +1,10 @@
 import { kindOf } from '../lib/gst.js'
 import { waLink } from '../lib/whatsapp.js'
-import { Link, useParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useOutletContext, useParams } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { useQuery } from '@tanstack/react-query'
-import { loadCreditNote, rupees, messageFor } from '../lib/api.js'
+import { loadCreditNote, rupees, messageFor, sendCreditNote } from '../lib/api.js'
 
 /**
  * The credit note. POS-RET-006, WF-RETURN-01 success.
@@ -16,7 +18,25 @@ const HOW = {
   CASH: 'Cash', UPI: 'UPI', CARD: 'Card', STORE_CREDIT: 'Store credit', EXCHANGE: 'Put towards the new bill'
 }
 
+/** One press, one message: a new key per press, the button held while it goes. */
+function SendCreditNote({ returnId }) {
+  const [busy, setBusy] = useState(false)
+  async function send() {
+    setBusy(true)
+    try {
+      const r = await sendCreditNote(returnId, `cn-${returnId}-${Date.now()}`)
+      toast.success(`Sent on WhatsApp to ${r.to}.`)
+    } catch (err) {
+      toast.error(messageFor(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return <button onClick={send} disabled={busy}>{busy ? 'Sending…' : 'WhatsApp'}</button>
+}
+
 export default function CreditNote() {
+  const whatsappReady = (useOutletContext() ?? {})?.shop?.whatsappReady === true
   const { id } = useParams()
   const { data: note, isLoading, isError, error } = useQuery({
     queryKey: ['credit-note', id],
@@ -58,6 +78,8 @@ export default function CreditNote() {
             `Credit note ${note.creditNoteNo} against bill ${note.originalSale?.invoiceNo ?? ''}: ${rupees(note.totalPaise)} returned` +
             (back ? ` (${back})` : '') + (note.pointsBack > 0 ? `, ${note.pointsBack} points back` : '') + '.' +
             (note.refunds.some(r => r.method === 'STORE_CREDIT') && note.customer ? ` Store credit now ${rupees(note.customer.storeCreditPaise)}.` : ''))
+          // From the shop's own number when it is linked (13 Oct), the cashier's phone (Share) otherwise.
+          if (whatsappReady && note.customer?.phone) return <SendCreditNote returnId={note.id} />
           return href ? <a href={href} target="_blank" rel="noreferrer">Share on WhatsApp</a> : null
         })()}
       </div>
