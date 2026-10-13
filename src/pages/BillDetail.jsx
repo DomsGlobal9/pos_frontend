@@ -31,6 +31,7 @@ export default function BillDetail() {
   const { data: sends } = useQuery({
     queryKey: ['sends', id],
     queryFn: () => loadSends(id),
+    refetchInterval: sendsRefetch,
     enabled: !!data?.customer
   })
 
@@ -108,6 +109,11 @@ export default function BillDetail() {
     </div>
   )
 }
+
+/** While a message is still on its way (and under 10 minutes old), ask again every 8 s: the ticks move
+ * on their own and the screen should show it without a reload (13 Oct, live). */
+export const sendsRefetch = (q) =>
+  (q.state.data ?? []).some(x => ['SENDING', 'QUEUED', 'SENT', 'DELIVERED'].includes(x.status) && Date.now() - new Date(x.at).getTime() < 600_000) ? 8_000 : false
 
 export const SEND = { SENDING: 'sending', QUEUED: 'on its way', SENT: 'sent', DELIVERED: 'delivered', READ: 'read', FAILED: 'not sent', EXPIRED: 'not sent' }
 
