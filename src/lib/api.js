@@ -360,6 +360,11 @@ export async function loadPublicReceipt(token) {
   return data.data
 }
 
+export async function sendCreditNote(returnId, onceKey) {
+  const { data } = await api.post(`/returns/${returnId}/send`, { onceKey })
+  return data.data
+}
+
 export async function setShopPaymentMethods(methods) {
   const { data } = await api.put('/shop/payment-methods', { methods })
   return data.data
