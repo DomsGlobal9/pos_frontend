@@ -208,6 +208,21 @@ export function OrderDetail() {
    * warning. The person at the till then decides, in so many words, whether to hand it over
    * anyway. That decision is recorded with their name.
    */
+  // Goods out with money owed is credit: a cashier needs a manager for it, as at the counter.
+  async function handOverOwing(manager) {
+    try {
+      await handOverOrder(id, true, manager)
+      toast.success('Handed over with money still owed.')
+      setApproval(null)
+      refresh()
+    } catch (err) {
+      const details = err?.response?.data?.details
+      if (details?.code === 'APPROVAL_REQUIRED' && !manager) { setApproval({ need: details, retry: handOverOwing, error: '' }); return }
+      if (manager) { setApproval(a => (a ? { ...a, error: messageFor(err) } : a)); return }
+      toast.error(messageFor(err))
+    }
+  }
+
   async function handOver() {
     setBusy(true)
     try {
@@ -221,15 +236,7 @@ export function OrderDetail() {
           note: `${rupees(details.owedPaise)} is still owed on this order. The amount and your name will be recorded.`,
           confirmLabel: 'Hand over'
         })
-        if (yes) {
-          try {
-            await handOverOrder(id, true)
-            toast.success('Handed over with money still owed.')
-            refresh()
-          } catch (inner) {
-            toast.error(messageFor(inner))
-          }
-        }
+        if (yes) await handOverOwing()
       } else {
         toast.error(messageFor(err))
       }

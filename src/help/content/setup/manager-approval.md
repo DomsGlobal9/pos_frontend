@@ -33,8 +33,8 @@ it is still recorded.
 When the cashier already wrote why (for example on a write-off), it is filled in for the manager.
 :::
 
-:::faq "That person is not allowed to approve …"
-Only someone whose role allows it can approve: a manager or the owner. A cashier's PIN is refused.
+:::faq "That PIN cannot approve …"
+Only someone whose role allows it can approve: a manager or the owner. A cashier's PIN is refused, and counts as a wrong try. Too many wrong tries lock approvals for a minute, then longer each time.
 :::
 
 :::faq Where is it all recorded?

@@ -45,10 +45,10 @@ export default function PaymentChecks() {
       // Asked for, not demanded: the whole point is that a reference may still not exist.
       const reference = await askText(`Reference for the ${rupees(payment.amountPaise)} ${what} payment, if you have one:`, '', {
         note: payment.method === 'UPI'
-          ? 'The 12-digit UTR from the bank statement or the customer UPI app. Leave it empty if there is none — the money still counts as arrived.'
+          ? 'The 12-digit UTR from the bank statement or the customer UPI app. If there is none, a manager or the owner can leave it empty.'
           : payment.method === 'BANK_TRANSFER'
-          ? 'The UTR from the bank statement (12 to 22 letters and numbers). Leave it empty if there is none — the money still counts as arrived.'
-          : 'For a card: last 4 and approval code, like 4321/AB12C3. Leave it empty if there is none — the money still counts as arrived.',
+          ? 'The UTR from the bank statement (12 to 22 letters and numbers). If there is none, a manager or the owner can leave it empty.'
+          : 'For a card: last 4 and approval code, like 4321/AB12C3. If there is none, a manager or the owner can leave it empty.',
         confirmLabel: 'It arrived'
       })
       if (reference === null) return
