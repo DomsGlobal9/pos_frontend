@@ -120,7 +120,7 @@ export default function CreditNote() {
             <div>{line.description}</div>
             <div style={s.line}>
               <span style={s.soft}>
-                {line.qty} returned{line.hsn ? ` · HSN ${line.hsn}` : ''}{taxBill ? ` · GST ${line.taxRate}%` : ''}
+                {line.qty} returned{line.hsn ? ` · ${String(line.hsn).startsWith('99') ? 'SAC' : 'HSN'} ${line.hsn}` : ''}{taxBill ? ` · GST ${line.taxRate}%` : ''}
               </span>
               <span>{rupees(line.amountPaise)}</span>
             </div>
