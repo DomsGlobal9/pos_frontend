@@ -109,7 +109,7 @@ export default function BillDetail() {
   )
 }
 
-const SEND = { SENDING: 'sending', QUEUED: 'on its way', SENT: 'sent', DELIVERED: 'delivered', READ: 'read', FAILED: 'not sent', EXPIRED: 'not sent' }
+export const SEND = { SENDING: 'sending', QUEUED: 'on its way', SENT: 'sent', DELIVERED: 'delivered', READ: 'read', FAILED: 'not sent', EXPIRED: 'not sent' }
 
 const s = {
   sends: { display: 'flex', gap: 6, flexWrap: 'wrap' },

@@ -3,8 +3,9 @@ import { waLink } from '../lib/whatsapp.js'
 import { useState } from 'react'
 import { Link, useOutletContext, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { useQuery } from '@tanstack/react-query'
-import { loadCreditNote, rupees, messageFor, sendCreditNote } from '../lib/api.js'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { loadCreditNote, rupees, messageFor, sendCreditNote, loadCreditNoteSends } from '../lib/api.js'
+import { SEND } from './BillDetail.jsx'
 
 /**
  * The credit note. POS-RET-006, WF-RETURN-01 success.
@@ -21,11 +22,13 @@ const HOW = {
 /** One press, one message: a new key per press, the button held while it goes. */
 function SendCreditNote({ returnId }) {
   const [busy, setBusy] = useState(false)
+  const queryClient = useQueryClient()
   async function send() {
     setBusy(true)
     try {
       const r = await sendCreditNote(returnId, `cn-${returnId}-${Date.now()}`)
       toast.success(`Sent on WhatsApp to ${r.to}.`)
+      queryClient.invalidateQueries({ queryKey: ['sends', returnId] })
     } catch (err) {
       toast.error(messageFor(err))
     } finally {
@@ -42,6 +45,8 @@ export default function CreditNote() {
     queryKey: ['credit-note', id],
     queryFn: () => loadCreditNote(id)
   })
+  // What was sent from the shop's number, and how far it got -- as on a bill.
+  const { data: sends } = useQuery({ queryKey: ['sends', id], queryFn: () => loadCreditNoteSends(id), enabled: whatsappReady })
 
   if (isLoading) return <p style={s.state}>Opening the credit note…</p>
   if (isError) {
@@ -83,6 +88,16 @@ export default function CreditNote() {
           return href ? <a href={href} target="_blank" rel="noreferrer">Share on WhatsApp</a> : null
         })()}
       </div>
+
+      {sends?.length > 0 && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} className="no-print">
+          {sends.map(x => (
+            <span key={x.id} className={`chip${x.status === 'FAILED' || x.status === 'EXPIRED' ? ' bad' : x.status === 'DELIVERED' || x.status === 'READ' ? ' good' : ''}`} title={x.failReason ?? ''}>
+              WhatsApp to {x.to} · {SEND[x.status] ?? x.status}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div style={s.links} className="no-print">
         <Link to={`/bills/${note.originalSale.id}`} style={s.back}>← Bill {note.originalSale.invoiceNo}</Link>

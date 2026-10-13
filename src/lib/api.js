@@ -157,8 +157,8 @@ export async function markOrderReady(id) {
 }
 
 /** POS-ORD-013/014. acceptDue is the explicit "hand over with money owed". */
-export async function handOverOrder(id, acceptDue = false) {
-  const { data } = await api.post(`/orders/${id}/hand-over`, acceptDue ? { acceptDue: true } : {})
+export async function handOverOrder(id, acceptDue = false, approval) {
+  const { data } = await api.post(`/orders/${id}/hand-over`, acceptDue ? { acceptDue: true, ...(approval ? { approval } : {}) } : {})
   return data.data
 }
 
@@ -357,6 +357,11 @@ export async function loadSends(saleId) {
 /** The customer's own copy, by the token on the paper. No sign-in. */
 export async function loadPublicReceipt(token) {
   const { data } = await api.get(`/public/receipts/${token}`)
+  return data.data
+}
+
+export async function loadCreditNoteSends(returnId) {
+  const { data } = await api.get(`/returns/${returnId}/sends`)
   return data.data
 }
 
