@@ -384,8 +384,10 @@ export default function Till() {
   }
 
   async function askDiscount() {
+    // A percent is of what is left after the offers, as Inventory counts it (owner's decision, 14 Oct).
+    const afterOffers = totals.subtotalPaise - totals.offersPaise
     const typed = await askText('Money off the whole bill', billDiscountPaise ? String(billDiscountPaise / 100) : '', {
-      note: `In rupees. End with % for a percentage — 10% of ${rupees(totals.subtotalPaise)} is ${rupees(Math.round(totals.subtotalPaise / 10))}.`,
+      note: `In rupees. End with % for a percentage — 10% of ${rupees(afterOffers)}${totals.offersPaise > 0 ? ' (after offers)' : ''} is ${rupees(Math.round(afterOffers / 10))}.`,
       placeholder: '0',
       inputMode: 'decimal',
       confirmLabel: 'Take it off'
@@ -401,9 +403,9 @@ export default function Till() {
       return
     }
     const paise = isPercent
-      ? Math.round(totals.subtotalPaise * number / 100)
+      ? Math.round(afterOffers * number / 100)
       : Math.round(number * 100)
-    setBillDiscountPaise(Math.min(paise, totals.subtotalPaise))
+    setBillDiscountPaise(Math.min(paise, afterOffers))
     refocus()
   }
 

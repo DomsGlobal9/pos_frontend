@@ -87,10 +87,12 @@ export default function ApprovalSheet({ need, error, busy, onApprove, onCancel, 
 function describe(need) {
   if (!need) return ''
   if (need.kind === 'DISCOUNT_OVER_LIMIT') {
-    const percent = need.subtotalPaise
-      ? Math.round((need.discountPaise / need.subtotalPaise) * 1000) / 10
+    // Of what is left after offers -- the base the limit is measured on (14 Oct).
+    const base = (need.subtotalPaise ?? 0) - (need.offersPaise ?? 0)
+    const percent = base > 0
+      ? Math.round((need.discountPaise / base) * 1000) / 10
       : null
-    return `${rupees(need.discountPaise)} off a ${rupees(need.subtotalPaise)} bill` +
+    return `${rupees(need.discountPaise)} off a ${rupees(base)} bill${need.offersPaise > 0 ? ' (after offers)' : ''}` +
       (percent !== null ? ` — ${percent}%` : '') +
       `. Cashiers can give up to ${need.limitPercent}% on their own.`
   }
