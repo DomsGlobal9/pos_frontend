@@ -291,8 +291,15 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
         <Rule />
 
         <div style={s.line}><span>Subtotal</span><span>{rupees(sale.subtotalPaise)}</span></div>
-        {sale.discountPaise > 0 && (
-          <div style={s.line}><span>Discount</span><span>−{rupees(sale.discountPaise)}</span></div>
+        {/* Offers apart from a discount by hand; the hand one as a percent of what the offers left (14 Oct). */}
+        {(sale.offersPaise ?? 0) > 0 && (
+          <div style={s.line}><span>Offers</span><span>−{rupees(sale.offersPaise)}</span></div>
+        )}
+        {sale.discountPaise - (sale.offersPaise ?? 0) > 0 && (
+          <div style={s.line}>
+            <span>{discountLabel(sale.discountPaise - (sale.offersPaise ?? 0), sale.subtotalPaise - (sale.offersPaise ?? 0), (sale.offersPaise ?? 0) > 0)}</span>
+            <span>−{rupees(sale.discountPaise - (sale.offersPaise ?? 0))}</span>
+          </div>
         )}
         {/* Rule 46: the taxable value, and each tax with its RATE -- one CGST/SGST (or IGST) pair per rate. */}
         {sale.taxPaise > 0 && (
@@ -418,6 +425,13 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
       </div>
     </div>
   )
+}
+
+/** "Discount 10% (on ₹9,000)" when it is a whole or half percent to the paisa; "Discount" otherwise. Same rule as the PDF. */
+function discountLabel(byHand, base, afterOffers) {
+  const pct = base > 0 ? Math.round((byHand * 200) / base) / 2 : 0
+  if (!pct || Math.round((base * pct) / 100) !== byHand) return 'Discount'
+  return `Discount ${pct}%${afterOffers ? ` (on ${rupees(base)})` : ''}`
 }
 
 const Rule = () => <div style={{ borderTop: '1px dashed #999', margin: '6px 0' }} />

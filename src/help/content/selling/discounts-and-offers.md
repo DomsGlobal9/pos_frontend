@@ -33,5 +33,6 @@ manager for this; a manager or owner can do it themselves. Reports count every c
 
 :::note Example
 A ₹3,000 saree with a ₹300 offer, and a 10% discount in a shop whose limit is 10%: offer −₹300, discount −₹270,
-the customer pays ₹2,430. The GST is worked out on what was charged.
+the customer pays ₹2,430. A percent is always of what the offers left, and the bill prints it that way:
+**Offers −₹300**, then **Discount 10% (on ₹2,700) −₹270**. The GST is worked out on what was charged.
 :::
