@@ -447,7 +447,8 @@ export function rupees(paise) {
     minimumFractionDigits: Math.abs(paise) % 100 === 0 ? 0 : 2,
     maximumFractionDigits: 2
   })
-  return `${negative ? '-' : ''}₹${text}`
+  // A real minus sign (U+2212), like every "−₹300" the screens write by hand; a hyphen looked like a dash.
+  return `${negative ? '−' : ''}₹${text}`
 }
 
 // ---- Connections: keys, webhooks, import, export. WF-INTEGRATIONS-01.
