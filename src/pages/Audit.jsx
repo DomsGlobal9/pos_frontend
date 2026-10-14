@@ -15,7 +15,7 @@ const LABEL = {
   'sale.discount_over_limit': 'Discount over the limit',
   'sale.price_override': 'Price changed',
   'approval.granted': 'Manager approved',
-  'approval.refused': 'Approval refused',
+  'approval.refused': 'Approvals locked after wrong PINs',
   'payment.unconfirmed': 'Payment not confirmed',
   'payment.resolved': 'Payment checked',
   'bill.reprinted': 'Bill reprinted',
@@ -90,6 +90,7 @@ export default function Audit() {
                 {d.approvedBy ? ` asked · ${d.approvedBy} approved` : d.byOwnAuthority ? ' on their own authority' : ''}
                 {d.discountPaise ? ` · ${rupees(d.discountPaise)} off` : ''}
                 {d.reason ? ` · "${d.reason}"` : ''}
+                {d.lockedForSeconds ? ` · ${d.wrongTries} wrong PINs typed, no approvals for ${Math.round(d.lockedForSeconds / 60)} min` : ''}
               </div>
               <div style={s.muted}>{new Date(row.createdAt).toLocaleString('en-IN')}</div>
             </li>

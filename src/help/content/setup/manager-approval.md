@@ -34,7 +34,7 @@ When the cashier already wrote why (for example on a write-off), it is filled in
 :::
 
 :::faq "That PIN cannot approve …"
-Only someone whose role allows it can approve: a manager or the owner. A cashier's PIN is refused, and counts as a wrong try. Too many wrong tries lock approvals for a minute, then longer each time.
+Only someone whose role allows it can approve: a manager or the owner. A cashier's PIN is refused, and counts as a wrong try. Too many wrong tries lock approvals for a minute, then longer each time, and **More → Activity** shows whose typing did it.
 :::
 
 :::faq Where is it all recorded?
