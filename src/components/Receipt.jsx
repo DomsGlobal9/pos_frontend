@@ -172,7 +172,7 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
 
   return (
     <div style={s.page}>
-      <style>{PRINT_CSS}</style>
+      <style>{printCss()}</style>
 
       <div style={s.bar} className="no-print">
         <div>
@@ -423,13 +423,14 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
 const Rule = () => <div style={{ borderTop: '1px dashed #999', margin: '6px 0' }} />
 
 // The paper width is the device's (POS-DEV-002): 80 mm unless a manager set this device to 58 mm.
-const PRINT_CSS = `
+const printCss = () => `
 @media print {
   @page { size: ${paperWidthMm()}mm auto; margin: 0; }
   body { background: #fff; }
   .no-print { display: none !important; }
   .receipt {
-    width: ${paperWidthMm()}mm; margin: 0; padding: 4mm 3mm;
+    /* !important: the on-screen sheet sets 80mm inline, which beats a stylesheet (14 Oct: 58 mm never printed narrow). */
+    width: ${paperWidthMm()}mm !important; max-width: none !important; margin: 0; padding: 4mm 3mm;
     border: none; box-shadow: none; font-size: 11px;
   }
   /* The till hides itself below 768px on screen. Printing is not a narrow screen, so that rule

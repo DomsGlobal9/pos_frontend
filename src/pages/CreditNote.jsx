@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { loadCreditNote, rupees, messageFor, sendCreditNote, loadCreditNoteSends } from '../lib/api.js'
 import { SEND, sendsRefetch } from './BillDetail.jsx'
+import { paperWidthMm } from '../lib/device.js'
 
 /**
  * The credit note. POS-RET-006, WF-RETURN-01 success.
@@ -67,7 +68,7 @@ export default function CreditNote() {
 
   return (
     <div style={s.page}>
-      <style>{PRINT_CSS}</style>
+      <style>{printCss()}</style>
 
       <div style={s.bar} className="no-print">
         <div>
@@ -200,12 +201,13 @@ export default function CreditNote() {
 
 const Rule = () => <div style={{ borderTop: '1px dashed #999', margin: '6px 0' }} />
 
-const PRINT_CSS = `
+// The device's paper, as the bill (14 Oct: a 58 mm till printed credit notes 80 mm wide, totals off the edge).
+const printCss = () => `
 @media print {
-  @page { size: 80mm auto; margin: 0; }
+  @page { size: ${paperWidthMm()}mm auto; margin: 0; }
   body { background: #fff; }
   .no-print { display: none !important; }
-  .receipt { width: 80mm; margin: 0; padding: 4mm 3mm; border: none; font-size: 11px; }
+  .receipt { width: ${paperWidthMm()}mm !important; max-width: none !important; margin: 0; padding: 4mm 3mm; border: none; font-size: 11px; }
 }
 `
 
