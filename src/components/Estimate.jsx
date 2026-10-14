@@ -1,4 +1,5 @@
 import { rupees } from '../lib/api.js'
+import { paperWidthMm } from '../lib/device.js'
 import { lineTotal, offerOn, unitPrice } from '../lib/basket.js'
 import { waLink } from '../lib/whatsapp.js'
 import useEscape from '../lib/useEscape.js'
@@ -21,13 +22,13 @@ export default function Estimate({ shop, lines, totals, offers, customer, onClos
 
   return (
     <div style={s.backdrop} role="dialog" aria-label="Estimate">
-      {/* Only the paper prints, 80 mm wide like a bill -- not the till behind it. */}
+      {/* Only the paper prints, as wide as this device's bill paper -- not the till behind it. */}
       <style>{`
         @media print {
-          @page { size: 80mm auto; margin: 0; }
+          @page { size: ${paperWidthMm()}mm auto; margin: 0; }
           body * { visibility: hidden !important; }
           .estimate-print, .estimate-print * { visibility: visible !important; }
-          .estimate-print { position: absolute; left: 0; top: 0; width: 80mm; }
+          .estimate-print { position: absolute; left: 0; top: 0; width: ${paperWidthMm()}mm; }
         }
       `}</style>
       <div style={s.panel}>
