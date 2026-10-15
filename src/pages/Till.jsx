@@ -808,13 +808,28 @@ export default function Till() {
             {/* Above the total, because it is the thing a cashier checks last before taking
                 money -- and because leaving it blank has to stay effortless. */}
             <div style={s.customer}>
-              {customer ? (
+              {customer ? (<>
                 <span style={s.customerChip}>
                   <User size={16} aria-hidden="true" />
                   <span style={s.customerName}>{customer.name || customer.phoneDisplay}</span>
                   <button style={s.customerClear} onClick={() => setCustomer(null)} aria-label="Remove customer"><X size={15} /></button>
                 </span>
-              ) : (
+              {/* Who is at the counter (15 Oct): what they owe first, because it changes what the
+                  cashier does next; otherwise how good a customer they are. */}
+              {customer.owedPaise > 0
+                ? (
+                  <div style={{ ...s.customerFacts, color: 'var(--bad)' }} role="status">
+                    Owes {rupees(customer.owedPaise)}
+                    {customer.creditLimitPaise != null && ` · ${rupees(Math.max(0, customer.creditLimitPaise - customer.owedPaise))} credit left`}
+                  </div>
+                )
+                : customer.visitCount > 0 && (
+                  <div style={s.customerFacts}>
+                    {customer.visitCount} {customer.visitCount === 1 ? 'visit' : 'visits'} · {rupees(customer.lifetimeSpentPaise)} spent
+                    {customer.creditLimitPaise != null && ` · ${rupees(customer.creditLimitPaise)} credit allowed`}
+                  </div>
+                )}
+              </>) : (
                 <button style={s.customerAdd} onClick={() => setAskingCustomer(true)}>
                   <UserPlus size={16} aria-hidden="true" /> Add customer
                 </button>
@@ -1130,6 +1145,7 @@ const s = {
     background: 'var(--brand-tint)', color: 'var(--brand-deep)'
   },
   customerName: { fontWeight: 700, fontSize: 14 },
+  customerFacts: { fontSize: 12, color: 'var(--ink-soft)', marginTop: 4, flexBasis: '100%' },
   customerClear: { minHeight: 30, minWidth: 30, padding: 0, borderRadius: 999, border: 'none', boxShadow: 'none', background: 'transparent', color: 'var(--brand-deep)', display: 'grid', placeItems: 'center' },
   linkish: { background: 'none', border: 'none', padding: 0, color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' },
   servedBy: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-soft)', margin: '6px 0', whiteSpace: 'nowrap' },

@@ -91,6 +91,37 @@ function ChangeName({ customer }) {
 }
 
 /**
+ * CREDIT ALLOWED (15 Oct): how much this customer may owe in all before a cashier has to call a
+ * manager. Empty: a manager every time, as before. Set by whoever may lend; everyone sees it.
+ */
+function CreditAllowed({ customer }) {
+  const queryClient = useQueryClient()
+  async function change() {
+    const typed = await askText('Credit allowed', customer.creditLimitPaise != null ? String(customer.creditLimitPaise / 100) : '', {
+      note: 'In rupees: how much they may owe in all before a cashier needs a manager. Leave it empty to ask a manager every time.',
+      confirmLabel: 'Save', placeholder: 'None', inputMode: 'decimal'
+    })
+    if (typed === null) return
+    const text = typed.trim().replace(/[₹,s]/g, '')
+    const value = text === '' ? null : Number(text)
+    if (value !== null && (!Number.isFinite(value) || value < 0)) { toast.error('That is not an amount.'); return }
+    try {
+      await saveCustomerDetails(customer.id, { creditLimitPaise: value === null ? null : Math.round(value * 100) })
+      await queryClient.invalidateQueries({ queryKey: ['customer', customer.id] })
+      toast.success(value === null ? 'A manager will be asked every time.' : `They may owe up to ${rupees(Math.round(value * 100))} without a manager.`)
+    } catch (err) {
+      toast.error(messageFor(err))
+    }
+  }
+  return (
+    <div style={s.muted}>
+      Credit allowed: {customer.creditLimitPaise == null ? 'none — a manager is asked every time' : rupees(customer.creditLimitPaise)}
+      {customer.mayGiveCredit && <> · <button type="button" style={s.linkButton} onClick={change}>Change</button></>}
+    </div>
+  )
+}
+
+/**
  * A business buyer: name, GSTIN and address, so their bills are tax invoices made out to them
  * (GST Rule 46) and the accountant can file them as B2B. The server checks the GSTIN's check
  * character and asks for the address with it. Bills already given keep what they were issued with.
@@ -189,6 +220,8 @@ export function CustomerDetail() {
         <Tile label="Visits" value={String(data.visitCount)} />
         <Tile label="Spent here" value={rupees(data.lifetimeSpentPaise)} />
       </div>
+
+      <CreditAllowed customer={data} />
 
       {/* POS-CUST-011. Only when there is something -- a zero here is noise on every card. */}
       {data.owedPaise > 0 && (
