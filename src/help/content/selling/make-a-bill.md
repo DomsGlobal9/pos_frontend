@@ -5,7 +5,7 @@ for: Cashiers, managers and the owner
 minutes: 3
 app: /sell
 appLabel: Sell
-keywords: bill billing sale new sale scan barcode find item add item quantity remove complete sale next sale print receipt estimate quotation
+keywords: bill billing sale new sale scan barcode find item add item quantity remove complete sale next sale print receipt estimate quotation keyboard shortcuts keys F2 F4 F8
 ---
 
 ## 1. Put the items on the bill
@@ -83,4 +83,9 @@ A discount above your limit, or a changed price, needs a manager's PIN on your s
 
 :::faq The page reloaded and my bill is still there
 That is on purpose: the bill being made is kept on the till until it is completed or cleared.
+:::
+
+:::note Keys, on a computer
+**F2** take payment · **F3** search · **F4** add customer · **F8** discount · **F9** park the bill. **Esc** closes
+whatever is open. The keys do nothing while a box is open, so nothing happens behind it.
 :::

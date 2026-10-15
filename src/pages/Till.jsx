@@ -409,6 +409,32 @@ export default function Till() {
     refocus()
   }
 
+  /*
+   * KEYS FOR A COUNTER WITH A KEYBOARD (15 Oct). Function keys, because a barcode scanner types into
+   * the search box and letters there are a search. Never while a popup is open: a key must not act
+   * behind a question or the payment box. F5, F6, F7, F11 and F12 stay the browser's.
+   */
+  const keys = useRef(null)
+  keys.current = (e) => {
+    if (document.querySelector('[role="dialog"], .ask-panel')) return
+    const has = lines.length > 0 && !busy
+    const act = {
+      F2: has && (() => setPaying(true)),
+      F3: () => refocusSelected(),
+      F4: !customer && (() => setAskingCustomer(true)),
+      F8: has && (() => askDiscount()),
+      F9: has && (() => parkCurrent())
+    }[e.key]
+    if (act === undefined) return
+    e.preventDefault()
+    if (act) act()
+  }
+  useEffect(() => {
+    const on = (e) => keys.current?.(e)
+    window.addEventListener('keydown', on)
+    return () => window.removeEventListener('keydown', on)
+  }, [])
+
   const setQty = (id, qty) =>
     setLines(current => qty <= 0
       ? current.filter(l => l.id !== id)
@@ -900,6 +926,8 @@ export default function Till() {
               style={s.complete}
               disabled={lines.length === 0 || busy}
               onClick={() => setPaying(true)}
+              aria-keyshortcuts="F2"
+              title="F2"
             >
               Take payment
             </button>
@@ -963,6 +991,10 @@ export default function Till() {
                     else refocus()
                   }} />
               </div>
+            )}
+            {/* The keys, where someone looking for a quicker way will look. Not on a phone. */}
+            {!stacked && (
+              <p style={s.keysHint}>Keys: F2 pay · F3 search · F4 customer · F8 discount · F9 park</p>
             )}
           </div>
         </div>
@@ -1145,6 +1177,7 @@ const s = {
     background: 'var(--brand-tint)', color: 'var(--brand-deep)'
   },
   customerName: { fontWeight: 700, fontSize: 14 },
+  keysHint: { margin: '10px 2px 0', fontSize: 12, color: 'var(--ink-soft)' },
   customerFacts: { fontSize: 12, color: 'var(--ink-soft)', marginTop: 4, flexBasis: '100%' },
   customerClear: { minHeight: 30, minWidth: 30, padding: 0, borderRadius: 999, border: 'none', boxShadow: 'none', background: 'transparent', color: 'var(--brand-deep)', display: 'grid', placeItems: 'center' },
   linkish: { background: 'none', border: 'none', padding: 0, color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' },
