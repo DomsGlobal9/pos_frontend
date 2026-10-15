@@ -131,7 +131,9 @@ function describe(need) {
     const earlier = need.alreadyOwedPaise > 0
       ? ` They already owe ${rupees(need.alreadyOwedPaise)} on ${need.alreadyOwedBills === 1 ? 'another bill' : `${need.alreadyOwedBills} other bills`}.`
       : ''
-    return `Selling on credit: ${rupees(need.owedPaise)} of a ${rupees(need.totalPaise)} bill will be owed, and the goods go home now.${earlier}`
+    // Their credit allowed, when a manager set one (15 Oct): this is over it.
+    const limit = need.creditLimitPaise != null ? ` Their credit allowed is ${rupees(need.creditLimitPaise)}; this goes over it.` : ''
+    return `Selling on credit: ${rupees(need.owedPaise)} of a ${rupees(need.totalPaise)} bill will be owed, and the goods go home now.${earlier}${limit}`
   }
   return 'Something on this bill needs a manager.'
 }
