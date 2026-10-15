@@ -158,7 +158,15 @@ export default function DayClose() {
           <section style={s.block}>
             <h2 style={s.heading}>Sales</h2>
             <Line label={`Bills (${f.bills.count})`} value={f.bills.grossPaise} />
-            <Line label="Discounts" value={-f.bills.discountPaise} />
+            {/* Split as Reports splits it (15 Oct). A day closed before then has no split: one line. */}
+            {f.bills.offersPaise === undefined
+              ? <Line label="Discounts" value={-f.bills.discountPaise} />
+              : (
+                <>
+                  {f.bills.offersPaise > 0 && <Line label="Offers" value={-f.bills.offersPaise} />}
+                  <Line label="Discounts given" value={-(f.bills.discountPaise - f.bills.offersPaise)} />
+                </>
+              )}
             <Line label="Includes GST" value={f.bills.taxPaise} muted />
             <Line label="Net sales" value={f.bills.netPaise} strong />
             <Line label={`Returns (${f.returns.count})`} value={-f.returns.totalPaise} />
