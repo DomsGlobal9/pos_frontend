@@ -17,7 +17,7 @@ import { paperWidthMm } from '../lib/device.js'
  * went back. Everything is read from what was saved -- nothing is worked out again here.
  */
 const HOW = {
-  CASH: 'Cash', UPI: 'UPI', CARD: 'Card', STORE_CREDIT: 'Store credit', EXCHANGE: 'Put towards the new bill'
+  CASH: 'Cash', UPI: 'UPI', CARD: 'Card', STORE_CREDIT: 'Store credit', EXCHANGE: 'Put towards the new bill', VOUCHER: 'Back onto the gift voucher'
 }
 
 /** One press, one message: a new key per press, the button held while it goes. */

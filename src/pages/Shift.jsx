@@ -73,6 +73,7 @@ export default function Shift() {
               <Line label="Cash refunds" value={-shift.figures.cashRefundsPaise} />
               <Line label="Cash in" value={shift.figures.cashInPaise} />
               <Line label="Cash out" value={-shift.figures.cashOutPaise} />
+              {(shift.figures.voucherCashPaise ?? 0) > 0 && <Line label="Cash for gift vouchers" value={shift.figures.voucherCashPaise} />}
               <div style={{ ...s.line, ...s.total }}>
                 <span>Should be in the drawer</span><b>{rupees(shift.figures.expectedPaise)}</b>
               </div>
