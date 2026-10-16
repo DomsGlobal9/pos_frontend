@@ -177,6 +177,16 @@ export default function Till() {
     return () => { alive = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [askingMoney, customer?.id, shop?.inventoryConnected])
+  // Their groups in Inventory, asked once when they are added (16 Oct) -- not only at payment, where
+  // the wallet is asked. A shop not connected, offline, or Inventory slow: simply no badge.
+  const [groups, setGroups] = useState([])
+  useEffect(() => {
+    setGroups([])
+    if (!customer || !shop?.inventoryConnected || !navigator.onLine) return
+    let alive = true
+    loadWallet(customer.id, 0).then(r => { if (alive && r?.ok) setGroups(r.wallet.groups ?? []) }).catch(() => {})
+    return () => { alive = false }
+  }, [customer?.id, shop?.inventoryConnected])
   const fromInventory = !!(shop?.inventoryConnected && customer)
   const w = wallet?.ok ? wallet.wallet : null
   const walletProps = {
@@ -838,6 +848,8 @@ export default function Till() {
                 <span style={s.customerChip}>
                   <User size={16} aria-hidden="true" />
                   <span style={s.customerName}>{customer.name || customer.phoneDisplay}</span>
+                  {/* Their groups in Inventory -- VIP, Wholesale -- so the cashier knows who is at the counter (16 Oct). */}
+                  {groups.slice(0, 3).map(g => <span key={g} className="chip good" style={s.groupBadge}>{g}</span>)}
                   <button style={s.customerClear} onClick={() => setCustomer(null)} aria-label="Remove customer"><X size={15} /></button>
                 </span>
               {/* Who is at the counter (15 Oct): what they owe first, because it changes what the
@@ -1177,6 +1189,7 @@ const s = {
     background: 'var(--brand-tint)', color: 'var(--brand-deep)'
   },
   customerName: { fontWeight: 700, fontSize: 14 },
+  groupBadge: { fontSize: 11, padding: '1px 8px', minHeight: 0 },
   keysHint: { margin: '10px 2px 0', fontSize: 12, color: 'var(--ink-soft)' },
   customerFacts: { fontSize: 12, color: 'var(--ink-soft)', marginTop: 4, flexBasis: '100%' },
   customerClear: { minHeight: 30, minWidth: 30, padding: 0, borderRadius: 999, border: 'none', boxShadow: 'none', background: 'transparent', color: 'var(--brand-deep)', display: 'grid', placeItems: 'center' },
