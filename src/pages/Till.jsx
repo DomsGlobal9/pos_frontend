@@ -24,6 +24,7 @@ import KeepSheet from '../components/KeepSheet.jsx'
 import HeldSheet from '../components/HeldSheet.jsx'
 import { askText } from '../components/Ask.jsx'
 import Estimate from '../components/Estimate.jsx'
+import VoucherSale from '../components/VoucherSale.jsx'
 
 /**
  * The sell screen.
@@ -106,6 +107,7 @@ export default function Till() {
   // The customer's points and store credit, from Inventory, read when the payment screen opens (§10).
   const [wallet, setWallet] = useState(null)
   const [showEstimate, setShowEstimate] = useState(false)
+  const [sellingVoucher, setSellingVoucher] = useState(false)
   const searchBox = useRef(null)
 
   // The shell already loads these and shows connection state in the header; asking again here
@@ -954,6 +956,7 @@ export default function Till() {
           {...walletProps}
           upiQr={!!(shop?.inventoryConnected && shop?.shop?.upiQrEnabled)}
           upi={{ upiId: shop?.shop?.upiId, name: shop?.shop?.shopName, note: 'Bill at the counter' }}
+          vouchers={!!shop?.inventoryConnected && navigator.onLine}
           onCancel={() => { setPaying(false); refocus() }}
           onConfirm={takePayment}
         />
@@ -994,6 +997,12 @@ export default function Till() {
             )}
             {lines.length > 0 && <MoreItem label="Park this bill" hint="Put it aside and bill the next customer." onClick={parkCurrent} />}
             <MoreItem label="Parked bills" hint="Bring back a bill that was put aside." onClick={() => { setShowMore(false); setShowHeld(true) }} />
+            {shop?.inventoryConnected && (
+              <>
+                <div style={s.moreGroup}>Gift vouchers</div>
+                <MoreItem label="Sell a gift voucher" hint="A code for an amount, spent later at any till of the shop." onClick={() => { setShowMore(false); setSellingVoucher(true) }} />
+              </>
+            )}
             {lines.length > 0 && (
               <div style={s.moreDanger}>
                 <MoreItem danger label="Clear bill" hint="Take everything off. Nothing is sold."
@@ -1010,6 +1019,10 @@ export default function Till() {
             )}
           </div>
         </div>
+      )}
+
+      {sellingVoucher && (
+        <VoucherSale shop={shop?.shop} counterId={shop?.counters?.[0]?.id} onClose={() => { setSellingVoucher(false); refocus() }} />
       )}
 
       {showEstimate && (

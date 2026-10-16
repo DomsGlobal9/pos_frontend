@@ -17,7 +17,7 @@ export const SECTIONS = [
     pages: ['make-a-bill', 'customers', 'served-by', 'discounts-and-offers', 'park-a-bill'] },
   { id: 'payments', title: 'Payments', icon: 'Wallet',
     blurb: 'Every way a customer can pay: cash, UPI, any card machine, points, store credit, split.',
-    pages: ['how-customers-can-pay', 'upi', 'card-machine', 'payments-to-check', 'points-and-store-credit'] },
+    pages: ['how-customers-can-pay', 'upi', 'card-machine', 'payments-to-check', 'points-and-store-credit', 'gift-vouchers'] },
   { id: 'orders', title: 'Orders and credit', icon: 'ClipboardList',
     blurb: 'Kept for the customer, sold on credit (udhaar), collecting what is owed, writing it off.',
     pages: ['kept-orders', 'sell-on-credit', 'collect-what-is-owed', 'write-off'] },

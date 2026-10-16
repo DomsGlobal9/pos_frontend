@@ -3,7 +3,7 @@ import useEscape from '../lib/useEscape.js'
 import { rupees } from '../lib/api.js'
 import UpiQr from './UpiQr.jsx'
 import RazorpayQr from './RazorpayQr.jsx'
-import { closeUpiQr } from '../lib/api.js'
+import { closeUpiQr, checkVoucher, messageFor } from '../lib/api.js'
 import toast from 'react-hot-toast'
 
 /**
@@ -31,7 +31,7 @@ import toast from 'react-hot-toast'
  *   ADVANCE  keeping goods for a customer: anything from nothing up to the bill (POS-ORD-002)
  *   COLLECT  money coming in later against a kept order: something, never more than is owed
  */
-const LABELS = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', POINTS: 'Points', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque' }
+const LABELS = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', POINTS: 'Points', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque', VOUCHER: 'Gift voucher' }
 // Counted only when the bank says so (10 Oct): always waits under Payment checks, never "confirmed" here.
 const CLEARS_LATER = ['BANK_TRANSFER', 'CHEQUE']
 const NEEDS_REFERENCE = ['UPI', 'CARD']
@@ -46,7 +46,7 @@ const COPY = {
 // Credit and advance take the same rules: whatever is paid now, nothing included, up to the bill.
 const advanceLike = (mode) => mode === 'ADVANCE' || mode === 'CREDIT'
 
-export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT', creditPaise = 0, heading, confirmLabel, upi, points = null, walletNote = null, upiQr = false }) {
+export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onConfirm, mode = 'EXACT', creditPaise = 0, heading, confirmLabel, upi, points = null, walletNote = null, upiQr = false, vouchers = false }) {
   // Contract §10. Points are offered only when Inventory says some can be used on THIS bill; the
   // server holds them in Inventory at Complete, so this figure is a guide and Inventory has the last word.
   const pointStep = points?.pointValuePaise ?? 100
@@ -56,7 +56,9 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
   const methods = [
     ...(enabledMethods?.length ? enabledMethods : ['CASH', 'UPI', 'CARD']).filter(m => LABELS[m] && m !== 'CREDIT'),
     ...(creditPaise > 0 ? ['CREDIT'] : []),
-    ...(pointsUsable > 0 ? ['POINTS'] : [])
+    ...(pointsUsable > 0 ? ['POINTS'] : []),
+    // Gift vouchers (16 Oct): held in Inventory, so only where the till is connected and online.
+    ...(vouchers ? ['VOUCHER'] : [])
   ]
   const copy = COPY[mode] ?? COPY.EXACT
 
@@ -134,6 +136,23 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
   }
 
   const removeRow = (index) => setRows(current => current.filter((_, i) => i !== index))
+
+  // A gift voucher is checked with Inventory before it is taken: what it is good for on this bill.
+  async function checkCode(index) {
+    const row = rows[index]
+    update(index, { voucherBusy: true, voucherCheck: null })
+    try {
+      const v = await checkVoucher(row.voucherCode, totalPaise)
+      const room = Math.max(0, remaining + (toPaise(row.amount) ?? 0))
+      update(index, {
+        voucherBusy: false, voucherCheck: v,
+        ...(v.usablePaise > 0 ? { amount: String(Math.min(v.usablePaise, room) / 100), voucherCode: v.code } : {})
+      })
+    } catch (err) {
+      update(index, { voucherBusy: false })
+      toast.error(messageFor(err))
+    }
+  }
 
   /*
    * A Razorpay QR the customer has just paid completes the sale by itself when nothing else is left
@@ -353,6 +372,30 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
               </>
             )}
 
+            {row.method === 'VOUCHER' && (
+              <>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'end' }}>
+                  <label style={{ ...s.label, flex: 1 }}>
+                    Voucher code
+                    <input value={row.voucherCode} placeholder="GV-7KQ2-9XMA" aria-label="Gift voucher code" autoCapitalize="characters"
+                      onChange={e => update(index, { voucherCode: e.target.value.toUpperCase().slice(0, 14), voucherCheck: null })} />
+                  </label>
+                  <button type="button" onClick={() => checkCode(index)} disabled={row.voucherBusy || row.voucherCode.replace(/[^A-Z0-9]/g, '').length < 8}>
+                    {row.voucherBusy ? 'Checking…' : 'Check'}
+                  </button>
+                </div>
+                {row.voucherCheck && (row.voucherCheck.usablePaise > 0 ? (
+                  <p style={s.muted} role="status">
+                    {rupees(row.voucherCheck.balancePaise)} on it{row.voucherCheck.buyerName ? `, from ${row.voucherCheck.buyerName}` : ''}
+                    {row.voucherCheck.expiresAt ? ` · valid till ${new Date(row.voucherCheck.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}.
+                    {' '}Held in Inventory when the sale is saved.
+                  </p>
+                ) : (
+                  <p style={s.problem} role="status">{row.voucherCheck.reason ?? 'This voucher cannot be used.'}</p>
+                ))}
+              </>
+            )}
+
             {row.method === 'CHEQUE' && (
               <div style={{ display: 'flex', gap: 8 }}>
                 <label style={{ ...s.label, flex: 1 }}>
@@ -418,7 +461,10 @@ const blank = (method, amountPaise) => ({
   chequeNo: '',
   bank: '',
   tendered: '',
-  unconfirmed: false
+  unconfirmed: false,
+  voucherCode: '',
+  voucherCheck: null,
+  voucherBusy: false
 })
 
 /** One sentence naming what is wrong with this row, or null. Mirrors the server's rules so the
@@ -432,6 +478,12 @@ function rowProblem(row) {
     return null
   }
   if (row.method === 'CREDIT' || row.method === 'POINTS') return null
+  if (row.method === 'VOUCHER') {
+    if (!row.voucherCheck) return 'Type the voucher code and press Check.'
+    if (row.voucherCheck.usablePaise <= 0) return row.voucherCheck.reason ?? 'This voucher cannot be used.'
+    if (amount > row.voucherCheck.usablePaise) return `Only ${rupees(row.voucherCheck.usablePaise)} of this voucher can be used.`
+    return null
+  }
   if (row.method === 'CHEQUE') {
     if (!/^\d{6}$/.test(row.chequeNo ?? '')) return 'Type the 6-digit cheque number.'
     if ((row.bank ?? '').trim().length < 2) return 'Type the bank the cheque is drawn on.'
@@ -474,6 +526,8 @@ function toPayment(row, pointStep = 100) {
     // "004512 / HDFC": Inventory keeps letters, digits, spaces and . / @ _ - only.
     ...(row.method === 'CHEQUE' ? { reference: `${row.chequeNo} / ${row.bank.trim()}` } : {}),
     ...(row.method === 'BANK_TRANSFER' && row.reference ? { reference: row.reference } : {}),
+    // The code as Inventory confirmed it on Check.
+    ...(row.method === 'VOUCHER' ? { reference: row.voucherCheck?.code ?? row.voucherCode } : {}),
     ...(NEEDS_REFERENCE.includes(row.method) && row.unconfirmed ? { unconfirmed: true } : {})
   }
 }

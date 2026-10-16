@@ -16,7 +16,7 @@ import { askYesNo, askText } from '../components/Ask.jsx'
  * lands on the day afterwards shows on its own "since closing" line rather than quietly changing
  * the closed numbers.
  */
-const METHOD = { CASH: 'Cash', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', EXCHANGE: 'Exchange credit', STORE_CREDIT: 'Store credit', POINTS: 'Points' }
+const METHOD = { CASH: 'Cash', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', EXCHANGE: 'Exchange credit', STORE_CREDIT: 'Store credit', POINTS: 'Points', VOUCHER: 'Gift voucher' }
 
 const today = () => {
   const d = new Date()
@@ -180,6 +180,17 @@ export default function DayClose() {
             {Object.entries(f.paidOut).map(([m, v]) => <Line key={m} label={METHOD[m] ?? m} value={-v} />)}
           </section>
 
+          {/* Gift vouchers (16 Oct): money in that the shop owes in goods -- not sales, not profit. */}
+          {f.vouchers && (f.vouchers.soldCount > 0 || f.vouchers.usedPaise > 0) && (
+            <section style={s.block}>
+              <h2 style={s.heading}>Gift vouchers</h2>
+              {f.vouchers.soldCount > 0 && <Line label={`Sold (${f.vouchers.soldCount})`} value={f.vouchers.soldPaise} />}
+              {Object.entries(f.vouchers.soldByMethod).map(([m, v]) => <Line key={m} label={`  paid by ${(METHOD[m] ?? m).toLowerCase()}`} value={v} muted />)}
+              {f.vouchers.usedPaise > 0 && <Line label="Used on bills today" value={f.vouchers.usedPaise} />}
+              <p style={s.muted}>Not sales: the shop owes these in goods. GST is on the goods when a voucher is used.</p>
+            </section>
+          )}
+
           <section style={s.block}>
             <h2 style={s.heading}>Cash</h2>
             <Line label="Floats counted in" value={f.cash.openingPaise} />
@@ -187,6 +198,7 @@ export default function DayClose() {
             <Line label="Cash refunds" value={-f.cash.refundsPaise} />
             <Line label="Cash in" value={f.cash.inPaise} />
             <Line label="Cash out" value={-f.cash.outPaise} />
+            {(f.cash.voucherCashPaise ?? 0) > 0 && <Line label="Cash for gift vouchers" value={f.cash.voucherCashPaise} />}
             <Line label="Should be in the drawers" value={f.cash.positionPaise} strong />
             {f.cash.unattributedPaise !== 0 && (
               <p style={s.warn}>{rupees(f.cash.unattributedPaise)} of that was taken with no shift open, so no drawer counts it.</p>

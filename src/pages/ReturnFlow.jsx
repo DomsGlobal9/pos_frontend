@@ -68,7 +68,7 @@ function ExchangePayment({ shop, owner, difference, onCancel, onConfirm }) {
 }
 
 const REASONS = ['Wrong size', 'Damaged', 'Colour not as expected', 'Changed mind']
-const MONEY = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', STORE_CREDIT: 'Store credit' }
+const MONEY = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', STORE_CREDIT: 'Store credit', VOUCHER: 'Back onto the gift voucher' }
 
 export default function ReturnFlow({ mode = 'RETURN' }) {
   const exchange = mode === 'EXCHANGE'
@@ -185,7 +185,11 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
       if (!method) return exchange ? `Choose how to give back ${rupees(giveBack)}.` : 'Choose how the money goes back.'
       if ((method === 'UPI' || method === 'CARD') && !reference.trim()) return `Add the ${MONEY[method]} refund reference.`
       if (method === 'STORE_CREDIT' && !owner) return 'Add the customer, so the credit has somewhere to go.'
-      if (method !== 'STORE_CREDIT' && giveBack > info.moneyRefundablePaise) {
+      // Back onto the voucher(s) that paid (16 Oct): up to what they paid, never cash.
+      if (method === 'VOUCHER' && giveBack > (info.voucherRefundablePaise ?? 0)) {
+        return `Only ${rupees(info.voucherRefundablePaise ?? 0)} of this bill was paid by gift voucher. Give the rest as store credit, or return less.`
+      }
+      if (method !== 'STORE_CREDIT' && method !== 'VOUCHER' && giveBack > info.moneyRefundablePaise) {
         return info.moneyRefundablePaise === 0
           ? 'Nothing on this bill was paid in money. Give it as store credit.'
           : `Only ${rupees(info.moneyRefundablePaise)} of this bill was paid in money. Give it as store credit.`
@@ -350,7 +354,10 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
           ? <p style={s.muted}>Goes to {owner.name || owner.phoneMasked || owner.phoneDisplay}, who has {rupees(owner.storeCreditPaise ?? 0)} now.</p>
           : <button type="button" onClick={() => setAskCustomer(true)}>+ Add customer for the credit</button>
       )}
-      {method && method !== 'STORE_CREDIT' && info.moneyRefundablePaise < info.totalPaise && (
+      {method === 'VOUCHER' && (
+        <p style={s.muted}>It goes back onto the voucher that paid this bill, even if it has expired since. Never as cash.</p>
+      )}
+      {method && method !== 'STORE_CREDIT' && method !== 'VOUCHER' && info.moneyRefundablePaise < info.totalPaise && (
         <p style={s.muted}>Up to {rupees(info.moneyRefundablePaise)} of this bill can go back as money.</p>
       )}
     </section>

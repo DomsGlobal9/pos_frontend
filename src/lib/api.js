@@ -417,6 +417,18 @@ export async function closeUpiQr(qrId) {
   return data.data
 }
 
+/** Gift vouchers, held in Inventory (16 Oct). A wrong code is an answer, not an error. */
+export async function checkVoucher(code, billPaise) {
+  const { data } = await api.get(`/vouchers/${encodeURIComponent(code)}`, { params: billPaise != null ? { billPaise } : {} })
+  return data.data
+}
+
+/** Sell one: the money is taken first, then Inventory makes the code. The same key gives the same voucher. */
+export async function sellVoucher(body) {
+  const { data } = await api.post('/vouchers', body, { timeout: 30_000 })
+  return data.data
+}
+
 export async function loadWallet(customerId, billPaise) {
   const { data } = await api.get('/sales/wallet', { params: { customerId, billPaise } })
   return data.data
