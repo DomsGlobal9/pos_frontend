@@ -997,7 +997,8 @@ export default function Till() {
             )}
             {lines.length > 0 && <MoreItem label="Park this bill" hint="Put it aside and bill the next customer." onClick={parkCurrent} />}
             <MoreItem label="Parked bills" hint="Bring back a bill that was put aside." onClick={() => { setShowMore(false); setShowHeld(true) }} />
-            {shop?.inventoryConnected && (
+            {/* Only where the shop sells them (19 Oct): Inventory's switch, or not said yet (an older Inventory). */}
+            {shop?.inventoryConnected && shop?.shop?.giftVouchers?.enabled !== false && (
               <>
                 <div style={s.moreGroup}>Gift vouchers</div>
                 <MoreItem label="Sell a gift voucher" hint="A code for an amount, spent later at any till of the shop." onClick={() => { setShowMore(false); setSellingVoucher(true) }} />
