@@ -25,7 +25,14 @@ export default function VoucherSale({ shop, counterId, onClose }) {
   useEscape(() => { if (step !== 'pay') onClose() })
 
   const paise = Math.round(Number(String(amount).replace(/[₹,\s]/g, '')) * 100)
-  const amountOk = Number.isFinite(paise) && paise >= 100
+  // The shop's own limits, from Inventory (19 Oct): said before any money is taken, not after.
+  const min = shop?.giftVouchers?.minPaise ?? 100
+  const max = shop?.giftVouchers?.maxPaise ?? null
+  const limitProblem = !Number.isFinite(paise) || !amount ? null
+    : paise < min ? `A voucher here is at least ${rupees(min)}.`
+    : max && paise > max ? `A voucher here is at most ${rupees(max)}.`
+    : null
+  const amountOk = Number.isFinite(paise) && paise >= 100 && !limitProblem
 
   useEffect(() => {
     if (sold?.code) QRCode.toDataURL(sold.code, { margin: 1, width: 200, errorCorrectionLevel: 'M' }).then(setQr).catch(() => setQr(null))
@@ -80,6 +87,7 @@ export default function VoucherSale({ shop, counterId, onClose }) {
               <input autoFocus inputMode="decimal" value={amount} placeholder="5000" aria-label="Voucher amount"
                 onChange={e => setAmount(e.target.value.replace(/[^0-9.,₹]/g, ''))} />
             </label>
+            {limitProblem && <p style={s.problem} role="status">{limitProblem}</p>}
             <label style={s.label}>
               From (optional)
               <input value={name} placeholder="The buyer's name" aria-label="Buyer name" onChange={e => setName(e.target.value.slice(0, 80))} />
@@ -128,5 +136,6 @@ const s = {
   primary: { background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' },
   slip: { border: '1px dashed var(--line)', borderRadius: 10, padding: 12, display: 'grid', gap: 4, background: '#fff', color: '#111' },
   code: { textAlign: 'center', fontFamily: 'ui-monospace, monospace', fontSize: 20, fontWeight: 800, letterSpacing: 2, margin: '6px 0' },
-  change: { margin: 0, fontWeight: 700 }
+  change: { margin: 0, fontWeight: 700 },
+  problem: { margin: 0, color: 'var(--bad)', fontSize: 13 }
 }
