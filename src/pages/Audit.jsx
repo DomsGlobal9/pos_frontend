@@ -59,7 +59,13 @@ const LABEL = {
   'webhook.created': 'Updates address added',
   'webhook.updated': 'Updates address changed',
   'webhook.deleted': 'Updates address removed',
-  'webhook.resent': 'Update sent again'
+  'webhook.resent': 'Update sent again',
+  // 22 Oct: recorded, but shown raw until now.
+  'voucher.sold': 'Gift voucher sold',
+  'customer.updated': 'Customer details changed',
+  'item.added': 'Item added',
+  'item.changed': 'Item changed',
+  'shop.gst_registration_set': 'GST registration changed'
 }
 
 export default function Audit() {
@@ -89,6 +95,8 @@ export default function Audit() {
                 {row.actorName ?? 'Someone'}
                 {d.approvedBy ? ` asked · ${d.approvedBy} approved` : d.byOwnAuthority ? ' on their own authority' : ''}
                 {d.discountPaise ? ` · ${rupees(d.discountPaise)} off` : ''}
+                {!d.discountPaise && d.amountPaise ? ` · ${rupees(d.amountPaise)}` : ''}
+                {d.fields?.includes('creditLimitPaise') ? ` · credit allowed ${d.creditLimitPaise === null ? 'none' : rupees(d.creditLimitPaise)}` : ''}
                 {d.reason ? ` · "${d.reason}"` : ''}
                 {d.lockedForSeconds ? ` · ${d.wrongTries} wrong PINs typed, no approvals for ${Math.round(d.lockedForSeconds / 60)} min` : ''}
               </div>
