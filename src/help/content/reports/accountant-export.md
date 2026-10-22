@@ -28,7 +28,8 @@ keywords: accountant export excel csv gst return gstr-1 hsn summary b2b b2c down
 - **Gift vouchers** — vouchers sold at these tills (and how they were paid), used on bills, and returned
   onto vouchers. They are not sales, so they are not in the other sheets: the shop owes them in goods, and
   GST is charged on the goods when a voucher is used. Vouchers work at every store of the shop, so what is
-  **still owed** on them is in Inventory → Reports → Day Book (Gift vouchers).
+  **still owed** on them is in Inventory → Settings → Money → Day Book (Gift vouchers), and voucher by
+  voucher in Customers → Gift vouchers.
 
 :::note Only the till's bills
 The till's bills are the GST record for the counter. Bills made elsewhere in Inventory are in Inventory's
