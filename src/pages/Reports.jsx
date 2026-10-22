@@ -14,7 +14,7 @@ import { Difference } from './Shift.jsx'
  *
  * A cashier sees their own sales today and nothing about anyone else's (MASTER §8, "limited").
  */
-const METHOD = { CASH: 'Cash', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', EXCHANGE: 'Exchange credit', STORE_CREDIT: 'Store credit', POINTS: 'Points' }
+const METHOD = { CASH: 'Cash', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque', UPI: 'UPI', CARD: 'Card', CREDIT: 'Store credit', EXCHANGE: 'Exchange credit', STORE_CREDIT: 'Store credit', POINTS: 'Points', VOUCHER: 'Gift voucher' }
 
 const pad = (n) => String(n).padStart(2, '0')
 const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -92,6 +92,17 @@ export default function Reports() {
 
           <div style={wide ? s.twoCol : s.oneCol}>
             <div style={s.col}>
+              {/* Gift vouchers (22 Oct): money in that the shop owes in goods -- not sales. */}
+              {r.vouchers && (r.vouchers.count > 0 || r.vouchers.usedPaise > 0 || r.vouchers.returnedOntoPaise > 0) && (
+                <Card title="Gift vouchers">
+                  <Bars rows={[
+                    ...(r.vouchers.count > 0 ? Object.entries(r.vouchers.byMethod).map(([m, v]) => ({ label: `Sold · ${METHOD[m] ?? m}`, value: v, note: '' })) : []),
+                    ...(r.vouchers.usedPaise > 0 ? [{ label: 'Used on bills', value: r.vouchers.usedPaise, note: '' }] : []),
+                    ...(r.vouchers.returnedOntoPaise > 0 ? [{ label: 'Returned onto vouchers', value: r.vouchers.returnedOntoPaise, note: '' }] : [])
+                  ]} empty="None." />
+                  <div style={s.subhead}>{r.vouchers.count} sold for {rupees(r.vouchers.totalPaise)}. Not sales: the shop owes these in goods, and GST is on the goods when a voucher is used.</div>
+                </Card>
+              )}
               {/* POS-RPT-002 */}
               <Card title="How it was paid">
                 <Bars rows={r.paidIn.map(p => ({ label: METHOD[p.method] ?? p.method, value: p.amountPaise, note: `${p.count}` }))}
