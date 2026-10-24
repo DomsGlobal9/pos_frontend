@@ -3,6 +3,7 @@ import useEscape from '../lib/useEscape.js'
 import { rupees } from '../lib/api.js'
 import UpiQr from './UpiQr.jsx'
 import RazorpayQr from './RazorpayQr.jsx'
+import CardMachinePay, { cancelOnce } from './CardMachinePay.jsx'
 import { closeUpiQr, checkVoucher, messageFor } from '../lib/api.js'
 import toast from 'react-hot-toast'
 
@@ -163,6 +164,12 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
     if (qrJustPaid && canComplete && !saving) confirm()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qrJustPaid])
+  // The same for a card the machine has just approved (24 Oct).
+  const cardJustApproved = rows.some(r => r.cardRequestId && r.cardApproved)
+  useEffect(() => {
+    if (cardJustApproved && canComplete && !saving) confirm()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardJustApproved])
 
   /*
    * Leaving while a QR is up: close it first. If the customer paid in that very moment, the panel stays
@@ -175,6 +182,13 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
         const s = await closeUpiQr(row.qrId).catch(() => null)
         if (s?.status === 'PAID') {
           update(index, { qrPaid: true, reference: s.utr ?? s.paymentId ?? '' })
+          return
+        }
+      }
+      if (row.cardRequestId && !row.cardApproved && !row.unconfirmed) {
+        const s = await cancelOnce(row.cardRequestId).catch(() => null)
+        if (s?.status === 'APPROVED') {
+          update(index, { cardApproved: true, cardLast4: s.last4 ?? '', approvalCode: s.approvalCode ?? '' })
           return
         }
       }
@@ -312,6 +326,15 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
               </p>
             )}
 
+            {/* 24 Oct: the shop's card machine, set up in Settings. Typing the slip stays for every other machine. */}
+            {row.method === 'CARD' && (!row.unconfirmed || row.cardRequestId) && (
+              <CardMachinePay
+                key={`card-${index}`}
+                amountPaise={toPaise(row.amount) ?? 0}
+                onChange={c => update(index, c ? { cardRequestId: c.cardRequestId, cardApproved: c.approved, ...(c.approved ? { cardLast4: c.last4 ?? '', approvalCode: c.approvalCode ?? '' } : {}) } : { cardRequestId: null, cardApproved: false })}
+              />
+            )}
+
             {NEEDS_REFERENCE.includes(row.method) && (
               <>
                 {/* PLAN-payments Step 1: what a real reference looks like, so a made-up one is caught here. */}
@@ -327,7 +350,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
                       aria-label="UPI reference"
                     />
                   </label>
-                ) : (
+                ) : row.cardRequestId ? null : (
                   <div style={{ display: 'flex', gap: 8 }}>
                     <label style={{ ...s.label, flex: 1 }}>
                       Card last 4
@@ -456,6 +479,8 @@ const blank = (method, amountPaise) => ({
   reference: '',
   qrId: null,
   qrPaid: false,
+  cardRequestId: null,
+  cardApproved: false,
   cardLast4: '',
   approvalCode: '',
   chequeNo: '',
@@ -502,6 +527,9 @@ function rowProblem(row) {
     if (!/^\d{12}$/.test(utr)) return 'A UPI reference is the 12-digit UTR in the customer\'s UPI app.'
     return null
   }
+  if (row.method === 'CARD' && row.cardRequestId) {
+    return row.cardApproved ? null : 'Waiting for the card on the machine — or tick "not confirmed yet" and let them go.'
+  }
   if (row.method === 'CARD') {
     if (!/^\d{4}$/.test(row.cardLast4)) return 'Type the card\'s last 4 digits from the slip, or tick "not confirmed yet".'
     if (!/^[A-Z0-9]{6}$/.test(row.approvalCode)) return 'Type the 6-character approval code from the slip.'
@@ -522,7 +550,9 @@ function toPayment(row, pointStep = 100) {
     // A QR payment sends only its QR: the server asks Razorpay (through Inventory) what was paid.
     ...(row.method === 'UPI' && row.qrId ? { qrId: row.qrId } : {}),
     ...(row.method === 'UPI' && !row.qrId && row.reference.trim() ? { reference: row.reference.replace(/\s+/g, '') } : {}),
-    ...(row.method === 'CARD' && !row.unconfirmed ? { cardLast4: row.cardLast4, approvalCode: row.approvalCode } : {}),
+    // A card sent to the machine sends only its request: the server asks the machine what was paid.
+    ...(row.method === 'CARD' && row.cardRequestId ? { cardRequestId: row.cardRequestId } : {}),
+    ...(row.method === 'CARD' && !row.cardRequestId && !row.unconfirmed ? { cardLast4: row.cardLast4, approvalCode: row.approvalCode } : {}),
     // "004512 / HDFC": Inventory keeps letters, digits, spaces and . / @ _ - only.
     ...(row.method === 'CHEQUE' ? { reference: `${row.chequeNo} / ${row.bank.trim()}` } : {}),
     ...(row.method === 'BANK_TRANSFER' && row.reference ? { reference: row.reference } : {}),

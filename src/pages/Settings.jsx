@@ -3,6 +3,7 @@ import { Link, useOutletContext } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { QrCode, Boxes, Monitor, Image as ImageIcon, Receipt, Wallet, MessageCircle } from 'lucide-react'
+import CardMachinesSettings from '../components/CardMachinesSettings.jsx'
 import { setShopUpi, setShopLogo, setShopGst, setShopPaymentMethods, messageFor } from '../lib/api.js'
 
 /**
@@ -117,6 +118,8 @@ export default function Settings() {
       </section>
 
       <WhatsAppSettings shop={shop} />
+
+      <CardMachinesSettings owner={owner} counters={shop?.counters ?? []} />
 
       <section style={s.card} aria-label="Ways customers pay">
         <div style={s.head}><span style={s.icon}><Wallet size={18} aria-hidden="true" /></span><b>Ways customers pay</b></div>

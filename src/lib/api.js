@@ -417,6 +417,33 @@ export async function closeUpiQr(qrId) {
   return data.data
 }
 
+/** Card machines the till sends the amount to (24 Oct): Pine Labs Cloud, Razorpay POS. Never a provider key. */
+export async function loadCardMachines(all = false) {
+  const { data } = await api.get('/card-machines', { params: all ? { all: 1 } : {} })
+  return data.data
+}
+export async function addCardMachine(body) {
+  const { data } = await api.post('/card-machines', body)
+  return data.data
+}
+export async function changeCardMachine(id, body) {
+  const { data } = await api.patch(`/card-machines/${encodeURIComponent(id)}`, body)
+  return data.data
+}
+/** Always 200: { ok: true, requestId, status } or { ok: false, reason } -- then the slip is typed. */
+export async function startCardPayment(machineId, amountPaise, idempotencyKey) {
+  const { data } = await api.post('/card-machines/requests', { machineId, amountPaise, idempotencyKey })
+  return data.data
+}
+export async function loadCardPayment(requestId) {
+  const { data } = await api.get(`/card-machines/requests/${encodeURIComponent(requestId)}`)
+  return data.data
+}
+export async function cancelCardPayment(requestId) {
+  const { data } = await api.post(`/card-machines/requests/${encodeURIComponent(requestId)}/cancel`, {})
+  return data.data
+}
+
 /** Gift vouchers, held in Inventory (16 Oct). A wrong code is an answer, not an error. */
 export async function checkVoucher(code, billPaise) {
   const { data } = await api.get(`/vouchers/${encodeURIComponent(code)}`, { params: billPaise != null ? { billPaise } : {} })
