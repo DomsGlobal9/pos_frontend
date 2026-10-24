@@ -62,6 +62,8 @@ const LABEL = {
   'webhook.resent': 'Update sent again',
   // 22 Oct: recorded, but shown raw until now.
   'voucher.sold': 'Gift voucher sold',
+  'card_machine.added': 'Card machine added',
+  'card_machine.changed': 'Card machine changed',
   'customer.updated': 'Customer details changed',
   'item.added': 'Item added',
   'item.changed': 'Item changed',
