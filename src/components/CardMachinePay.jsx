@@ -14,6 +14,13 @@ import { newOnceKey } from '../lib/basket.js'
  */
 /** Cancel a request on its machine once: Back and this row closing would otherwise both ask. */
 const cancelled = new Map()
+/*
+ * A request on a bill being saved is that bill's: the box closing must not cancel it on the machine, or a
+ * customer still putting in their PIN is cut off and the payment can never be confirmed (found by the
+ * end-to-end run, 24 Oct). The sweep on the server settles it when the machine approves.
+ */
+const kept = new Set()
+export function keepRequest(requestId) { kept.add(requestId) }
 export function cancelOnce(requestId) {
   if (!cancelled.has(requestId)) cancelled.set(requestId, cancelCardPayment(requestId).catch(err => { cancelled.delete(requestId); throw err }))
   return cancelled.get(requestId)
@@ -40,7 +47,7 @@ export default function CardMachinePay({ amountPaise, counterId, onChange }) {
 
   // The row goes away with an amount still on the machine: take it off.
   // ponytail: a card approved in that same second is still caught by the server's sweep, not lost.
-  useEffect(() => () => { if (live.current && stateRef.current === 'waiting') cancelOnce(live.current).catch(() => {}) }, [])
+  useEffect(() => () => { if (live.current && stateRef.current === 'waiting' && !kept.has(live.current)) cancelOnce(live.current).catch(() => {}) }, [])
 
   useEffect(() => {
     if (state !== 'waiting' || !req) return

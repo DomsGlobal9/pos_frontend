@@ -3,7 +3,7 @@ import useEscape from '../lib/useEscape.js'
 import { rupees } from '../lib/api.js'
 import UpiQr from './UpiQr.jsx'
 import RazorpayQr from './RazorpayQr.jsx'
-import CardMachinePay, { cancelOnce } from './CardMachinePay.jsx'
+import CardMachinePay, { cancelOnce, keepRequest } from './CardMachinePay.jsx'
 import { closeUpiQr, checkVoucher, messageFor } from '../lib/api.js'
 import toast from 'react-hot-toast'
 
@@ -185,7 +185,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
           return
         }
       }
-      if (row.cardRequestId && !row.cardApproved && !row.unconfirmed) {
+      if (row.cardRequestId && !row.cardApproved) {
         const s = await cancelOnce(row.cardRequestId).catch(() => null)
         if (s?.status === 'APPROVED') {
           update(index, { cardApproved: true, cardLast4: s.last4 ?? '', approvalCode: s.approvalCode ?? '' })
@@ -200,6 +200,8 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
     event?.preventDefault()
     if (!canComplete) return
     setSaving(true)
+    // Saved with the bill: left on the machine for the customer, not cancelled as the box closes.
+    for (const row of rows) if (row.cardRequestId) keepRequest(row.cardRequestId)
     try {
       await onConfirm(free ? [] : counted.map(row => toPayment(row, pointStep)))
     } finally {
