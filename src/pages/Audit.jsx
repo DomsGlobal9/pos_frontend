@@ -67,6 +67,7 @@ const LABEL = {
   'stock.received': 'Stock received',
   'stock.adjusted': 'Stock adjusted',
   'stock.counted': 'Stock counted',
+  'shop.details_set': 'Shop details changed',
   'customer.updated': 'Customer details changed',
   'item.added': 'Item added',
   'item.changed': 'Item changed',

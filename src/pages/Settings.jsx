@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { QrCode, Boxes, Monitor, Image as ImageIcon, Receipt, Wallet, MessageCircle } from 'lucide-react'
 import CardMachinesSettings from '../components/CardMachinesSettings.jsx'
+import ShopDetailsSettings from '../components/ShopDetailsSettings.jsx'
 import { setShopUpi, setShopLogo, setShopGst, setShopPaymentMethods, messageFor } from '../lib/api.js'
 
 /**
@@ -99,6 +100,8 @@ export default function Settings() {
     <div style={s.page}>
       <h1 style={{ margin: 0 }}>Settings</h1>
 
+      <ShopDetailsSettings shop={shop} owner={owner} connected={connected} />
+
       <section style={s.card} aria-label="UPI payments">
         <div style={s.head}><span style={s.icon}><QrCode size={18} aria-hidden="true" /></span><b>UPI payments</b></div>
         <p style={s.muted}>
@@ -193,7 +196,7 @@ export default function Settings() {
       <p style={s.muted}>
         {connected
           ? 'Shop name, address, phone, GSTIN, receipt footer and discount limits come from Inventory (Settings → Name, logo and bill details), with the next item refresh. Invoice numbering is set up by ScaleEzy.'
-          : 'Shop name, GSTIN, address, invoice numbering and discount limits are set up by ScaleEzy for now.'}
+          : 'Invoice numbering is set up by ScaleEzy, so a year’s bills stay one unbroken series.'}
       </p>
     </div>
   )

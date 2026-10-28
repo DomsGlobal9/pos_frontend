@@ -22,7 +22,7 @@ import StockPanel from '../components/StockPanel.jsx'
  * place that hides them.
  */
 
-const EMPTY = { code: '', name: '', price: '', gst: '5', hsn: '', barcode: '', qty: '', colour: '', size: '' }
+const EMPTY = { code: '', name: '', price: '', gst: '5', hsn: '', barcode: '', qty: '', colour: '', size: '', group: '', active: true }
 
 export default function Items() {
   const [q, setQ] = useState('')
@@ -131,6 +131,14 @@ export default function Items() {
           </Field>
           <Field label="Colour"><input value={form.colour} onChange={e => setForm({ ...form, colour: e.target.value })} /></Field>
           <Field label="Size"><input value={form.size} onChange={e => setForm({ ...form, size: e.target.value })} /></Field>
+          {/* 28 Oct: before, only a spreadsheet could group a design's colours and sizes or take an item off sale. */}
+          <Field label="Group" hint="The same word for every colour and size of one design, like KANCHI-201. The till then offers them together.">
+            <input value={form.group} onChange={e => setForm({ ...form, group: e.target.value })} />
+          </Field>
+          <label style={s.check}>
+            <input type="checkbox" checked={form.active !== false} onChange={e => setForm({ ...form, active: e.target.checked })} />
+            On sale <span style={s.hint}>Untick to stop selling it. It stays here, and its bills keep it.</span>
+          </label>
           <div style={s.actions}>
             <button type="button" onClick={() => setForm(null)}>Cancel</button>
             <button type="submit" style={s.primary} disabled={busy}>{busy ? 'Saving…' : 'Save item'}</button>
@@ -162,7 +170,7 @@ export default function Items() {
                 <div style={s.detail}>
                   <b>{i.name}</b>
                   <span style={s.muted}>
-                    {[i.code, i.colour, i.size].filter(Boolean).join(' · ')}
+                    {[i.code, i.colour, i.size, i.group ? `group ${i.group}` : null].filter(Boolean).join(' · ')}
                     {i.hsn ? ` · HSN ${i.hsn}` : ''}
                     {i.barcode ? ` · ${i.barcode}` : ''}
                   </span>
@@ -180,7 +188,7 @@ export default function Items() {
                     ...EMPTY, ...i,
                     price: String(i.pricePaise / 100), gst: String(i.taxRate),
                     hsn: i.hsn ?? '', barcode: i.barcode ?? '', qty: i.qty ?? '',
-                    colour: i.colour ?? '', size: i.size ?? ''
+                    colour: i.colour ?? '', size: i.size ?? '', group: i.group ?? '', active: i.active !== false
                   })}
                 >
                   Change
@@ -236,6 +244,7 @@ const s = {
   detail: { display: 'grid', gap: 2, flex: 1, minWidth: 180 },
   right: { display: 'grid', justifyItems: 'end', gap: 2 },
   small: { minHeight: 'var(--tap)' },
+  check: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, flexWrap: 'wrap' },
   filters: { display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' },
   on: { background: 'var(--accent)', borderColor: 'var(--accent)', color: '#fff' },
   link: { border: 'none', background: 'none', padding: 0, minHeight: 0, color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' }

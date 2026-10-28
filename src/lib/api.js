@@ -417,6 +417,12 @@ export async function closeUpiQr(qrId) {
   return data.data
 }
 
+/** The shop's own details, for a shop without Inventory (28 Oct). Only the fields sent change. Owner only. */
+export async function setShopDetails(body) {
+  const { data } = await api.put('/shop/details', body)
+  return data.data
+}
+
 /** Card machines the till sends the amount to (24 Oct): Pine Labs Cloud, Razorpay POS. Never a provider key. */
 export async function loadCardMachines(all = false) {
   const { data } = await api.get('/card-machines', { params: all ? { all: 1 } : {} })

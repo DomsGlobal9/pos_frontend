@@ -1,14 +1,29 @@
 ---
 title: Settings
-summary: Which ways customers pay (cash, UPI, card), the shop's UPI ID for the payment QR, its GST registration when the till is not linked to Inventory, and the logo on the bill. Everything else — name, address, GSTIN, prices — comes from Inventory.
+summary: The shop's name, address, phone, GSTIN and bill footer, the cashier's discount limit and the return window; which ways customers pay; the UPI ID for the payment QR; GST registration; and the logo. With the Inventory link, the shop's details come from Inventory instead.
 for: The owner
 minutes: 2
 app: /settings
 appLabel: Settings
-keywords: settings upi id vpa qr gst registration composition logo bill shop details owner
+keywords: settings shop name address phone gstin footer discount limit return window upi id vpa qr gst registration composition logo bill shop details owner
 ---
 
 **More → Settings**. Only the owner can change these.
+
+## Shop details
+
+The **shop name**, **phone**, **address**, **GSTIN** and the **line at the bottom of the bill**, as every
+bill prints them; the **most a cashier can take off** without a manager (in %); and how many days
+**returns** are taken (empty: any time). Change what you need and **Save**.
+
+A GSTIN is checked as you save it: one wrong character is caught here. Its first two digits are your
+state, which decides CGST + SGST or IGST on every bill from now on.
+
+:::note Bills already given out keep theirs
+Each bill keeps the name, address, phone and GSTIN it was issued with, so a reprint of last month's bill
+shows what the customer was given, not today's details. Bill numbering is set up by ScaleEzy, so a
+year's bills stay one unbroken series.
+:::
 
 
 ![The Settings page: UPI payments, GST registration and Logo on the bill.](1-settings.webp "Only the owner can change these.")
@@ -34,9 +49,9 @@ the till linked to Inventory, this comes from Inventory and is shown here only.
 Choose a picture; it prints at the top of the bill and its PDF. A PNG with a clear background prints best
 on a receipt printer.
 
-## Set in Inventory, not here
+## With the Inventory link
 
-The shop's name, address, phone, GSTIN, items, prices, GST rates, offers and the cashier's discount limit
-come from Inventory with **Refresh items from Inventory**. See [Inventory link](/help/behind/inventory-link).
+The shop's name, address, phone, GSTIN, footer, items, prices, GST rates, offers and the cashier's discount
+limit come from Inventory with **Refresh items from Inventory**, and Shop details is shown here read-only. See [Inventory link](/help/behind/inventory-link).
 
 Also under Settings: **Inventory link** and **Devices** (see [Devices](/help/setup/devices)).
