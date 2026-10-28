@@ -336,6 +336,12 @@ export async function setInventoryWhenDown(whenDown) {
 }
 
 /** WF-REPORTS-01. `from` and `to` are YYYY-MM-DD; a cashier always gets their own today. */
+/** Every item sold in the period, with returns and what is left (28 Oct). Owner and managers. */
+export async function loadItemSales({ from, to } = {}) {
+  const { data } = await api.get('/reports/items', { params: { from, to } })
+  return data.data
+}
+
 export async function loadReport({ from, to } = {}) {
   const { data } = await api.get('/reports', { params: { from, to } })
   return data.data

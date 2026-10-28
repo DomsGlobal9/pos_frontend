@@ -103,6 +103,16 @@ export default function InventoryLink() {
         </section>
       )}
 
+      {/* 28 Oct: customers made or changed at the counter, and consent ticked there, go to ScaleEzy CRM. */}
+      {connected && data.crm?.configured && (
+        <section style={s.card} aria-label="Customers to CRM">
+          <Row label="Customers to CRM, waiting" value={String(data.crm.waiting)} />
+          <Row label="Last sent to CRM" value={data.crm.lastSentAt ? new Date(data.crm.lastSentAt).toLocaleString('en-IN') : 'Nothing yet'} />
+          {data.crm.setAside > 0 && <p style={s.warn}>{data.crm.setAside} could not be taken by CRM. Ask ScaleEzy support.</p>}
+          {data.crm.problem && <p style={s.warn}>{data.crm.problem} It will try again by itself.</p>}
+        </section>
+      )}
+
       {connected && (
         <button style={s.primary} disabled={busy}
           onClick={() => act(syncInventoryItems, (r) => `${r.added} added, ${r.updated} updated${r.switchedOff ? `, ${r.switchedOff} switched off` : ''}.`)}>

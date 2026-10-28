@@ -1,6 +1,6 @@
 ---
 title: The accountant's Excel
-summary: Download every bill and credit note with its GST for any dates — five sheets: bills, GST by rate, the HSN summary for GSTR-1, days and gift vouchers — or a CSV.
+summary: Download every bill and credit note with its GST for any dates — six sheets: bills, GST by rate, the HSN summary for GSTR-1, items sold, days and gift vouchers — or a CSV.
 for: The owner
 minutes: 2
 app: /connections
@@ -16,7 +16,7 @@ keywords: accountant export excel csv gst return gstr-1 hsn summary b2b b2c down
 
 ![Sales for your accountant. From is marked 1, To 2 and Download Excel 3.](1-export.webp "The CSV is the same bills in one sheet.")
 
-## The five sheets
+## The six sheets
 
 - **Bills** — every bill and credit note: number, date, customer, the **GSTIN it was issued to**, taxable
   value, CGST, SGST, IGST, round-off, total, and how it was paid. Money that never came in is named for
@@ -24,6 +24,8 @@ keywords: accountant export excel csv gst return gstr-1 hsn summary b2b b2c down
 - **GST by rate** — each bill split by GST rate.
 - **HSN summary** — for **GSTR-1 table 12**: by HSN and rate, business (B2B) and consumer (B2C) apart,
   credit notes taken off.
+- **Items sold** — every item sold in the dates: code, name, colour, size and group, pieces and value
+  sold, returned, net, and how many are left now. A total at the bottom.
 - **Days** — each day's totals.
 - **Gift vouchers** — vouchers sold at these tills (and how they were paid), used on bills, and returned
   onto vouchers. They are not sales, so they are not in the other sheets: the shop owes them in goods, and

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { loadReport, rupees, messageFor } from '../lib/api.js'
+import ItemSales from '../components/ItemSales.jsx'
 import { isTouchFirst } from '../lib/useMedia.js'
 import { Difference } from './Shift.jsx'
 
@@ -189,6 +190,11 @@ export default function Reports() {
                       </li>
                     ))}
                   </ol>
+                </Card>
+              )}
+              {!limited && (
+                <Card title="Every item sold">
+                  <ItemSales range={range} />
                 </Card>
               )}
             </div>
