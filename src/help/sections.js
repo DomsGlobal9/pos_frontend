@@ -35,7 +35,7 @@ export const SECTIONS = [
     pages: ['reports', 'sales-by-salesperson', 'accountant-export'] },
   { id: 'setup', title: 'Set up and staff', icon: 'Settings',
     blurb: 'Staff and PINs, what needs a manager, shop settings, devices and connections.',
-    pages: ['staff-and-pins', 'manager-approval', 'settings', 'devices'] },
+    pages: ['staff-and-pins', 'manager-approval', 'settings', 'items-and-stock', 'devices'] },
   { id: 'behind', title: 'Internet and Inventory', icon: 'Wifi',
     blurb: 'When the internet drops, and how the till keeps Inventory up to date.',
     pages: ['when-the-internet-drops', 'inventory-link'] }

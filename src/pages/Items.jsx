@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Plus } from 'lucide-react'
-import { loadItems, saveItem, rupees, messageFor } from '../lib/api.js'
+import { loadItems, saveItem, setLowStockAt, rupees, messageFor } from '../lib/api.js'
+import StockPanel from '../components/StockPanel.jsx'
 
 /**
  * The owner's item list, and the form that adds to it. POS-STAND-003.
@@ -25,13 +26,16 @@ const EMPTY = { code: '', name: '', price: '', gst: '5', hsn: '', barcode: '', q
 
 export default function Items() {
   const [q, setQ] = useState('')
+  // Standalone stock (28 Oct): all items, the low ones, or the ones out; and whose stock panel is open.
+  const [stock, setStock] = useState('')
+  const [open, setOpen] = useState(null)
   const [form, setForm] = useState(null)
   const [busy, setBusy] = useState(false)
   const queryClient = useQueryClient()
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['items', q],
-    queryFn: () => loadItems(q)
+    queryKey: ['items', q, stock],
+    queryFn: () => loadItems(q, stock)
   })
 
   async function submit(event) {
@@ -53,6 +57,17 @@ export default function Items() {
       toast.error(messageFor(err))
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function changeLow() {
+    const typed = window.prompt('An item is "low" when this many or fewer are left:', String(data.lowStockAt ?? 2))
+    if (typed === null) return
+    try {
+      await setLowStockAt(Number(typed))
+      queryClient.invalidateQueries({ queryKey: ['items'] })
+    } catch (err) {
+      toast.error(messageFor(err))
     }
   }
 
@@ -131,8 +146,15 @@ export default function Items() {
         style={s.find}
       />
 
+      <div style={s.filters} role="radiogroup" aria-label="Show">
+        {[['', 'All'], ['low', `Low (${data.lowCount ?? 0})`], ['out', `Out of stock (${data.outCount ?? 0})`]].map(([k, label]) => (
+          <button key={k || 'all'} type="button" role="radio" aria-checked={stock === k} onClick={() => setStock(k)} style={stock === k ? s.on : undefined}>{label}</button>
+        ))}
+        <span style={s.muted}>Low means {data.lowStockAt ?? 2} or fewer. <button type="button" style={s.link} onClick={changeLow}>Change</button></span>
+      </div>
+
       {data.items.length === 0
-        ? <p style={s.muted}>{q ? 'Nothing matches that.' : 'No items yet. Add one, or import a list on Connections.'}</p>
+        ? <p style={s.muted}>{stock === 'out' ? 'Nothing is out of stock.' : stock === 'low' ? 'Nothing is running low.' : q ? 'Nothing matches that.' : 'No items yet. Add one, or import a list on Connections.'}</p>
         : (
           <ul style={s.list} className="card-list">
             {data.items.map(i => (
@@ -148,7 +170,7 @@ export default function Items() {
                 <div style={s.right}>
                   <b>{rupees(i.pricePaise)}</b>
                   <span style={s.muted}>
-                    {i.taxRate}% GST{i.qty === null || i.qty === undefined ? '' : ` · ${i.qty} left`}
+                    {i.taxRate}% GST{i.qty === null || i.qty === undefined ? ' · not counted' : i.qty <= 0 ? ' · none left' : ` · ${i.qty} left`}
                   </span>
                 </div>
                 {!i.active && <span className="chip warn">not on sale</span>}
@@ -163,6 +185,10 @@ export default function Items() {
                 >
                   Change
                 </button>
+                <button style={s.small} aria-expanded={open === i.code} onClick={() => setOpen(open === i.code ? null : i.code)}>
+                  Stock
+                </button>
+                {open === i.code && <StockPanel item={i} />}
               </li>
             ))}
           </ul>
@@ -209,5 +235,8 @@ const s = {
   },
   detail: { display: 'grid', gap: 2, flex: 1, minWidth: 180 },
   right: { display: 'grid', justifyItems: 'end', gap: 2 },
-  small: { minHeight: 'var(--tap)' }
+  small: { minHeight: 'var(--tap)' },
+  filters: { display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' },
+  on: { background: 'var(--accent)', borderColor: 'var(--accent)', color: '#fff' },
+  link: { border: 'none', background: 'none', padding: 0, minHeight: 0, color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' }
 }

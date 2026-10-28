@@ -528,8 +528,22 @@ export async function download(path, params, filename) {
 }
 
 /** The owner's item list, including the items switched off. POS-STAND-003. */
-export async function loadItems(q) {
-  const { data } = await api.get('/items', { params: q ? { q } : {} })
+export async function loadItems(q, stock) {
+  const { data } = await api.get('/items', { params: { ...(q ? { q } : {}), ...(stock ? { stock } : {}) } })
+  return data.data
+}
+
+/** A standalone shop's stock book (28 Oct): received, adjusted with a reason, counted. Owner only. */
+export async function moveStock(code, body) {
+  const { data } = await api.post(`/items/${encodeURIComponent(code)}/stock`, body)
+  return data.data
+}
+export async function loadStockBook(code) {
+  const { data } = await api.get(`/items/${encodeURIComponent(code)}/stock`)
+  return data.data
+}
+export async function setLowStockAt(lowStockAt) {
+  const { data } = await api.put('/items/low-stock-at', { lowStockAt })
   return data.data
 }
 
