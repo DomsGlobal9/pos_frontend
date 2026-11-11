@@ -106,6 +106,8 @@ export default function InventoryLink() {
       {/* 28 Oct: customers made or changed at the counter, and consent ticked there, go to ScaleEzy CRM. */}
       {connected && data.crm?.configured && (
         <section style={s.card} aria-label="Customers to CRM">
+          {/* 11 Nov: CRM refuses shops that do not use it; that is how it should be, not a fault. */}
+          {data.crm.notOnCrm && <p>This shop does not use ScaleEzy CRM, so its customers stay on the till. If the shop starts using CRM, they go across within a day.</p>}
           <Row label="Customers to CRM, waiting" value={String(data.crm.waiting)} />
           <Row label="Last sent to CRM" value={data.crm.lastSentAt ? new Date(data.crm.lastSentAt).toLocaleString('en-IN') : 'Nothing yet'} />
           {data.crm.setAside > 0 && <p style={s.warn}>{data.crm.setAside} could not be taken by CRM. Ask ScaleEzy support.</p>}
