@@ -123,6 +123,10 @@ export default function InventoryLink() {
           <Row label="Key" value={`${data.keyPrefix}…`} />
           {/* Which shop in Inventory the bills go to: a key from another shop shows at once (12 Nov). */}
           <Row label="Inventory shop" value={data.inventoryShop ?? 'Not known yet'} />
+          {/* 12 Nov: Inventory tells the till the moment items, stock or settings change. */}
+          <Row label="Instant updates from Inventory" value={!data.pushes?.on
+            ? 'Not set up yet -- the till checks every 30 seconds'
+            : data.pushes.lastAt ? `On · last ${new Date(data.pushes.lastAt).toLocaleString('en-IN')}` : 'On · none yet'} />
           {/* 12 Nov: people erased in Inventory are forgotten here too. Checked every five minutes. */}
           <Row label="Erased in Inventory, checked" value={data.erasures?.checkedAt
             ? `${new Date(data.erasures.checkedAt).toLocaleString('en-IN')} · ${data.erasures.forgotten} forgotten here`
