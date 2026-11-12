@@ -52,6 +52,25 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
     }
   }
 
+  // A known customer who says yes to offers today (12 Nov, owner: consent is ticked here, at the
+  // counter). Find-or-create only ever turns consent on, and tells CRM.
+  async function withConsent(customer) {
+    if (!consent || customer.marketingConsent) return customer
+    const { customer: agreed } = await createCustomer({ phone, marketingConsent: true })
+    return { ...customer, ...agreed }
+  }
+
+  async function useKnown() {
+    setBusy(true)
+    try {
+      onPick(await withConsent(found))
+    } catch (error) {
+      toast.error(messageFor(error))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   // A known customer with no name or address on file, on a bill that needs them: fill them in here.
   async function completeAndUse() {
     setBusy(true)
@@ -60,7 +79,7 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
         ...(name.trim() && !found.name ? { name: name.trim() } : {}),
         ...(address.trim() && !found.address ? { address: address.trim() } : {})
       })
-      onPick({ ...found, ...updated })
+      onPick(await withConsent({ ...found, ...updated }))
     } catch (error) {
       toast.error(messageFor(error))
     } finally {
@@ -84,6 +103,25 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
       setBusy(false)
     }
   }
+
+  /*
+   * Only ever turned ON here. A screen without the tick is not the customer saying no —
+   * it is usually nobody having asked — so nothing in the sell flow withdraws consent.
+   */
+  const consentTick = (
+    <label style={s.check}>
+      <input
+        type="checkbox"
+        checked={consent}
+        onChange={e => setConsent(e.target.checked)}
+        style={s.checkbox}
+      />
+      <span>
+        Happy to receive offers
+        <div style={s.muted}>Only tick this if you asked and they said yes.</div>
+      </span>
+    </label>
+  )
 
   return (
     <div style={s.backdrop} role="dialog" data-sheet aria-label="Customer" onClick={onClose}>
@@ -122,6 +160,7 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
               <span>{found.visitCount} {found.visitCount === 1 ? 'visit' : 'visits'}</span>
               <span>{rupees(found.lifetimeSpentPaise)} spent</span>
             </div>
+            {!found.marketingConsent && consentTick}
             {needAddress && !found.gstin && (!found.name || !found.address) ? (
               <>
                 <p style={s.muted}>This bill is Rs 50,000 or more: GST rules ask for their name and address on it.</p>
@@ -134,11 +173,11 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
                 <button style={s.primary} onClick={completeAndUse} disabled={busy || (!found.name && !name.trim()) || (!found.address && !address.trim())}>
                   {busy ? 'Saving…' : 'Save and use'}
                 </button>
-                <button type="button" onClick={() => onPick(found)} disabled={busy}>Use without them</button>
+                <button type="button" onClick={useKnown} disabled={busy}>Use without them</button>
               </>
             ) : (
-              <button style={s.primary} onClick={() => onPick(found)}>
-                Use {found.name ? found.name.split(' ')[0] : 'this customer'}
+              <button style={s.primary} onClick={useKnown} disabled={busy}>
+                {busy ? 'Saving…' : `Use ${found.name ? found.name.split(' ')[0] : 'this customer'}`}
               </button>
             )}
           </div>
@@ -164,22 +203,7 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
                   placeholder="Needed on bills of Rs 50,000 or more" aria-label="Customer address" />
               </label>
             )}
-            {/*
-              * Only ever turned ON here. A screen without the tick is not the customer saying no —
-              * it is usually nobody having asked — so nothing in the sell flow withdraws consent.
-              */}
-            <label style={s.check}>
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={e => setConsent(e.target.checked)}
-                style={s.checkbox}
-              />
-              <span>
-                Happy to receive offers
-                <div style={s.muted}>Only tick this if you asked and they said yes.</div>
-              </span>
-            </label>
+            {consentTick}
             <button style={s.primary} onClick={save} disabled={busy}>
               {busy ? 'Saving…' : 'Add and use'}
             </button>
