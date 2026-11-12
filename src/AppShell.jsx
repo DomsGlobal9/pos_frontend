@@ -10,6 +10,7 @@ import { checkIn } from './lib/device.js'
 import { applyUpdate, updateReady, tillIsIdle } from './lib/update.js'
 import { useOutbox, flush, outboxItems } from './lib/outbox.js'
 import { onSession, tillToken, staffToken, personOut } from './lib/session.js'
+import { startLive } from './lib/live.js'
 import { OpenTill, WhoAtTill } from './components/TillGate.jsx'
 import './lib/useEscape.js' // Esc and Tab in popups, on every screen
 
@@ -56,6 +57,9 @@ export default function AppShell() {
     })
     return () => { alive = false; off() }
   }, [queryClient])
+
+  // Signed in: hear every change in this shop the moment it happens (12 Nov). lib/live.js.
+  useEffect(() => (gate === 'ok' ? startLive(queryClient) : undefined), [gate, queryClient])
 
   const { items: waiting } = useOutbox()
   const { data: status, isError: unreachable, refetch: recheck } = useQuery({
