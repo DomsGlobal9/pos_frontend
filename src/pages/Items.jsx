@@ -158,7 +158,7 @@ export default function Items() {
         {[['', 'All'], ['low', `Low (${data.lowCount ?? 0})`], ['out', `Out of stock (${data.outCount ?? 0})`]].map(([k, label]) => (
           <button key={k || 'all'} type="button" role="radio" aria-checked={stock === k} onClick={() => setStock(k)} style={stock === k ? s.on : undefined}>{label}</button>
         ))}
-        <span style={s.muted}>Low means {data.lowStockAt ?? 2} or fewer. <button type="button" style={s.link} onClick={changeLow}>Change</button></span>
+        <span style={s.muted}>Low means {data.lowStockAt ?? 2} or fewer. <button type="button" style={s.link} onClick={changeLow} aria-label="Change the low-stock level">Change</button></span>
       </div>
 
       {data.items.length === 0
