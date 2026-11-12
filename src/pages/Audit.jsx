@@ -33,6 +33,7 @@ const LABEL = {
   'inventory.connected': 'Connected to Inventory',
   'inventory.disconnected': 'Disconnected from Inventory',
   'inventory.retried': 'Inventory sending retried',
+  'inventory.resent': 'Bills sent again to Inventory',
   'inventory.skipped': 'Bill left out of Inventory',
   'inventory.catalogue_synced': 'Items refreshed from Inventory',
   /*
