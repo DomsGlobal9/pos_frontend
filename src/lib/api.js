@@ -325,8 +325,15 @@ export async function leaveOutOfInventory(document, reason) {
 }
 
 export async function syncInventoryItems() {
-  // Can take a while for a big catalogue; longer than the till's usual ten seconds.
-  const { data } = await api.post('/inventory-link/sync-catalogue', {}, { timeout: 120_000 })
+  // Can take a while for a big catalogue; longer than the till's usual ten seconds. A person's refresh
+  // is a full one (12 Nov): it also takes off what Inventory no longer lists for this shop.
+  const { data } = await api.post('/inventory-link/sync-catalogue', { full: true }, { timeout: 120_000 })
+  return data.data
+}
+
+/** Send again to Inventory from this bill or credit note on (12 Nov). Owner only. */
+export async function resendInventoryFrom(document) {
+  const { data } = await api.post('/inventory-link/resend', { document })
   return data.data
 }
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { loadInventoryLink, connectInventory, disconnectInventory, retryInventory, leaveOutOfInventory, syncInventoryItems, setInventoryWhenDown, messageFor } from '../lib/api.js'
+import { loadInventoryLink, connectInventory, disconnectInventory, retryInventory, leaveOutOfInventory, syncInventoryItems, setInventoryWhenDown, resendInventoryFrom, messageFor } from '../lib/api.js'
 import { askYesNo } from '../components/Ask.jsx'
 
 /**
@@ -19,6 +19,7 @@ export default function InventoryLink() {
   // Leaving the stopped bill out: opened on purpose, with a reason, never one click.
   const [leaving, setLeaving] = useState(false)
   const [why, setWhy] = useState('')
+  const [resendDoc, setResendDoc] = useState('')
 
   // The shop too: the header's "Inventory connected" comes from it, and it is otherwise kept for good.
   const refresh = () => { queryClient.invalidateQueries({ queryKey: ['inventory-link'] }); queryClient.invalidateQueries({ queryKey: ['shop'] }) }
@@ -27,6 +28,32 @@ export default function InventoryLink() {
     setBusy(true)
     try { const result = await fn(); if (done) toast.success(typeof done === 'function' ? done(result) : done); refresh() }
     catch (err) { toast.error(messageFor(err)) }
+    finally { setBusy(false) }
+  }
+
+  /*
+   * A key for another shop in Inventory is refused (12 Nov: Swathy's key went into sphl's till). The
+   * owner is asked once, plainly; only "it has moved" connects it, and the items start afresh.
+   */
+  async function useKey() {
+    setBusy(true)
+    try {
+      try { await connectInventory({ key: key.trim() }) }
+      catch (err) {
+        const d = err?.response?.data?.details
+        if (d?.code !== 'SHOP_CHANGED') throw err
+        const name = d.nowName ? `${d.nowName} (${d.now})` : d.now
+        const moved = await askYesNo(`This key is for ${name}, not ${d.was}`, {
+          note: `This till sends to ${d.was}. If the key was made in the wrong shop, choose Cancel and make one while in ${d.was} in Inventory. Only if this till has really moved to ${name}, connect it there.`,
+          confirmLabel: `Move till to ${d.now}`, danger: true
+        })
+        if (!moved) return
+        await connectInventory({ key: key.trim(), moveTo: d.now })
+      }
+      setKey('')
+      toast.success('Connected.')
+      refresh()
+    } catch (err) { toast.error(messageFor(err)) }
     finally { setBusy(false) }
   }
 
@@ -94,6 +121,8 @@ export default function InventoryLink() {
         <section style={s.card}>
           <Row label="Status" value={connected ? 'Connected' : 'Disconnected'} />
           <Row label="Key" value={`${data.keyPrefix}…`} />
+          {/* Which shop in Inventory the bills go to: a key from another shop shows at once (12 Nov). */}
+          <Row label="Inventory shop" value={data.inventoryShop ?? 'Not known yet'} />
           <Row label="Waiting to send" value={String(data.waiting)} />
           {/* Taken in by Inventory, which applies them a few seconds later. */}
           <Row label="Being applied in Inventory" value={String(data.settling ?? 0)} />
@@ -174,10 +203,26 @@ export default function InventoryLink() {
             <input type="password" autoComplete="off" value={key} onChange={e => setKey(e.target.value)} aria-label="Connection key" />
             <span style={s.muted}>In Inventory: Settings → Money → POS (billing counter) → Create key. It is shown once -- copy it straight here.</span>
           </label>
-          <button style={s.primary} disabled={busy || key.trim().length < 16}
-            onClick={() => act(async () => { await connectInventory({ key: key.trim() }); setKey('') }, 'Connected.')}>
+          <button style={s.primary} disabled={busy || key.trim().length < 16} onClick={useKey}>
             {connected ? 'Replace key' : 'Connect'}
           </button>
+        </section>
+      )}
+
+      {/* 12 Nov: two bills went to another shop under a wrong key. Send them again to this one. */}
+      {manage && connected && (
+        <section style={s.card}>
+          <h2 style={s.heading}>Send again</h2>
+          <label style={s.label}>
+            From bill or credit note
+            <input value={resendDoc} onChange={e => setResendDoc(e.target.value)} placeholder="INV/2026-27/0004" aria-label="Send again from" />
+            <span style={s.muted}>Only when bills went to the wrong shop in Inventory. That one and everything after it go again to {data.inventoryShop ?? 'this shop'}; what Inventory already has is skipped.</span>
+          </label>
+          <button disabled={busy || !resendDoc.trim()} onClick={async () => {
+            if (await askYesNo(`Send again from ${resendDoc.trim()}?`, { note: `To ${data.inventoryShop ?? 'the shop this till is connected to'} in Inventory.`, confirmLabel: 'Send again' })) {
+              act(async () => { const r = await resendInventoryFrom(resendDoc.trim()); setResendDoc(''); return r }, r => (r.resent ? `${r.resent} sent again.` : 'Not sent yet -- it goes by itself.'))
+            }
+          }}>Send again</button>
         </section>
       )}
 
