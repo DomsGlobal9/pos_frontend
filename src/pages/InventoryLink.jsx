@@ -123,6 +123,10 @@ export default function InventoryLink() {
           <Row label="Key" value={`${data.keyPrefix}…`} />
           {/* Which shop in Inventory the bills go to: a key from another shop shows at once (12 Nov). */}
           <Row label="Inventory shop" value={data.inventoryShop ?? 'Not known yet'} />
+          {/* 12 Nov: people erased in Inventory are forgotten here too. Checked every five minutes. */}
+          <Row label="Erased in Inventory, checked" value={data.erasures?.checkedAt
+            ? `${new Date(data.erasures.checkedAt).toLocaleString('en-IN')} · ${data.erasures.forgotten} forgotten here`
+            : 'Not yet'} />
           <Row label="Waiting to send" value={String(data.waiting)} />
           {/* Taken in by Inventory, which applies them a few seconds later. */}
           <Row label="Being applied in Inventory" value={String(data.settling ?? 0)} />
