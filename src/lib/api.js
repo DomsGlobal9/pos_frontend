@@ -385,6 +385,12 @@ export async function sendCreditNote(returnId, onceKey) {
   return data.data
 }
 
+/** How long the till waits with nothing happening before asking for a PIN: 10, 30, 60, 240, or 0 = never (12 Nov). */
+export async function setIdleSignOut(minutes) {
+  const { data } = await api.put('/shop/idle-sign-out', { minutes })
+  return data.data
+}
+
 export async function setShopPaymentMethods(methods) {
   const { data } = await api.put('/shop/payment-methods', { methods })
   return data.data

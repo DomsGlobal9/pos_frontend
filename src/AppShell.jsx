@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import { health, loadShop, whoAmI, loadInventoryLink } from './lib/api.js'
 import { useDevice, isTouchFirst } from './lib/useMedia.js'
 import NavBar from './components/NavBar.jsx'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { checkIn } from './lib/device.js'
 import { applyUpdate, updateReady, tillIsIdle } from './lib/update.js'
 import { useOutbox, flush, outboxItems } from './lib/outbox.js'
@@ -26,7 +26,8 @@ import './lib/useEscape.js' // Esc and Tab in popups, on every screen
  * The header carries the shop name and the honest connection state, because POS-SYNC-001/002 say a
  * user should always be able to tell whether their work is safe without going looking for it.
  */
-const IDLE_SIGN_OUT_MS = 10 * 60 * 1000
+// The shop's choice (12 Nov, Settings -> Sign out when idle): 10 minutes unless the owner chose otherwise; 0 = never.
+const DEFAULT_IDLE_MINUTES = 10
 
 export default function AppShell() {
   const device = useDevice()
@@ -76,6 +77,8 @@ export default function AppShell() {
    * Ten minutes with no tap or key (a scanner types), and only when nothing is in progress. The last touch
    * is shared by every tab: Switch clears them all, so a forgotten tab must not sign out a busy one.
    */
+  const idleMinutes = useRef(DEFAULT_IDLE_MINUTES)
+  idleMinutes.current = shop?.shop?.idleSignOutMinutes ?? DEFAULT_IDLE_MINUTES
   useEffect(() => {
     const KEY = 'pos.lastTouch'
     let wrote = 0
@@ -89,9 +92,11 @@ export default function AppShell() {
     const t = setInterval(() => {
       let last = wrote
       try { last = Math.max(last, Number(localStorage.getItem(KEY)) || 0) } catch { /* this tab's own */ }
-      if (staffToken() && Date.now() - last > IDLE_SIGN_OUT_MS && tillIsIdle()) {
+      const minutes = idleMinutes.current
+      if (minutes > 0 && staffToken() && Date.now() - last > minutes * 60_000 && tillIsIdle()) {
         personOut()
-        toast('Signed out after 10 minutes with nothing happening. Choose your name to carry on.', { id: 'idle-out', duration: 10_000 })
+        const span = minutes >= 60 ? `${minutes / 60} hour${minutes > 60 ? 's' : ''}` : `${minutes} minutes`
+        toast(`Signed out after ${span} with nothing happening. Choose your name to carry on.`, { id: 'idle-out', duration: 10_000 })
       }
     }, 30_000)
     return () => { clearInterval(t); window.removeEventListener('pointerdown', touch, true); window.removeEventListener('keydown', touch, true) }

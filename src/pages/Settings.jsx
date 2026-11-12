@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { QrCode, Boxes, Monitor, Image as ImageIcon, Receipt, Wallet, MessageCircle } from 'lucide-react'
 import CardMachinesSettings from '../components/CardMachinesSettings.jsx'
 import ShopDetailsSettings from '../components/ShopDetailsSettings.jsx'
+import IdleSignOutSettings from '../components/IdleSignOutSettings.jsx'
 import { setShopUpi, setShopLogo, setShopGst, setShopPaymentMethods, messageFor } from '../lib/api.js'
 
 /**
@@ -123,6 +124,8 @@ export default function Settings() {
       <WhatsAppSettings shop={shop} />
 
       <CardMachinesSettings owner={owner} counters={shop?.counters ?? []} />
+
+      <IdleSignOutSettings shop={shop} owner={owner} />
 
       <section style={s.card} aria-label="Ways customers pay">
         <div style={s.head}><span style={s.icon}><Wallet size={18} aria-hidden="true" /></span><b>Ways customers pay</b></div>

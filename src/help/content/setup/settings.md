@@ -49,6 +49,13 @@ the till linked to Inventory, this comes from Inventory and is shown here only.
 Choose a picture; it prints at the top of the bill and its PDF. A PNG with a clear background prints best
 on a receipt printer.
 
+## Sign out when idle
+
+With nothing happening for a while (no tap, no scan, nothing on the bill) the till asks for a name and PIN
+again, so nobody else at the counter can sell or approve as the last person. Choose how long: 10 minutes
+(the usual), 30 minutes, 1 hour or 4 hours. **Never** keeps whoever signed in last until someone presses
+Switch; use it only if one person works the till. The till never signs anyone out in the middle of a bill.
+
 ## With the Inventory link
 
 The shop's name, address, phone, GSTIN, footer, items, prices, GST rates, offers and the cashier's discount

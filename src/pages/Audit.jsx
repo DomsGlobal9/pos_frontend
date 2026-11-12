@@ -69,6 +69,7 @@ const LABEL = {
   'stock.adjusted': 'Stock adjusted',
   'stock.counted': 'Stock counted',
   'shop.details_set': 'Shop details changed',
+  'shop.idle_set': 'Sign-out-when-idle time changed',
   'customer.erased': 'Customer erased (asked by Inventory)',
   'customer.updated': 'Customer details changed',
   'item.added': 'Item added',
