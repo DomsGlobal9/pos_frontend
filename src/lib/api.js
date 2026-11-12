@@ -109,6 +109,8 @@ export async function loadVariants(group) {
 /** POS-CUST-002. Null when we have not met them -- an ordinary answer, not a failure. */
 export async function findCustomerByPhone(phone) {
   const { data } = await api.get(`/customers/by-phone/${encodeURIComponent(phone)}`)
+  // Not met at this till but known in Inventory (12 Nov): the name it has them by, to start from.
+  if (!data.data && data.inventoryName) return { inventoryName: data.inventoryName }
   return data.data
 }
 

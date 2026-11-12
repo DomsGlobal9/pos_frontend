@@ -25,6 +25,7 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
   const [address, setAddress] = useState('')
   const [consent, setConsent] = useState(false)
   const [found, setFound] = useState(null)
+  const [inventoryName, setInventoryName] = useState(null)
   const [searched, setSearched] = useState(false)
   const [busy, setBusy] = useState(false)
   const phoneBox = useRef(null)
@@ -37,7 +38,11 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
     if (!phone.trim() || busy) return
     setBusy(true)
     try {
-      const customer = await findCustomerByPhone(phone)
+      const answer = await findCustomerByPhone(phone)
+      // Known only in Inventory: still new here, with Inventory's name filled in for the cashier.
+      const customer = answer?.inventoryName ? null : answer
+      setInventoryName(answer?.inventoryName ?? null)
+      if (answer?.inventoryName) setName(answer.inventoryName)
       setFound(customer)
       setSearched(true)
       // Not known: the cashier's next move is the name, so put them there.
@@ -138,7 +143,7 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
               ref={phoneBox}
               inputMode="tel"
               value={phone}
-              onChange={e => { setPhone(e.target.value); setSearched(false); setFound(null) }}
+              onChange={e => { setPhone(e.target.value); setSearched(false); setFound(null); setInventoryName(null) }}
               placeholder="10-digit mobile"
               aria-label="Customer phone number"
             />
@@ -185,7 +190,9 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
 
         {searched && !found && (
           <div style={s.newOne}>
-            <p style={s.muted}>New customer. Adding them takes one field.</p>
+            <p style={s.muted}>
+              {inventoryName ? `Known in Inventory as ${inventoryName}. First time at this till.` : 'New customer. Adding them takes one field.'}
+            </p>
             <label style={s.label}>
               Name
               <input
