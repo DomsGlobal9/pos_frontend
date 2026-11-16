@@ -593,7 +593,8 @@ export default function Till() {
       },
       summary: {
         totalPaise: totals.totalPaise,
-        pieces: lines.reduce((n, l) => n + l.qty, 0),
+        // A length of cloth counts as one item, not 225 (16 Nov).
+        pieces: lines.reduce((n, l) => n + (isMeasured(l.unit) ? 1 : l.qty), 0),
         first: lines[0]?.name ?? 'Sale',
         more: Math.max(0, lines.length - 1),
         customerName: customer?.name ?? null,
@@ -940,7 +941,7 @@ export default function Till() {
               {lines.length} {lines.length === 1 ? 'line' : 'lines'}
               {' · '}
               {(() => {
-                const n = lines.reduce((sum, l) => sum + l.qty, 0)
+                const n = lines.reduce((sum, l) => sum + (isMeasured(l.unit) ? 1 : l.qty), 0)
                 return `${n} ${n === 1 ? 'item' : 'items'}`
               })()}
             </div>
