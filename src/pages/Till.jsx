@@ -11,6 +11,8 @@ import { checkIn } from '../lib/device.js'
 import PaymentPanel from '../components/PaymentPanel.jsx'
 import Receipt from '../components/Receipt.jsx'
 import VariantSheet from '../components/VariantSheet.jsx'
+import LengthSheet from '../components/LengthSheet.jsx'
+import { isMeasured, qtyText, stepOf, perUnitPaise } from '../lib/units.js'
 import useEscape from '../lib/useEscape.js'
 import ShiftBar from '../components/ShiftBar.jsx'
 import { Search, ScanBarcode, UserPlus, User, X, Camera } from 'lucide-react'
@@ -60,6 +62,8 @@ export default function Till() {
   const [savedOffline, setSavedOffline] = useState(null)
   // The colour/size picker, when a search result turns out to have siblings. WF-PRODUCT-01.
   const [picking, setPicking] = useState(null)
+  // Cloth being added: how much? (16 Nov, sold by the metre.)
+  const [measuring, setMeasuring] = useState(null)
   /*
    * The customer on this bill, or null. POS-CUST-001.
    *
@@ -252,19 +256,29 @@ export default function Till() {
     addItem(item)
   }
 
-  function addItem(item, searched) {
+  /*
+   * `qty` is how much to add: one piece, or for cloth the length chosen in centimetres (16 Nov). Cloth
+   * picked without a length asks for one first.
+   */
+  function addItem(item, searched, qty) {
+    if (isMeasured(item.unit) && qty === undefined) {
+      setMeasuring({ item, searched })
+      return
+    }
+    const add = qty ?? 1
     // A new "typing episode" starts with every add: a lookup started before it is about old text.
     episode.current++
     setLines(current => {
       const at = current.findIndex(l => l.id === item.id)
       if (at >= 0) {
         const next = [...current]
-        next[at] = { ...next[at], qty: next[at].qty + 1 }
+        next[at] = { ...next[at], qty: next[at].qty + add }
         return next
       }
       return [...current, {
         id: item.id, code: item.code, name: item.name, colour: item.colour, size: item.size,
-        pricePaise: item.pricePaise, taxRate: item.taxRate, qty: 1, availableQty: item.availableQty
+        pricePaise: item.pricePaise, taxRate: item.taxRate, qty: add, availableQty: item.availableQty,
+        unit: item.unit ?? null
       }]
     })
     /*
@@ -364,13 +378,16 @@ export default function Till() {
   async function overridePrice(id) {
     const line = lines.find(l => l.id === id)
     if (!line) return
-    const typed = await askText(`Sell ${line.name} at a different price?`, String(unitPrice(line) / 100), {
-      note: `The tag says ${rupees(line.pricePaise)}.`,
+    // Cloth is priced per metre on screen and per centimetre underneath (16 Nov): asked and shown per metre.
+    const per = isMeasured(line.unit) ? line.unit.factor : 1
+    const typed = await askText(`Sell ${line.name} at a different price${per > 1 ? ` per ${line.unit.short}` : ''}?`, String(unitPrice(line) * per / 100), {
+      note: `The tag says ${rupees(line.pricePaise * per)}${per > 1 ? ` / ${line.unit.short}` : ''}.`,
       inputMode: 'decimal',
       confirmLabel: 'Use this price'
     })
     if (typed === null) { refocus(); return }
-    const value = Math.round(Number(typed) * 100)
+    // Per base unit, in whole paise: Rs 455/m is 455 paise a cm. A per-metre price is kept to whole rupees.
+    const value = Math.round(Number(typed) * 100 / per)
     if (!Number.isFinite(value) || value <= 0) {
       toast.error('That is not a price.')
       refocus()
@@ -729,8 +746,8 @@ export default function Till() {
                     <span style={s.resultRight}>
                       {/* A row standing for several colours shows the cheapest as a "from" price;
                           a specific piece shows its own. */}
-                      <b>{item.priceFromPaise ? `from ${rupees(item.priceFromPaise)}` : rupees(item.pricePaise)}</b>
-                      {!item.priceFromPaise && <Left qty={item.availableQty} />}
+                      <b>{item.priceFromPaise ? `from ${rupees(perUnitPaise(item.priceFromPaise, item.unit))}` : rupees(perUnitPaise(item.pricePaise, item.unit))}{isMeasured(item.unit) ? ` / ${item.unit.short}` : ''}</b>
+                      {!item.priceFromPaise && <Left qty={item.availableQty} unit={item.unit} />}
                     </span>
                   </button>
                 </li>
@@ -770,14 +787,14 @@ export default function Till() {
                   </div>
                   <div style={s.lineBottom}>
                     <div style={s.qty}>
-                      <button style={s.qtyBtn} onClick={() => setQty(line.id, line.qty - 1)} aria-label="One less">−</button>
-                      <span style={s.qtyNum}>{line.qty}</span>
-                      <button style={s.qtyBtn} onClick={() => setQty(line.id, line.qty + 1)} aria-label="One more">+</button>
+                      <button style={s.qtyBtn} onClick={() => setQty(line.id, line.qty - stepOf(line.unit))} aria-label="One less">−</button>
+                      <span style={s.qtyNum}>{qtyText(line.qty, line.unit)}</span>
+                      <button style={s.qtyBtn} onClick={() => setQty(line.id, line.qty + stepOf(line.unit))} aria-label="One more">+</button>
                     </div>
                     <button style={s.priceBtn} onClick={() => overridePrice(line.id)} aria-label={`Change the price of ${line.name}`}>
-                      {rupees(unitPrice(line))} each
+                      {isMeasured(line.unit) ? `${rupees(perUnitPaise(unitPrice(line), line.unit))} / ${line.unit.short}` : `${rupees(unitPrice(line))} each`}
                     </button>
-                    {line.overridePricePaise && <span style={s.wasPrice}>was {rupees(line.pricePaise)}</span>}
+                    {line.overridePricePaise && <span style={s.wasPrice}>was {rupees(perUnitPaise(line.pricePaise, line.unit))}</span>}
                     <button style={{ ...s.remove, marginLeft: 'auto' }} onClick={() => setQty(line.id, 0)} aria-label={`Remove ${line.name}`}>×</button>
                   </div>
                 </li>
@@ -809,9 +826,9 @@ export default function Till() {
                     </td>
                     <td style={s.td}>
                       <div style={s.qty}>
-                        <button style={s.qtyBtn} onClick={() => setQty(line.id, line.qty - 1)} aria-label="One less">−</button>
-                        <span style={s.qtyNum}>{line.qty}</span>
-                        <button style={s.qtyBtn} onClick={() => setQty(line.id, line.qty + 1)} aria-label="One more">+</button>
+                        <button style={s.qtyBtn} onClick={() => setQty(line.id, line.qty - stepOf(line.unit))} aria-label="One less">−</button>
+                        <span style={s.qtyNum}>{qtyText(line.qty, line.unit)}</span>
+                        <button style={s.qtyBtn} onClick={() => setQty(line.id, line.qty + stepOf(line.unit))} aria-label="One more">+</button>
                       </div>
                     </td>
                     <td style={s.tdRight}>
@@ -820,10 +837,10 @@ export default function Till() {
                         onClick={() => overridePrice(line.id)}
                         aria-label={`Change the price of ${line.name}`}
                       >
-                        {rupees(unitPrice(line))}
+                        {rupees(perUnitPaise(unitPrice(line), line.unit))}{isMeasured(line.unit) ? ` / ${line.unit.short}` : ''}
                       </button>
                       {line.overridePricePaise && (
-                        <div style={s.wasPrice}>was {rupees(line.pricePaise)}</div>
+                        <div style={s.wasPrice}>was {rupees(perUnitPaise(line.pricePaise, line.unit))}</div>
                       )}
                     </td>
                     <td style={s.tdRight}>
@@ -1088,6 +1105,14 @@ export default function Till() {
         />
       )}
 
+      {measuring && (
+        <LengthSheet
+          item={measuring.item}
+          onAdd={(qty) => { const m = measuring; setMeasuring(null); addItem(m.item, m.searched, qty) }}
+          onClose={() => { setMeasuring(null); refocus() }}
+        />
+      )}
+
       {picking && (
         <VariantSheet
           group={picking.group}
@@ -1101,9 +1126,11 @@ export default function Till() {
 }
 
 /** How many are left, when that is known. Null is not zero, and must not be shown as zero. */
-function Left({ qty }) {
+function Left({ qty, unit }) {
   if (qty === null || qty === undefined) return null
   if (qty <= 0) return <span style={{ ...s.muted, color: 'var(--bad)' }}>none left</span>
+  // Cloth: what is left in metres (16 Nov), never "last one" for one centimetre.
+  if (isMeasured(unit)) return <span style={s.muted}>{qtyText(qty, unit)} left</span>
   if (qty === 1) return <span style={{ ...s.muted, color: 'var(--warn)' }}>last one</span>
   return <span style={s.muted}>{qty} left</span>
 }

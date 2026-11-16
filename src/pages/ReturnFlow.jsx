@@ -9,6 +9,8 @@ import { basketTotals, newOnceKey, offerOn } from '../lib/basket.js'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
 import CustomerSheet from '../components/CustomerSheet.jsx'
 import VariantSheet from '../components/VariantSheet.jsx'
+import LengthSheet from '../components/LengthSheet.jsx'
+import { isMeasured, qtyText, stepOf, perUnitPaise } from '../lib/units.js'
 import PaymentPanel from '../components/PaymentPanel.jsx'
 
 /**
@@ -95,6 +97,8 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [picking, setPicking] = useState(null)
+  // Cloth for the new bill of an exchange: how much? (16 Nov)
+  const [measuring, setMeasuring] = useState(null)
   const [paying, setPaying] = useState(false)
   // The scan box on "Coming back". A hook, so it lives up here with the others, above the early returns.
   const scanBox = useRef(null)
@@ -224,8 +228,8 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
       toast.error(info.lines.some(same) ? 'That one has already come back.' : 'That is not on this bill.')
     } else {
       const now = pick[line.saleLineId] ?? 0
-      if (now >= line.remainingQty) toast.error(`All ${line.remainingQty} of ${line.description} already chosen.`)
-      else setQty(line.saleLineId, now + 1, line.remainingQty)
+      if (now >= line.remainingQty) toast.error(`All ${qtyText(line.remainingQty, line.unit)} of ${line.description} already chosen.`)
+      else setQty(line.saleLineId, now + stepOf(line.unit), line.remainingQty)
     }
     // As on the sell screen: the next scan replaces this one rather than landing on the end of it.
     scanBox.current?.select()
@@ -311,14 +315,17 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
     addItem(item)
   }
 
-  function addItem(item) {
+  // `qty`: one piece, or for cloth the length chosen in cm; cloth picked without one asks first (16 Nov).
+  function addItem(item, qty) {
+    if (isMeasured(item.unit) && qty === undefined) { setPicking(null); setMeasuring(item); return }
+    const add = qty ?? 1
     setNewLines(current => {
       const at = current.findIndex(l => l.id === item.id)
-      if (at >= 0) return current.map((l, i) => (i === at ? { ...l, qty: l.qty + 1 } : l))
+      if (at >= 0) return current.map((l, i) => (i === at ? { ...l, qty: l.qty + add } : l))
       return [...current, {
         // The code too: the quote's offers are matched by it (offerOn).
         id: item.id, code: item.code, name: item.name, colour: item.colour, size: item.size,
-        pricePaise: item.pricePaise, taxRate: item.taxRate, qty: 1
+        pricePaise: item.pricePaise, taxRate: item.taxRate, qty: add, unit: item.unit ?? null
       }]
     })
     setResults([])
@@ -403,17 +410,17 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
                     {none
                       ? 'Already returned'
                       : line.returnedQty > 0
-                        ? `${line.remainingQty} of ${line.qty} can still come back`
-                        : `${line.qty} bought`}
+                        ? `${qtyText(line.remainingQty, line.unit)} of ${qtyText(line.qty, line.unit)} can still come back`
+                        : `${qtyText(line.qty, line.unit)} bought`}
                   </div>
                 </div>
                 {!none && (
                   <div style={s.stepper}>
                     <button type="button" aria-label={`One fewer ${line.description}`}
-                      onClick={() => setQty(line.saleLineId, qty - 1, line.remainingQty)} disabled={qty === 0}>−</button>
-                    <b style={s.qty} aria-label="Quantity coming back">{qty}</b>
+                      onClick={() => setQty(line.saleLineId, qty - stepOf(line.unit), line.remainingQty)} disabled={qty === 0}>−</button>
+                    <b style={s.qty} aria-label="Quantity coming back">{qtyText(qty, line.unit)}</b>
                     <button type="button" aria-label={`One more ${line.description}`}
-                      onClick={() => setQty(line.saleLineId, qty + 1, line.remainingQty)} disabled={qty >= line.remainingQty}>+</button>
+                      onClick={() => setQty(line.saleLineId, qty + stepOf(line.unit), line.remainingQty)} disabled={qty >= line.remainingQty}>+</button>
                   </div>
                 )}
               </li>
@@ -472,14 +479,14 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
                 <div style={s.lineText}>
                   <div>{[l.name, l.colour, l.size].filter(Boolean).join(', ')}</div>
                   <div style={s.muted}>
-                    {rupees(l.pricePaise)} each
+                    {isMeasured(l.unit) ? `${rupees(perUnitPaise(l.pricePaise, l.unit))} / ${l.unit.short}` : `${rupees(l.pricePaise)} each`}
                     {offerOn(l, newQuote?.byCode) > 0 && <span style={{ color: 'var(--good)', marginLeft: 8 }}>offer −{rupees(offerOn(l, newQuote?.byCode))}</span>}
                   </div>
                 </div>
                 <div style={s.stepper}>
-                  <button type="button" aria-label={`One fewer ${l.name}`} onClick={() => changeNew(l.id, l.qty - 1)}>−</button>
-                  <b style={s.qty}>{l.qty}</b>
-                  <button type="button" aria-label={`One more ${l.name}`} onClick={() => changeNew(l.id, l.qty + 1)}>+</button>
+                  <button type="button" aria-label={`One fewer ${l.name}`} onClick={() => changeNew(l.id, l.qty - stepOf(l.unit))}>−</button>
+                  <b style={s.qty}>{qtyText(l.qty, l.unit)}</b>
+                  <button type="button" aria-label={`One more ${l.name}`} onClick={() => changeNew(l.id, l.qty + stepOf(l.unit))}>+</button>
                 </div>
               </li>
             ))}
@@ -541,7 +548,10 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
       )}
 
       {picking && (
-        <VariantSheet group={picking.group} name={picking.name} onPick={addItem} onClose={() => setPicking(null)} />
+        <VariantSheet group={picking.group} name={picking.name} onPick={(v) => addItem(v)} onClose={() => setPicking(null)} />
+      )}
+      {measuring && (
+        <LengthSheet item={measuring} onAdd={(qty) => { const m = measuring; setMeasuring(null); addItem(m, qty) }} onClose={() => setMeasuring(null)} />
       )}
     </div>
   )

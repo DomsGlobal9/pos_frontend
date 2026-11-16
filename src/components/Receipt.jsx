@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { FileDown, MessageCircle, Printer } from 'lucide-react'
 import { api, rupees, markPrinted, messageFor, sendReceiptWhatsApp } from '../lib/api.js'
 import { newOnceKey } from '../lib/basket.js'
+import { qtyText, perUnitPaise, unitOfLine } from '../lib/units.js'
 import { waLink } from '../lib/whatsapp.js'
 import { checkIn, paperWidthMm } from '../lib/device.js'
 
@@ -274,7 +275,10 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
               <span style={s.muted}>
                 {/* Each part kept whole: on 80 mm "−₹300" broke after the minus sign (live, 8 Oct). */}
                 {[
-                  `${line.qty} × ${rupees(line.unitPricePaise)}`,
+                  // Cloth (16 Nov): "2.25 m × ₹450 / m".
+                  unitOfLine(line)
+                    ? `${qtyText(line.qty, unitOfLine(line))} × ${rupees(perUnitPaise(line.unitPricePaise, unitOfLine(line)))} / ${unitOfLine(line).short}`
+                    : `${line.qty} × ${rupees(line.unitPricePaise)}`,
                   // A service's code is a SAC, and every SAC starts 99 (fall & pico, 10 Oct).
                   line.hsn ? `${String(line.hsn).startsWith('99') ? 'SAC' : 'HSN'} ${line.hsn}` : '',
                   kindOf(sale) === 'TAX_INVOICE' ? `GST ${Number(line.taxRate)}%` : '',

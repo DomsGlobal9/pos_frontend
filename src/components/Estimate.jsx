@@ -3,6 +3,7 @@ import { paperWidthMm } from '../lib/device.js'
 import { lineTotal, offerOn, unitPrice } from '../lib/basket.js'
 import { waLink } from '../lib/whatsapp.js'
 import useEscape from '../lib/useEscape.js'
+import { isMeasured, qtyText, perUnitPaise } from '../lib/units.js'
 
 /**
  * An ESTIMATE of the basket on the till -- "what would these come to?" -- on paper, before anyone
@@ -39,7 +40,7 @@ export default function Estimate({ shop, lines, totals, offers, customer, onClos
           {(() => {
             const href = customer && waLink(customer.phone,
               `Estimate from ${shop?.shopName ?? 'the shop'}, valid until ${day(until)}:\n` +
-              lines.map(l => `${l.qty} x ${[l.name, l.colour, l.size].filter(Boolean).join(', ')} - ${rupees(lineTotal(l, offers))}`).join('\n') +
+              lines.map(l => `${qtyText(l.qty, l.unit)} x ${[l.name, l.colour, l.size].filter(Boolean).join(', ')} - ${rupees(lineTotal(l, offers))}`).join('\n') +
               `\nEstimated total ${rupees(totals.totalPaise)} (incl. all taxes). Not a bill.`)
             return href ? <a href={href} target="_blank" rel="noreferrer">WhatsApp</a> : null
           })()}
@@ -62,7 +63,7 @@ export default function Estimate({ shop, lines, totals, offers, customer, onClos
               <div>{[l.name, l.colour, l.size].filter(Boolean).join(', ')}</div>
               <div style={s.line}>
                 <span style={s.muted}>
-                  {l.qty} × {rupees(unitPrice(l))}{offerOn(l, offers) > 0 ? ` · offer −${rupees(offerOn(l, offers))}` : ''}
+                  {qtyText(l.qty, l.unit)} × {rupees(perUnitPaise(unitPrice(l), l.unit))}{isMeasured(l.unit) ? ` / ${l.unit.short}` : ""}{offerOn(l, offers) > 0 ? ` · offer −${rupees(offerOn(l, offers))}` : ''}
                 </span>
                 <b>{rupees(lineTotal(l, offers))}</b>
               </div>

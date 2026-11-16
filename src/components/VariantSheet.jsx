@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { loadVariants, rupees, messageFor } from '../lib/api.js'
 import useEscape from '../lib/useEscape.js'
+import { isMeasured, qtyText, perUnitPaise } from '../lib/units.js'
 
 /**
  * WF-PRODUCT-01. POS-SELL-006, -007, -008.
@@ -47,8 +48,8 @@ export default function VariantSheet({ group, name, onPick, onClose }) {
                   <span style={s.muted}>{variant.code}</span>
                 </span>
                 <span style={s.right}>
-                  <b>{rupees(variant.pricePaise)}</b>
-                  <Left qty={variant.availableQty} />
+                  <b>{rupees(perUnitPaise(variant.pricePaise, variant.unit))}{isMeasured(variant.unit) ? ` / ${variant.unit.short}` : ''}</b>
+                  <Left qty={variant.availableQty} unit={variant.unit} />
                 </span>
               </button>
             </li>
@@ -60,9 +61,11 @@ export default function VariantSheet({ group, name, onPick, onClose }) {
 }
 
 /** Null is not zero. An unknown count must never be shown as "none left". */
-function Left({ qty }) {
+function Left({ qty, unit }) {
   if (qty === null || qty === undefined) return null
   if (qty <= 0) return <span style={{ ...s.muted, color: 'var(--bad)' }}>none left</span>
+  // Cloth: what is left in metres (16 Nov).
+  if (isMeasured(unit)) return <span style={s.muted}>{qtyText(qty, unit)} left</span>
   if (qty === 1) return <span style={{ ...s.muted, color: 'var(--warn)' }}>last one</span>
   return <span style={s.muted}>{qty} left</span>
 }
