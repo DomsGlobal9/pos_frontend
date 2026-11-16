@@ -166,10 +166,11 @@ export default function AppShell() {
               )}
             </div>
           </div>
-          <Connection status={status} offline={!online || unreachable} waiting={waiting.length} inventory={shop?.inventoryConnected === true} inventoryStopped={!!link?.blocked} />
-          <UpdateReady />
+          <Connection status={status} offline={!online || unreachable} waiting={waiting.length} inventory={shop?.inventoryConnected === true} inventoryStopped={!!link?.blocked} compact={bottomNav} />
           <HelpButton />
         </header>
+        {/* Under the header, not in it (17 Nov): squeezed in beside the status it pushed the shop's name to "S." on a phone. */}
+        <UpdateReady />
 
         <div style={s.content} className="shell-content">
           <Outlet context={{ device, shop }} />
@@ -213,14 +214,14 @@ function UpdateReady() {
   }, [])
   if (!ready) return null
   return (
-    <span className="chip" style={s.state} role="status">
-      A new version is ready — it updates by itself when the till is free.{' '}
-      <button type="button" onClick={applyUpdate} style={{ padding: '0 6px' }}>Update now</button>
-    </span>
+    <div style={s.updateBar} role="status">
+      <span>A new version is ready. It goes in by itself when the till is free.</span>
+      <button type="button" onClick={applyUpdate} style={s.updateBtn}>Update now</button>
+    </div>
   )
 }
 
-function Connection({ status, offline, waiting, inventory, inventoryStopped }) {
+function Connection({ status, offline, waiting, inventory, inventoryStopped, compact }) {
   // Sales on this till that the server has not got. POS-SYNC-003: never "All saved" while any are.
   const held = waiting > 0 && (
     <Link to="/sync" className="chip warn" style={s.state}>
@@ -256,7 +257,8 @@ function Connection({ status, offline, waiting, inventory, inventoryStopped }) {
   return (
     <span className="chip good" style={s.state}>
       {/* "Inventory connected" only when this shop's own link is on -- never from the server's setting. */}
-      <Dot color="var(--good)" /> {inventory ? 'All saved · Inventory connected' : 'All saved'}
+      {/* On a phone, the short form: the long one wrapped to three lines and hid the shop's name (17 Nov). */}
+      <Dot color="var(--good)" /> {inventory ? (compact ? 'Saved · Inventory on' : 'All saved · Inventory connected') : 'All saved'}
     </span>
   )
 }
@@ -271,10 +273,15 @@ const s = {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
     minHeight: 60, padding: '8px 20px', background: 'var(--panel)', borderBottom: '1px solid var(--line)'
   },
-  brand: { display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 },
+  brand: { display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: '1 1 auto' },
   shop: { display: 'block', fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
   who: { fontSize: 12, color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', gap: 8 },
   switch: { minHeight: 26, padding: '0 10px', fontSize: 12, fontWeight: 600, borderRadius: 99 },
-  state: { fontSize: 12, textAlign: 'right', whiteSpace: 'normal' },
+  state: { fontSize: 12, textAlign: 'right', whiteSpace: 'normal', flex: '0 1 auto' },
+  updateBar: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap',
+    padding: '6px 20px', fontSize: 13, background: 'var(--brand-tint)', borderBottom: '1px solid var(--line)'
+  },
+  updateBtn: { minHeight: 30, padding: '0 12px', fontSize: 13, fontWeight: 600 },
   content: { flex: 1, minHeight: 0, overflow: 'auto' }
 }

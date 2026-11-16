@@ -1195,7 +1195,7 @@ const s = {
   muted: { color: 'var(--ink-soft)', fontSize: 12.5, fontWeight: 400 },
   qty: { display: 'inline-flex', alignItems: 'center', gap: 2, background: 'var(--panel-soft)', border: '1px solid var(--line)', borderRadius: 12, padding: 2 },
   qtyBtn: { minHeight: 34, minWidth: 34, padding: 0, fontSize: 18, lineHeight: 1, border: 'none', boxShadow: 'none', background: 'transparent', borderRadius: 10 },
-  qtyNum: { minWidth: 28, textAlign: 'center', fontWeight: 700 },
+  qtyNum: { minWidth: 28, textAlign: 'center', fontWeight: 700, whiteSpace: 'nowrap' },
   remove: { minHeight: 34, minWidth: 34, padding: 0, fontSize: 18, lineHeight: 1, border: 'none', boxShadow: 'none', background: 'none', color: 'var(--ink-soft)' },
   moreBackdrop: {
     position: 'fixed', inset: 0, background: 'rgba(16, 24, 14, 0.4)',

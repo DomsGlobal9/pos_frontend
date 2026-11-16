@@ -580,7 +580,8 @@ const s = {
   lineText: { minWidth: 0 },
   gone: { color: 'var(--ink-soft)', textDecoration: 'line-through' },
   stepper: { display: 'flex', alignItems: 'center', gap: 6 },
-  qty: { minWidth: 24, textAlign: 'center' },
+  // nowrap: a length ("1.00 m") broke over two lines in the stepper on a phone (17 Nov).
+  qty: { minWidth: 24, textAlign: 'center', whiteSpace: 'nowrap' },
   small: { minHeight: 36, padding: '0 12px', fontWeight: 400 },
   total: { display: 'flex', justifyContent: 'space-between', fontSize: 15 },
   choices: { display: 'flex', gap: 6, flexWrap: 'wrap' },
