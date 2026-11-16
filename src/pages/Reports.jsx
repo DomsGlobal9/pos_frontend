@@ -3,6 +3,7 @@ import { Link, useOutletContext } from 'react-router-dom'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { loadReport, rupees, messageFor } from '../lib/api.js'
 import ItemSales from '../components/ItemSales.jsx'
+import { qtyText } from '../lib/units.js'
 import { isTouchFirst } from '../lib/useMedia.js'
 import { Difference } from './Shift.jsx'
 
@@ -186,7 +187,7 @@ export default function Reports() {
                           <div style={s.ellipsis}>{t.name}</div>
                           <div style={s.muted}>{t.code}</div>
                         </span>
-                        <span style={{ textAlign: 'right' }}><b>{t.qty}</b><div style={s.muted}>{rupees(t.netPaise)}</div></span>
+                        <span style={{ textAlign: 'right' }}><b>{qtyText(t.qty, t.unit)}</b><div style={s.muted}>{rupees(t.netPaise)}</div></span>
                       </li>
                     ))}
                   </ol>

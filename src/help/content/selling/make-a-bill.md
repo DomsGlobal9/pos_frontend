@@ -5,7 +5,7 @@ for: Cashiers, managers and the owner
 minutes: 3
 app: /sell
 appLabel: Sell
-keywords: bill billing sale new sale scan barcode find item add item quantity remove complete sale next sale print receipt estimate quotation keyboard shortcuts keys F2 F4 F8
+keywords: metre meter length cloth fabric cut by the metre bill billing sale new sale scan barcode find item add item quantity remove complete sale next sale print receipt estimate quotation keyboard shortcuts keys F2 F4 F8
 ---
 
 ## 1. Put the items on the bill
@@ -20,6 +20,14 @@ The price, the offer and the GST come from Inventory. An offer shows under the l
 ![The sell screen. The Find an item box is marked 1 and the camera button 2.](1-find-item.webp "Phones and tablets can scan with the camera.")
 
 ![Two items on the bill. One more is marked 1, the price 2 and remove 3.](2-lines.webp "Each line shows the item, its colour and size, and its code.")
+
+### Cloth sold by the metre
+
+Cloth sold by the metre asks **How much?** when you pick it. Tap a length (0.25 m, 0.5 m, 1 m, 2 m, 2.5 m,
+5 m) or type one in metres, for example *2.25*. The shop cuts in fixed steps, often 25 cm, so a typed length is
+taken to the nearest step and the till says so. The line reads **2.25 m × ₹450 / m**, and **+** / **−** add or
+take off one cut. The bill and the receipt show the same. A return takes cloth back in the same steps, or
+all that is left of it.
 
 :::tip No scanner?
 Tap the camera button (**Scan with camera**) to scan a tag with a phone or tablet camera.

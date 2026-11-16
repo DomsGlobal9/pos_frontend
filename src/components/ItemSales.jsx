@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { loadItemSales, rupees, messageFor } from '../lib/api.js'
+import { qtyText } from '../lib/units.js'
 
 /**
  * Every item sold in the report's period (28 Oct), not just the top ten: pieces and value sold less
@@ -34,14 +35,17 @@ export default function ItemSales({ range }) {
         )}
       </div>
       <p style={s.muted}>
-        {data.items.length} items · {data.totals.netQty} pieces · {rupees(data.totals.netPaise)} after {data.totals.returnedQty} returned. Values include GST.
+        {data.items.length} items · {data.totals.netQty} pieces
+        {/* Cloth (16 Nov): its own total, in metres, never added to the pieces. */}
+        {(data.lengths ?? []).map(u => ` · ${qtyText(u.netQty, u)}`).join('')}
+        {' · '}{rupees(data.totals.netPaise)} after {data.totals.returnedQty} returned. Values include GST.
       </p>
       {byGroup ? (
         <ul style={s.list}>
           {groups.map(g => (
-            <li key={g.group} style={s.row}>
+            <li key={`${g.group}|${g.unit?.soldBy ?? ''}`} style={s.row}>
               <span style={{ flex: 1 }}><b>{g.group}</b><div style={s.muted}>{g.items} colours / sizes</div></span>
-              <span style={s.num}><b>{g.netQty}</b><div style={s.muted}>{rupees(g.netPaise)}</div></span>
+              <span style={s.num}><b>{qtyText(g.netQty, g.unit)}</b><div style={s.muted}>{rupees(g.netPaise)}</div></span>
             </li>
           ))}
         </ul>
@@ -53,11 +57,11 @@ export default function ItemSales({ range }) {
                 <div style={s.ellipsis}>{i.name}</div>
                 <div style={s.muted}>
                   {[i.colour, i.size, i.code].filter(Boolean).join(' · ') || 'typed on the bill'}
-                  {i.returnedQty ? ` · ${i.returnedQty} back` : ''}
-                  {i.leftNow !== null && i.leftNow !== undefined ? ` · ${Math.max(0, i.leftNow)} left` : ''}
+                  {i.returnedQty ? ` · ${qtyText(i.returnedQty, i.unit)} back` : ''}
+                  {i.leftNow !== null && i.leftNow !== undefined ? ` · ${qtyText(Math.max(0, i.leftNow), i.unit)} left` : ''}
                 </div>
               </span>
-              <span style={s.num}><b>{i.netQty}</b><div style={s.muted}>{rupees(i.netPaise)}</div></span>
+              <span style={s.num}><b>{qtyText(i.netQty, i.unit)}</b><div style={s.muted}>{rupees(i.netPaise)}</div></span>
             </li>
           ))}
         </ul>

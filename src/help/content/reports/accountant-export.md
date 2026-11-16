@@ -23,9 +23,10 @@ keywords: accountant export excel csv gst return gstr-1 hsn summary b2b b2c down
   what it is — *Not received*, *Being checked*, *Written off* — never as paid.
 - **GST by rate** — each bill split by GST rate.
 - **HSN summary** — for **GSTR-1 table 12**: by HSN and rate, business (B2B) and consumer (B2C) apart,
-  credit notes taken off.
+  credit notes taken off. Cloth sold by the metre is its own row with UQC **MTR**, in metres; pieces are **NOS**.
 - **Items sold** — every item sold in the dates: code, name, colour, size and group, pieces and value
-  sold, returned, net, and how many are left now. A total at the bottom.
+  sold, returned, net, and how many are left now. A total at the bottom. Cloth is in metres (the **Unit** column says
+  **m**) with its own total below the pieces.
 - **Days** — each day's totals.
 - **Gift vouchers** — vouchers sold at these tills (and how they were paid), used on bills, and returned
   onto vouchers. They are not sales, so they are not in the other sheets: the shop owes them in goods, and
