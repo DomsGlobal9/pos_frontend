@@ -209,7 +209,8 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
   }
 
   function takeEverything() {
-    setPick(Object.fromEntries(info.lines.filter(l => l.remainingQty > 0).map(l => [l.saleLineId, l.remainingQty])))
+    // Cut cloth the owner does not take back is left out (16 Nov).
+    setPick(Object.fromEntries(info.lines.filter(l => l.remainingQty > 0 && l.unit?.returnable !== false).map(l => [l.saleLineId, l.remainingQty])))
   }
 
   /*
@@ -224,7 +225,9 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
     if (!q) return
     const same = l => (l.barcode ?? '').toLowerCase() === q || (l.itemCode ?? '').toLowerCase() === q
     const line = info.lines.find(l => same(l) && l.remainingQty > 0)
-    if (!line) {
+    if (line?.unit?.returnable === false) {
+      toast.error(`Cut cloth cannot be returned: ${line.description}.`)
+    } else if (!line) {
       toast.error(info.lines.some(same) ? 'That one has already come back.' : 'That is not on this bill.')
     } else {
       const now = pick[line.saleLineId] ?? 0
@@ -402,6 +405,8 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
           {info.lines.map(line => {
             const qty = pick[line.saleLineId] ?? 0
             const none = line.remainingQty === 0
+            // Cut cloth the owner does not take back (Inventory's tick on the product, 16 Nov).
+            const kept = line.unit?.returnable === false
             return (
               <li key={line.saleLineId} style={s.line}>
                 <div style={s.lineText}>
@@ -414,7 +419,10 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
                         : `${qtyText(line.qty, line.unit)} bought`}
                   </div>
                 </div>
-                {!none && (
+                {!none && kept && (
+                  <span style={s.muted}>Cut cloth: not returnable. The owner can allow it on the product in Inventory.</span>
+                )}
+                {!none && !kept && (
                   <div style={s.stepper}>
                     <button type="button" aria-label={`One fewer ${line.description}`}
                       onClick={() => setQty(line.saleLineId, qty - stepOf(line.unit), line.remainingQty)} disabled={qty === 0}>−</button>
