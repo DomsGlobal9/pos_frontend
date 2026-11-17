@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MessageCircle } from 'lucide-react'
 import { Link, useOutletContext, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -94,7 +95,7 @@ export function Orders() {
                   {order.itemCount} {order.itemCount === 1 ? 'piece' : 'pieces'}
                   {order.note ? ` · ${order.note}` : ''}
                 </div>
-                <div style={s.muted}>{order.invoiceNo}</div>
+                <div style={{ ...s.muted, whiteSpace: 'nowrap' }}>{order.invoiceNo}</div>
               </div>
               {/* Two facts, two tags: money, and where the goods are. A date goes red once it has passed. */}
               <div style={s.right}>
@@ -280,7 +281,7 @@ export function OrderDetail() {
         </div>
 
         {kept && !done && (
-          <div style={s.actions}>
+          <div style={s.actions} className="action-row">
             {data.owedPaise > 0 && (
               // One key per opening of the panel, so a double press records the money once.
               <button style={s.primary} onClick={() => setCollecting({ onceKey: newOnceKey() })}>
@@ -295,7 +296,7 @@ export function OrderDetail() {
         )}
 
         {done && (data.owedPaise > 0 || writtenOffPaise > 0) && (
-          <div style={s.actions}>
+          <div style={s.actions} className="action-row">
             <button style={s.primary} onClick={() => setCollecting({ onceKey: newOnceKey() })}>
               {data.owedPaise > 0 ? 'Take payment' : 'They paid after all'}
             </button>
@@ -348,8 +349,8 @@ export function OrderDetail() {
           if (!ready && !due) return null
           return (
             <div style={s.actions}>
-              {ready && <a href={ready} target="_blank" rel="noreferrer" aria-label="Tell them it is ready on WhatsApp">WhatsApp: it&apos;s ready</a>}
-              {due && !ready && <a href={due} target="_blank" rel="noreferrer" aria-label="Remind them on WhatsApp what is due">WhatsApp: remind about {rupees(data.owedPaise)}</a>}
+              {ready && <a href={ready} target="_blank" rel="noreferrer" className="btn-like" aria-label="Tell them it is ready on WhatsApp"><MessageCircle size={16} aria-hidden="true" />Tell them it&apos;s ready</a>}
+              {due && !ready && <a href={due} target="_blank" rel="noreferrer" className="btn-like" aria-label="Remind them on WhatsApp what is due"><MessageCircle size={16} aria-hidden="true" />Remind about {rupees(data.owedPaise)}</a>}
             </div>
           )
         })()}

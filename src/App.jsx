@@ -1,37 +1,79 @@
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import AppShell from './AppShell.jsx'
 import AskHost from './components/Ask.jsx'
-import Home from './pages/Home.jsx'
-import Till from './pages/Till.jsx'
-import Placeholder from './pages/Placeholder.jsx'
-import More from './pages/More.jsx'
-import Bills from './pages/Bills.jsx'
-import BillDetail from './pages/BillDetail.jsx'
-import PaymentChecks from './pages/PaymentChecks.jsx'
-import { Customers, CustomerDetail } from './pages/Customers.jsx'
-import Audit from './pages/Audit.jsx'
-import { Orders, OrderDetail } from './pages/Orders.jsx'
-import ReturnFlow from './pages/ReturnFlow.jsx'
-import CreditNote from './pages/CreditNote.jsx'
-import Shift from './pages/Shift.jsx'
-import DayClose from './pages/DayClose.jsx'
-import InventoryLink from './pages/InventoryLink.jsx'
-import Reports from './pages/Reports.jsx'
-import PublicReceipt from './pages/PublicReceipt.jsx'
-import Settings from './pages/Settings.jsx'
-import Devices from './pages/Devices.jsx'
-import Sync from './pages/Sync.jsx'
-import Connections from './pages/Connections.jsx'
-import Staff from './pages/Staff.jsx'
-import Items from './pages/Items.jsx'
-import Labels from './pages/Labels.jsx'
-import ShopSetup from './pages/ShopSetup.jsx'
+import PageLoading from './components/PageLoading.jsx'
+import { lazyPage, warmUp } from './lib/lazyPage.js'
+
+/*
+ * EVERY SCREEN IS ITS OWN FILE (17 Nov), fetched the first time it is opened -- and kept by the
+ * service worker, so the till still opens every screen with the internet off.
+ */
+const load = {
+  Home: () => import('./pages/Home.jsx'),
+  Till: () => import('./pages/Till.jsx'),
+  Placeholder: () => import('./pages/Placeholder.jsx'),
+  More: () => import('./pages/More.jsx'),
+  Bills: () => import('./pages/Bills.jsx'),
+  BillDetail: () => import('./pages/BillDetail.jsx'),
+  PaymentChecks: () => import('./pages/PaymentChecks.jsx'),
+  Customers: () => import('./pages/Customers.jsx'),
+  Audit: () => import('./pages/Audit.jsx'),
+  Orders: () => import('./pages/Orders.jsx'),
+  ReturnFlow: () => import('./pages/ReturnFlow.jsx'),
+  CreditNote: () => import('./pages/CreditNote.jsx'),
+  Shift: () => import('./pages/Shift.jsx'),
+  DayClose: () => import('./pages/DayClose.jsx'),
+  InventoryLink: () => import('./pages/InventoryLink.jsx'),
+  Reports: () => import('./pages/Reports.jsx'),
+  PublicReceipt: () => import('./pages/PublicReceipt.jsx'),
+  Settings: () => import('./pages/Settings.jsx'),
+  Devices: () => import('./pages/Devices.jsx'),
+  Sync: () => import('./pages/Sync.jsx'),
+  Connections: () => import('./pages/Connections.jsx'),
+  Staff: () => import('./pages/Staff.jsx'),
+  Items: () => import('./pages/Items.jsx'),
+  Labels: () => import('./pages/Labels.jsx'),
+  ShopSetup: () => import('./pages/ShopSetup.jsx')
+}
+const Home = lazyPage(load.Home)
+const Till = lazyPage(load.Till)
+const Placeholder = lazyPage(load.Placeholder)
+const More = lazyPage(load.More)
+const Bills = lazyPage(load.Bills)
+const BillDetail = lazyPage(load.BillDetail)
+const PaymentChecks = lazyPage(load.PaymentChecks)
+const Customers = lazyPage(load.Customers, 'Customers')
+const CustomerDetail = lazyPage(load.Customers, 'CustomerDetail')
+const Audit = lazyPage(load.Audit)
+const Orders = lazyPage(load.Orders, 'Orders')
+const OrderDetail = lazyPage(load.Orders, 'OrderDetail')
+const ReturnFlow = lazyPage(load.ReturnFlow)
+const CreditNote = lazyPage(load.CreditNote)
+const Shift = lazyPage(load.Shift)
+const DayClose = lazyPage(load.DayClose)
+const InventoryLink = lazyPage(load.InventoryLink)
+const Reports = lazyPage(load.Reports)
+const PublicReceipt = lazyPage(load.PublicReceipt)
+const Settings = lazyPage(load.Settings)
+const Devices = lazyPage(load.Devices)
+const Sync = lazyPage(load.Sync)
+const Connections = lazyPage(load.Connections)
+const Staff = lazyPage(load.Staff)
+const Items = lazyPage(load.Items)
+const Labels = lazyPage(load.Labels)
+const ShopSetup = lazyPage(load.ShopSetup)
+
+// The screens a cashier opens first, fetched while the till is idle so the first tap is instant.
+warmUp([load.Till, load.Home, load.Bills, load.Orders, load.Customers, load.More])
+
 // The guide loads on its own, only when opened: the till never downloads it otherwise.
-const HelpLayout = lazy(() => import('./pages/help/HelpLayout.jsx'))
-const HelpHome = lazy(() => import('./pages/help/HelpHome.jsx'))
-const HelpArticle = lazy(() => import('./pages/help/HelpArticle.jsx'))
-const helpPage = (el) => <Suspense fallback={null}>{el}</Suspense>
+const HelpLayout = lazyPage(() => import('./pages/help/HelpLayout.jsx'))
+const HelpHome = lazyPage(() => import('./pages/help/HelpHome.jsx'))
+const HelpArticle = lazyPage(() => import('./pages/help/HelpArticle.jsx'))
+/** A screen outside the till's shell (the guide, the customer's receipt, setup) waits on its own. */
+const page = (el) => <Suspense fallback={<PageLoading />}>{el}</Suspense>
+
 
 /**
  * Routes. Every path here is a screen registered in docs/product/FLOWS.md.
@@ -42,17 +84,17 @@ const helpPage = (el) => <Suspense fallback={null}>{el}</Suspense>
  */
 const router = createBrowserRouter([
   // The customer's digital receipt, outside the till: no navigation, no sign-in. POS-RCPT-009.
-  { path: '/r/:token', element: <PublicReceipt /> },
+  { path: '/r/:token', element: page(<PublicReceipt />) },
   // Setting up a new shop -- ScaleEzy staff, with the setup key. Outside the till: no sign-in.
-  { path: '/setup', element: <ShopSetup /> },
+  { path: '/setup', element: page(<ShopSetup />) },
   // The guide, outside the till: readable when the till is locked or not yet opened. The "?" in the
   // header opens /help?from=<this screen> and the page about that screen opens itself.
   {
     path: '/help',
-    element: helpPage(<HelpLayout />),
+    element: page(<HelpLayout />),
     children: [
-      { index: true, element: helpPage(<HelpHome />) },
-      { path: ':section/:slug', element: helpPage(<HelpArticle />) }
+      { index: true, element: page(<HelpHome />) },
+      { path: ':section/:slug', element: page(<HelpArticle />) }
     ]
   },
   {

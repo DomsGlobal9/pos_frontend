@@ -175,7 +175,7 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
     <div style={s.page}>
       <style>{printCss()}</style>
 
-      <div style={s.bar} className="no-print">
+      <div style={s.bar} className="no-print doc-bar">
         <div>
           <b>{onDone ? `Saved as ${sale.invoiceNo}` : sale.invoiceNo}</b>
           <div style={s.muted}>
@@ -183,7 +183,7 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
             {(sale.printCount ?? 0) > 0 && ` · printed ${sale.printCount} ${sale.printCount === 1 ? 'time' : 'times'}`}
           </div>
         </div>
-        <div style={s.tools}>
+        <div style={s.tools} className="doc-tools">
           <button onClick={print} disabled={printing} style={s.tool}>
             <Printer size={16} aria-hidden="true" />
             {printing ? 'Preparing…' : publicView ? 'Print' : (sale.printCount ?? 0) > 0 ? 'Print again' : 'Print'}

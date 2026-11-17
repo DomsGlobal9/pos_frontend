@@ -242,7 +242,7 @@ export default function PaymentPanel({ totalPaise, enabledMethods, onCancel, onC
               </div>
             )}
 
-            <div style={s.methods} role="group" aria-label="Payment method">
+            <div style={methods.length <= 3 ? { ...s.methods, gridTemplateColumns: `repeat(${methods.length}, minmax(0, 1fr))` } : s.methods} role="group" aria-label="Payment method">
               {methods.map(method => (
                 <button
                   key={method}

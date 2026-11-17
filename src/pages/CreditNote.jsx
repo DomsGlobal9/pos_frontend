@@ -2,6 +2,7 @@ import { kindOf } from '../lib/gst.js'
 import { qtyText, unitOfLine } from '../lib/units.js'
 import { waLink } from '../lib/whatsapp.js'
 import { useState } from 'react'
+import { Printer, MessageCircle } from 'lucide-react'
 import { Link, useOutletContext, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -71,14 +72,15 @@ export default function CreditNote() {
     <div style={s.page}>
       <style>{printCss()}</style>
 
-      <div style={s.bar} className="no-print">
+      <div style={s.bar} className="no-print doc-bar">
         <div>
           <b>{note.creditNoteNo}</b>
           <div style={s.soft}>
             {rupees(note.totalPaise)} back · {new Date(note.createdAt).toLocaleString('en-IN')}
           </div>
         </div>
-        <button onClick={() => window.print()}>Print</button>
+        <div className="doc-tools" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <button onClick={() => window.print()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Printer size={16} aria-hidden="true" />Print</button>
         {(() => {
           const back = note.refunds.map(r => `${rupees(r.amountPaise)} ${HOW[r.method] ?? r.method}`.trim()).join(', ')
           const href = waLink(note.customer?.phone,
@@ -87,8 +89,9 @@ export default function CreditNote() {
             (note.refunds.some(r => r.method === 'STORE_CREDIT') && note.customer ? ` Store credit now ${rupees(note.customer.storeCreditPaise)}.` : ''))
           // From the shop's own number when it is linked (13 Oct), the cashier's phone (Share) otherwise.
           if (whatsappReady && note.customer?.phone) return <SendCreditNote returnId={note.id} />
-          return href ? <a href={href} target="_blank" rel="noreferrer">Share on WhatsApp</a> : null
+          return href ? <a href={href} target="_blank" rel="noreferrer" className="btn-like" aria-label="Share on WhatsApp"><MessageCircle size={16} aria-hidden="true" />WhatsApp</a> : null
         })()}
+        </div>
       </div>
 
       {sends?.length > 0 && (

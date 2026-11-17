@@ -62,11 +62,12 @@ export default function Devices() {
                   <span className="chip"><Printer size={12} aria-hidden="true" /> {d.paperWidthMm} mm{d.lastPrintedAt ? ` · printed ${ago(d.lastPrintedAt)}` : ''}</span>
                   <span className="chip"><Camera size={12} aria-hidden="true" /> {d.capabilities?.camera ? 'Camera' : 'No camera'}</span>
                 </div>
+                {/* Under the details, not beside them (17 Nov): beside, it squeezed the chips one to a line on a phone. */}
+                {data.mayManage && editing !== d.id && <button type="button" className="btn-quiet" style={{ justifySelf: 'start', marginTop: 4 }} onClick={() => setEditing(d.id)}>Change</button>}
                 {editing === d.id && data.mayManage && (
                   <Edit device={d} counters={shop?.counters ?? []} onSave={body => save(d.id, body)} onCancel={() => setEditing(null)} />
                 )}
               </div>
-              {data.mayManage && editing !== d.id && <button style={s.small} onClick={() => setEditing(d.id)}>Change</button>}
             </li>
           )
         })}

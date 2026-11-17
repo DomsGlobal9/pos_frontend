@@ -37,6 +37,8 @@
 html[data-theme='dark'] .hp-root { --hp-brand-ink: #A6D92B; --hp-tint: rgba(166, 217, 43, 0.1); }
 .hp-root *, .hp-root *::before, .hp-root *::after { box-sizing: border-box; }
 .hp-root a { color: inherit; }
+/* The till's own button rule (48 px tall, a shadow) is for the till; the guide sizes its buttons itself (17 Nov). */
+.hp-root button { min-height: 0; box-shadow: none; }
 
 /* header */
 .hp-header { position: sticky; top: 0; z-index: 30; height: var(--hp-header-h); display: flex; align-items: center; gap: 16px; padding: 0 24px; background: color-mix(in srgb, var(--hp-page) 90%, transparent); backdrop-filter: saturate(1.4) blur(10px); border-bottom: 1px solid var(--hp-line); }

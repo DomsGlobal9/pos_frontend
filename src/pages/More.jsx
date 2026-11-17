@@ -78,7 +78,7 @@ export default function More() {
       <Link to="/sell" style={s.action}>Go to Sell</Link>
       {/* Only on a till that was opened with a password -- not in development's stand-in mode. */}
       {tillToken() && (
-        <button style={s.close} onClick={async () => {
+        <button className="btn-quiet danger" style={{ justifySelf: 'start' }} onClick={async () => {
           if (!await askYesNo('Close the till on this device?', { note: 'An owner or manager will need to open it again.', confirmLabel: 'Close the till' })) return
           try { await closeThisTill() } catch { /* closing here is what matters */ }
           tillClosed()
@@ -112,5 +112,4 @@ const s = {
     padding: '0 18px', borderRadius: 10, textDecoration: 'none',
     border: '1px solid var(--line)', color: 'var(--ink)', fontWeight: 600
   },
-  close: { background: 'none', border: 'none', boxShadow: 'none', color: 'var(--bad)', textDecoration: 'underline', justifySelf: 'start', padding: 0 }
 }

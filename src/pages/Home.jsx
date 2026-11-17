@@ -126,7 +126,9 @@ export default function Home() {
         <p style={s.empty}>Nothing sold yet. Press New sale to start.</p>
       )}
       <ul style={s.feed} className="card-list">
-        {(data?.activity ?? []).map(row => {
+        {/* Beside the main column on a wide screen, as tall as it and no taller (17 Nov: ten rows ran off the
+            bottom of a laptop). The rest are one press away in All bills. */}
+        {(data?.activity ?? []).slice(0, wide ? 6 : 10).map(row => {
           const isReturn = row.kind === 'RETURN'
           return (
             <li key={row.id}>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { QrCode, Boxes, Monitor, Image as ImageIcon, Receipt, Wallet, MessageCircle } from 'lucide-react'
+import { QrCode, Boxes, Monitor, Image as ImageIcon, ImagePlus, Receipt, Wallet, MessageCircle } from 'lucide-react'
 import CardMachinesSettings from '../components/CardMachinesSettings.jsx'
 import ShopDetailsSettings from '../components/ShopDetailsSettings.jsx'
 import IdleSignOutSettings from '../components/IdleSignOutSettings.jsx'
@@ -187,7 +187,11 @@ export default function Settings() {
           </p>
         ) : owner ? (
           <div style={s.actions}>
-            <input type="file" accept="image/*" aria-label="Choose a logo picture" onChange={pickLogo} disabled={busyLogo} />
+            <label className="btn-file" aria-disabled={busyLogo || undefined}>
+              <ImagePlus size={18} aria-hidden="true" />
+              {busyLogo ? 'Saving…' : logo ? 'Choose another picture' : 'Choose a picture'}
+              <input type="file" accept="image/*" className="sr-only" aria-label="Choose a logo picture" onChange={pickLogo} disabled={busyLogo} />
+            </label>
             {logo && <button disabled={busyLogo} onClick={() => saveLogo(null)} aria-label="Remove the logo">Remove</button>}
           </div>
         ) : <p style={s.muted}>Only the owner can change this.</p>}

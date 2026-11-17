@@ -72,7 +72,10 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 
 h1 { letter-spacing: -0.02em; }
 
-a { color: var(--brand-deep); }
+/* Links are green, never the browser's underline (17 Nov: underlined text read as a plain browser link).
+   A link in running text underlines on hover only, to show it can be pressed. */
+a { color: var(--brand-deep); text-decoration: none; }
+a:not([class]):not([style]):hover { text-decoration: underline; text-underline-offset: 3px; }
 
 button {
   min-height: var(--tap);
@@ -88,7 +91,8 @@ button {
   transition: background-color 120ms ease, border-color 120ms ease, transform 80ms ease, box-shadow 120ms ease;
 }
 
-button:hover:not(:disabled) { background: var(--panel-soft); border-color: #c5c8bf; }
+/* :where() keeps this a fallback: any button with its own hover (the guide's, .btn-quiet) wins. */
+button:where(:hover:not(:disabled)) { background: var(--panel-soft); border-color: #c5c8bf; }
 button:active:not(:disabled) { transform: translateY(1px); }
 button:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 
@@ -162,6 +166,8 @@ ul.card-list > li:last-child > *, ul.card-list > li:last-child { border-bottom: 
 
 /* Page titles, one style everywhere. */
 .shell-content h1 { font-size: 24px; font-weight: 700; }
+/* A name with no spaces in it (a pasted code, a test string) breaks rather than widening the page (17 Nov). */
+.shell-content h1, .shell-content h2 { overflow-wrap: anywhere; }
 
 /*
  * PHONE, TABLET AND DESKTOP ARE ALL FIRST-CLASS. (CHG-001 retired the rule that hid selling
@@ -237,3 +243,141 @@ html, body { max-width: 100%; overflow-x: hidden; }
 
 /* A row of short buttons (17 Nov): each keeps its words on one line, and the row wraps instead. */
 .btn-row > button, .btn-row > a { white-space: nowrap; }
+
+/*
+ * NO PLAIN BROWSER CONTROLS (17 Nov, owner: "nothing should be plain native buttons"). Drop-downs get
+ * the till's own green chevron instead of the browser's arrow; a date field's calendar icon is tinted
+ * to match; a file picker's "Choose file" looks like every other button.
+ */
+select {
+  -webkit-appearance: none; appearance: none;
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23164b1e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 18px;
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+select:hover:not(:disabled) { border-color: #c5c8bf; }
+select:disabled { opacity: 0.55; cursor: not-allowed; }
+
+input[type="date"] { cursor: pointer; }
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer; opacity: 0.75; padding: 4px; border-radius: 6px;
+  /* The browser's black icon, recoloured to the brand green. */
+  filter: invert(21%) sepia(31%) saturate(1200%) hue-rotate(84deg) brightness(92%);
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; background-color: var(--brand-tint); }
+
+input[type="file"]::file-selector-button {
+  font: inherit; font-weight: 600; color: var(--brand-deep);
+  min-height: 40px; padding: 0 16px; margin-right: 12px;
+  border: 1px solid var(--line-strong); border-radius: 10px; background: var(--panel-soft); cursor: pointer;
+}
+
+/* A picker that IS a button: the label is what you see and press, the real input is hidden inside it. */
+.btn-file {
+  display: inline-flex; align-items: center; gap: 8px; min-height: var(--tap); padding: 0 18px;
+  border: 1px solid var(--line-strong); border-radius: 12px; background: var(--panel);
+  color: var(--brand-deep); font-weight: 600; cursor: pointer; white-space: nowrap;
+  box-shadow: 0 1px 1px rgba(20, 30, 16, 0.04);
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.btn-file:hover { background: var(--brand-tint); border-color: var(--brand-deep); }
+.btn-file:focus-within { outline: 3px solid rgba(166, 217, 43, 0.9); outline-offset: 2px; }
+.btn-file[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
+
+.sr-only {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/*
+ * A small second action beside some text -- "Change name", "Change", "Add GSTIN". It was underlined
+ * text, which read as a plain browser link with a stray shadow under it; now it is a quiet outlined pill.
+ */
+:is(button, a).btn-quiet {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 36px; padding: 0 14px; border-radius: 18px;
+  border: 1px solid var(--line-strong); background: var(--panel);
+  color: var(--brand-deep); font-size: 14px; font-weight: 600;
+  vertical-align: middle; box-shadow: none; text-decoration: none;
+  /* Short words stay on one line; a long one ("Business buyer? Add GSTIN...") wraps inside, never off a phone. */
+  max-width: 100%; text-align: left; line-height: 1.25; padding-top: 6px; padding-bottom: 6px;
+}
+:is(button, a).btn-quiet:hover:not(:disabled) { background: var(--brand-tint); border-color: var(--brand-deep); }
+:is(button, a).btn-quiet.danger { color: var(--bad); }
+:is(button, a).btn-quiet.danger:hover:not(:disabled) { background: var(--bad-tint); border-color: var(--bad); }
+@media (max-width: 767px) { :is(button, a).btn-quiet { min-height: 40px; } }
+
+/* A link that does what a button does (Share on WhatsApp): it looks like one. */
+a.btn-like {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: var(--tap); padding: 0 16px; border-radius: 12px;
+  border: 1px solid var(--line-strong); background: var(--panel); color: var(--ink);
+  font-weight: 600; text-decoration: none; white-space: nowrap;
+  box-shadow: 0 1px 1px rgba(20, 30, 16, 0.04);
+}
+a.btn-like:hover { background: var(--panel-soft); border-color: #c5c8bf; }
+
+/*
+ * A bill's or credit note's own bar on a phone (17 Nov): the number on its own line, never broken at
+ * the hyphen, and Print / PDF / WhatsApp side by side in one even row under it.
+ */
+.doc-bar b { white-space: nowrap; }
+@media (max-width: 600px) {
+  .doc-bar { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
+  .doc-tools { display: grid !important; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px !important; }
+  .doc-tools > * { justify-content: center; min-width: 0; padding-left: 8px !important; padding-right: 8px !important; white-space: nowrap; }
+}
+
+/*
+ * A screen's row of actions on a phone (17 Nov: "Hand over" sat alone on a second line). Two even
+ * columns; with three, the first -- the main one -- takes the whole top row.
+ */
+@media (max-width: 600px) {
+  .action-row { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .action-row > * { min-width: 0; justify-content: center; }
+  .action-row > :only-child, .action-row > :first-child:nth-last-child(3) { grid-column: 1 / -1; }
+}
+
+/*
+ * THE SELL SCREEN'S BOTTOM PANEL ON A PHONE (17 Nov, 360px: Add customer and Served by on two half-empty
+ * rows, More and Take payment stacked, and only one and a half basket lines left in view). Now three
+ * tight rows: who, the total, then More beside a wide Take payment.
+ */
+@media (max-width: 480px) {
+  .till-checkout { grid-template-columns: minmax(0, 1fr) !important; row-gap: 8px !important; padding-top: 10px !important; }
+  .till-who { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px !important; }
+  .till-who > * { min-width: 0; }
+  .till-who > :only-child { grid-column: 1 / -1; }
+  .till-who > div > button { width: 100%; justify-content: center; }
+  .till-who label, .till-who select { width: 100%; max-width: none !important; }
+  .till-total { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-items: baseline; }
+  .till-total > :nth-child(1) { grid-column: 1 / -1; }
+  .till-total > :nth-child(2) { font-size: 30px !important; }
+  .till-total > :last-child { margin-top: 0 !important; text-align: right; }
+  .till-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); }
+}
+
+/* Report figures on a phone (17 Nov): two to a row; a last one left alone takes the whole row. */
+@media (max-width: 600px) {
+  .report-tiles > :last-child:nth-child(even) { grid-column: 1 / -1; }
+  .report-tiles > :not(:first-child) > div:last-child { font-size: 21px !important; overflow-wrap: anywhere; }
+}
+
+/* A screen loading its own file (components/PageLoading.jsx). Hidden for the first 150 ms. */
+.page-loading {
+  display: grid; gap: 14px; padding: 20px; max-width: 860px; margin: 0 auto; width: 100%;
+  animation: page-loading-in 0s linear 150ms both;
+}
+@keyframes page-loading-in { from { opacity: 0; } to { opacity: 1; } }
+.skel {
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--line) 25%, #f0f1ec 37%, var(--line) 63%);
+  background-size: 400% 100%;
+  animation: skel-shine 1.3s ease infinite;
+}
+@keyframes skel-shine { from { background-position: 100% 50%; } to { background-position: 0 50%; } }
+@media (prefers-reduced-motion: reduce) { .skel { animation: none; } }

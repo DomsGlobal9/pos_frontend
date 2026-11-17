@@ -77,7 +77,7 @@ export default function Reports() {
       {r && (
         <>
           {/* POS-RPT-001 */}
-          <section style={s.tiles}>
+          <section style={s.tiles} className="report-tiles">
             {/* Full width on a phone: a crore-sized figure does not fit half a screen. */}
             <div style={{ ...s.hero, gridColumn: wide ? 'span 1' : '1 / -1' }}>
               <div style={s.heroLabel}>Net sales</div>
@@ -118,7 +118,7 @@ export default function Reports() {
                   <div style={s.subhead}>
                     Still being checked · {rupees(r.beingChecked.amountPaise)}
                     {r.beingChecked.count > 1 ? ` across ${r.beingChecked.count} payments` : ''}
-                    <Link to="/payment-checks" style={{ marginLeft: 8 }}>Check them →</Link>
+                    <Link to="/payment-checks" className="btn-quiet" style={{ marginLeft: 8 }}>Check them</Link>
                   </div>
                 )}
                 {r.neverArrived?.amountPaise > 0 && (
@@ -274,7 +274,7 @@ export default function Reports() {
               {/* POS-RPT-010 */}
               {!limited && (
                 <Card title="Day closes">
-                  {r.dayCloses.length === 0 ? <p style={s.muted}>No day was closed in this period. <Link to="/day-close" style={{ whiteSpace: 'nowrap' }}>Close today</Link></p> : (
+                  {r.dayCloses.length === 0 ? <p style={s.muted}>No day was closed in this period. <Link to="/day-close" className="btn-quiet" style={{ marginLeft: 6 }}>Close today</Link></p> : (
                     <ul style={s.list} className="card-list">
                       {r.dayCloses.map(c => (
                         <li key={c.date} style={s.row}>
@@ -347,7 +347,7 @@ const s = {
   period: { minHeight: 40, padding: '0 14px', fontWeight: 500, whiteSpace: 'nowrap', borderRadius: 999 },
   dates: { display: 'flex', gap: 10, flexWrap: 'wrap' },
   label: { display: 'grid', gap: 6, fontSize: 13, color: 'var(--ink-soft)', minWidth: 160 },
-  tiles: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 },
+  tiles: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 },
   hero: {
     gridColumn: 'span 1', padding: '16px 18px', borderRadius: 16, color: '#fff',
     background: 'linear-gradient(135deg, #164b1e 0%, #1f6428 100%)', boxShadow: '0 12px 30px -16px rgba(22, 75, 30, 0.55)'
@@ -355,13 +355,13 @@ const s = {
   heroLabel: { fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.75)' },
   heroValue: { fontSize: 28, fontWeight: 800, marginTop: 4, letterSpacing: '-0.02em' },
   heroSub: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
-  tile: { padding: '16px 18px', borderRadius: 16, background: 'var(--panel)', border: '1px solid var(--line)', boxShadow: 'var(--shadow)' },
+  tile: { minWidth: 0, padding: '16px 18px', borderRadius: 16, background: 'var(--panel)', border: '1px solid var(--line)', boxShadow: 'var(--shadow)' },
   tileLabel: { fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)' },
   tileValue: { fontSize: 24, fontWeight: 800, marginTop: 4, letterSpacing: '-0.01em' },
   oneCol: { display: 'grid', gap: 14 },
   twoCol: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 16, alignItems: 'start' },
   col: { display: 'grid', gap: 14, alignContent: 'start', minWidth: 0 },
-  card: { display: 'grid', gap: 10, padding: 16, borderRadius: 16, background: 'var(--panel)', border: '1px solid var(--line)', boxShadow: 'var(--shadow)', minWidth: 0 },
+  card: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10, padding: 16, borderRadius: 16, background: 'var(--panel)', border: '1px solid var(--line)', boxShadow: 'var(--shadow)', minWidth: 0 },
   cardTitle: { margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.06em' },
   subhead: { fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', marginTop: 6 },
   bars: { display: 'grid', gap: 10 },
@@ -380,7 +380,7 @@ const s = {
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', boxShadow: 'none' },
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--line)', fontSize: 14 },
   rowLink: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--line)', fontSize: 14, textDecoration: 'none', color: 'var(--ink)' },
-  top: { listStyle: 'none', margin: 0, padding: 0, display: 'grid' },
+  top: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)' },
   topRow: { display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--line)', fontSize: 14 },
   rank: { flex: 'none', display: 'grid', placeItems: 'center', width: 28, height: 28, borderRadius: 9, background: 'var(--brand-tint)', color: 'var(--brand-deep)', fontWeight: 800, fontSize: 13 },
   ellipsis: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },

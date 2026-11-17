@@ -394,7 +394,7 @@ function Summary({ title, onChange, children }) {
     <section style={s.summary} aria-label={title}>
       <div style={s.sumHead}>
         <span style={s.sumTitle}>{title}</span>
-        <button type="button" style={s.link} onClick={onChange} aria-label={`Change ${title.toLowerCase()}`}>Change</button>
+        <button type="button" className="btn-quiet" onClick={onChange} aria-label={`Change ${title.toLowerCase()}`}>Change</button>
       </div>
       {children}
     </section>
@@ -507,7 +507,6 @@ const s = {
   sumHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   sumTitle: { fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ink-soft)' },
   sumMain: { fontWeight: 700, fontSize: 16 },
-  link: { minHeight: 32, padding: '0 10px', border: 'none', background: 'transparent', color: 'var(--brand-deep)', fontWeight: 600, textDecoration: 'underline' },
   people: { listStyle: 'none', margin: 0, padding: 0, display: 'grid' },
   personRow: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--line)', fontSize: 14 },
   avatarSm: { width: 30, height: 30, borderRadius: 999, background: 'var(--brand-tint)', color: 'var(--brand-deep)', display: 'grid', placeItems: 'center', fontWeight: 700, fontSize: 13 },

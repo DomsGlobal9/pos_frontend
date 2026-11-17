@@ -859,11 +859,11 @@ export default function Till() {
           )}
         </section>
 
-        <aside style={{ ...s.right, ...(stacked ? s.rightStacked : s.rightSplit) }}>
+        <aside style={{ ...s.right, ...(stacked ? s.rightStacked : s.rightSplit) }} className={stacked ? 'till-checkout' : undefined}>
           {/* On a phone (17 Nov) the panel is a grid: who on top, the total beside the buttons below.
               'contents' lets this wrapper's parts take their own places in that grid. */}
           <div style={stacked ? { display: 'contents' } : undefined}>
-            <div style={stacked ? s.whoRow : undefined}>
+            <div style={stacked ? s.whoRow : undefined} className={stacked ? 'till-who' : undefined}>
             {/* Above the total, because it is the thing a cashier checks last before taking
                 money -- and because leaving it blank has to stay effortless. */}
             <div style={stacked ? { ...s.customer, marginBottom: 0 } : s.customer}>
@@ -910,7 +910,7 @@ export default function Till() {
                   // Never narrower than its words (seen 9 Oct: "Nobody choser" on a phone); it drops below instead.
                   style={stacked ? { flex: '0 1 auto', minHeight: 40, maxWidth: 190 } : { flex: '1 0 auto' }}
                 >
-                  <option value="">{stacked ? 'Served by: nobody' : 'Nobody chosen'}</option>
+                  <option value="">{stacked ? 'Who served?' : 'Nobody chosen'}</option>
                   {tillStaff.staff.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </label>
@@ -919,12 +919,12 @@ export default function Till() {
             {needsBuyer && (
               <div style={stacked ? { ...s.muted, gridColumn: '1 / -1' } : s.muted} role="note">
                 Rs 50,000 or more: GST rules ask for the customer's name and address on this bill.{' '}
-                <button type="button" style={s.linkish} onClick={() => setAskingCustomer(true)}>
+                <button type="button" className="btn-quiet" style={{ marginLeft: 4 }} onClick={() => setAskingCustomer(true)}>
                   {customer ? 'Add them' : 'Add customer'}
                 </button>
               </div>
             )}
-            <div style={stacked ? { minWidth: 0, alignSelf: 'end' } : undefined}>
+            <div style={stacked ? { minWidth: 0, alignSelf: 'end' } : undefined} className={stacked ? 'till-total' : undefined}>
             <div style={s.totalLabel}>Total</div>
             <div style={stacked ? { ...s.totalValue, fontSize: 34 } : s.totalValue}>{rupees(totals.totalPaise)}</div>
             {totals.offersPaise > 0 && (
@@ -954,7 +954,7 @@ export default function Till() {
             </div>
           </div>
 
-          <div style={stacked ? { display: 'grid', gap: 8, alignSelf: 'end' } : { display: 'grid', gap: 8 }}>
+          <div style={stacked ? { display: 'grid', gap: 8, alignSelf: 'end' } : { display: 'grid', gap: 8 }} className={stacked ? 'till-actions' : undefined}>
             {/*
               * ONE primary action, and everything else behind More. On a phone this panel is a
               * single bar under the basket, and five secondary buttons round "Take payment" is the
@@ -1244,7 +1244,6 @@ const s = {
   keysHint: { margin: '10px 2px 0', fontSize: 12, color: 'var(--ink-soft)' },
   customerFacts: { fontSize: 12, color: 'var(--ink-soft)', marginTop: 4, flexBasis: '100%' },
   customerClear: { minHeight: 30, minWidth: 30, padding: 0, borderRadius: 999, border: 'none', boxShadow: 'none', background: 'transparent', color: 'var(--brand-deep)', display: 'grid', placeItems: 'center' },
-  linkish: { background: 'none', border: 'none', padding: 0, color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' },
   servedBy: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-soft)', margin: '6px 0', whiteSpace: 'nowrap' },
   customerAdd: { minHeight: 40, padding: '0 14px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 999, whiteSpace: 'nowrap' },
   totalLabel: { fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.08em' },

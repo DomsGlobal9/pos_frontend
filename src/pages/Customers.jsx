@@ -87,7 +87,7 @@ function ChangeName({ customer }) {
       toast.error(messageFor(err))
     }
   }
-  return <button type="button" style={s.linkButton} onClick={change}>{customer.name ? 'Change name' : 'Add name'}</button>
+  return <button type="button" className="btn-quiet" style={{ justifySelf: 'start' }} onClick={change}>{customer.name ? 'Change name' : 'Add name'}</button>
 }
 
 /**
@@ -116,7 +116,7 @@ function CreditAllowed({ customer }) {
   return (
     <div style={s.muted}>
       Credit allowed: {customer.creditLimitPaise == null ? 'none — a manager is asked every time' : rupees(customer.creditLimitPaise)}
-      {customer.mayGiveCredit && <> · <button type="button" style={s.linkButton} onClick={change}>Change</button></>}
+      {customer.mayGiveCredit && <> <button type="button" className="btn-quiet" style={{ marginLeft: 6 }} onClick={change}>Change</button></>}
     </div>
   )
 }
@@ -157,7 +157,7 @@ function BusinessDetails({ customer }) {
 
   if (!open) {
     return (
-      <button type="button" style={s.linkButton} onClick={start}>
+      <button type="button" className="btn-quiet" style={{ justifySelf: 'start' }} onClick={start}>
         {customer.gstin ? 'Change business details' : 'Business buyer? Add GSTIN for tax invoices'}
       </button>
     )
@@ -326,7 +326,6 @@ const s = {
   right: { textAlign: 'right', whiteSpace: 'nowrap', flex: '0 0 auto' },
   muted: { color: 'var(--ink-soft)', fontSize: 12, textDecoration: 'none' },
   bad: { color: 'var(--bad)', margin: 0 },
-  linkButton: { justifySelf: 'start', background: 'none', border: 'none', padding: 0, color: 'var(--accent, #2563eb)', textDecoration: 'underline', cursor: 'pointer', fontSize: 14 },
   form: { display: 'grid', gap: 10, padding: 14, border: '1px solid var(--line)', borderRadius: 14, background: 'var(--panel)' },
   field: { display: 'grid', gap: 4, fontSize: 13 }
 }

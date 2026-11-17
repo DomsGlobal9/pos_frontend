@@ -1,11 +1,12 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { HelpCircle } from 'lucide-react'
+import { HelpCircle, ArrowLeftRight } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { health, loadShop, whoAmI, loadInventoryLink } from './lib/api.js'
 import { useDevice, isTouchFirst } from './lib/useMedia.js'
 import NavBar from './components/NavBar.jsx'
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import PageLoading from './components/PageLoading.jsx'
 import { checkIn } from './lib/device.js'
 import { applyUpdate, updateReady, tillIsIdle } from './lib/update.js'
 import { useOutbox, flush, outboxItems } from './lib/outbox.js'
@@ -151,17 +152,23 @@ export default function AppShell() {
       {!bottomNav && <NavBar device={device} />}
 
       <div style={s.main}>
-        <header style={s.header}>
-          <div style={s.brand}>
+        <header style={bottomNav ? { ...s.header, ...s.headerPhone } : s.header}>
+          <div style={bottomNav ? { ...s.brand, gap: 8 } : s.brand}>
             {/* On a phone the rail is gone, so the mark lives here instead. */}
             {bottomNav && <img src="/scaleezy-mark.svg" alt="" width="26" height="26" />}
             <div style={{ minWidth: 0 }}>
               <strong style={s.shop}>{shop?.shop?.shopName ?? 'ScaleEzy POS'}</strong>
               {shop?.cashier?.name && (
                 <div style={s.who}>
-                  {shop.cashier.name}
-                  {/* The next person takes the till with their own PIN. Only on an opened till. */}
-                  {tillToken() && <button type="button" style={s.switch} onClick={() => personOut()}>Switch</button>}
+                  <span style={s.whoName}>{shop.cashier.name}</span>
+                  {/* The next person takes the till with their own PIN. Only on an opened till. On a phone, just the
+                      icon (17 Nov): the word squeezed the name onto two lines and ran into the status. */}
+                  {tillToken() && (
+                    <button type="button" style={bottomNav ? s.switchIcon : s.switch} onClick={() => personOut()}
+                      aria-label="Switch person" title="Switch person">
+                      <ArrowLeftRight size={bottomNav ? 15 : 13} aria-hidden="true" />{!bottomNav && 'Switch'}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -173,7 +180,10 @@ export default function AppShell() {
         <UpdateReady />
 
         <div style={s.content} className="shell-content">
-          <Outlet context={{ device, shop }} />
+          {/* Each screen loads its own file the first time; the header and the bar stay put meanwhile. */}
+          <Suspense fallback={<PageLoading />}>
+            <Outlet context={{ device, shop }} />
+          </Suspense>
         </div>
       </div>
 
@@ -258,7 +268,7 @@ function Connection({ status, offline, waiting, inventory, inventoryStopped, com
     <span className="chip good" style={{ ...s.state, whiteSpace: 'nowrap' }}>
       {/* "Inventory connected" only when this shop's own link is on -- never from the server's setting. */}
       {/* On a phone, the short form: the long one wrapped to three lines and hid the shop's name (17 Nov). */}
-      <Dot color="var(--good)" /> {inventory ? (compact ? 'Saved · Inventory on' : 'All saved · Inventory connected') : 'All saved'}
+      <Dot color="var(--good)" /> {inventory ? (compact ? 'Saved · Inventory on' : 'All saved · Inventory connected') : (compact ? 'Saved' : 'All saved')}
     </span>
   )
 }
@@ -275,8 +285,11 @@ const s = {
   },
   brand: { display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: '1 1 auto' },
   shop: { display: 'block', fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-  who: { fontSize: 12, color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', gap: 8 },
-  switch: { minHeight: 26, padding: '0 10px', fontSize: 12, fontWeight: 600, borderRadius: 99 },
+  headerPhone: { gap: 8, padding: '8px 12px 8px 14px' },
+  who: { fontSize: 12, color: 'var(--ink-soft)', display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 },
+  whoName: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 },
+  switch: { display: 'inline-flex', alignItems: 'center', gap: 5, minHeight: 26, padding: '0 10px', fontSize: 12, fontWeight: 600, borderRadius: 99, flexShrink: 0, color: 'var(--brand-deep)' },
+  switchIcon: { display: 'grid', placeItems: 'center', minHeight: 28, height: 28, width: 28, padding: 0, borderRadius: 99, flexShrink: 0, color: 'var(--brand-deep)', background: 'var(--brand-tint)', borderColor: 'transparent', boxShadow: 'none' },
   state: { fontSize: 12, textAlign: 'right', whiteSpace: 'normal', flex: '0 1 auto' },
   updateBar: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap',

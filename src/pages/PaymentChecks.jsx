@@ -163,7 +163,7 @@ const s = {
   detail: { minWidth: 0 },
   actions: { display: 'flex', gap: 8, flexWrap: 'wrap' },
   never: { color: 'var(--bad)' },
-  link: { color: 'var(--ink-soft)' },
+  link: { color: 'var(--brand-deep)', fontWeight: 600 },
   muted: { color: 'var(--ink-soft)', fontSize: 12 },
   bad: { color: 'var(--bad)', margin: 0 }
 }

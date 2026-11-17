@@ -137,7 +137,7 @@ export function WhoAtTill({ onDone }) {
           </div>
         )}
         {error && <p style={s.bad} role="alert">{error}</p>}
-        <button type="button" style={s.link} onClick={close}>Close the till on this device</button>
+        <button type="button" className="btn-quiet" style={{ justifySelf: 'center' }} onClick={close}>Close the till on this device</button>
       </div>
     </div>
   )
@@ -161,5 +161,4 @@ const s = {
   dotOn: { background: 'var(--brand-deep)', borderColor: 'var(--brand-deep)' },
   pad: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 },
   key: { minHeight: 52, fontSize: 20, fontWeight: 600 },
-  link: { background: 'none', border: 'none', boxShadow: 'none', color: 'var(--ink-soft)', fontSize: 13, textDecoration: 'underline', justifySelf: 'center' }
 }

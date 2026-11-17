@@ -94,7 +94,7 @@ export default function Items() {
     <div style={s.page}>
       <div style={s.head}>
         <h1>Items</h1>
-        <Link to="/labels">Print barcode labels</Link>
+        <Link to="/labels" className="btn-quiet">Print barcode labels</Link>
         {!form && (
           <button style={s.primary} onClick={() => setForm({ ...EMPTY })}>
             <Plus size={16} aria-hidden="true" /> Add item
@@ -158,7 +158,7 @@ export default function Items() {
         {[['', 'All'], ['low', `Low (${data.lowCount ?? 0})`], ['out', `Out of stock (${data.outCount ?? 0})`]].map(([k, label]) => (
           <button key={k || 'all'} type="button" role="radio" aria-checked={stock === k} onClick={() => setStock(k)} style={stock === k ? s.on : undefined}>{label}</button>
         ))}
-        <span style={s.muted}>Low means {data.lowStockAt ?? 2} or fewer. <button type="button" style={s.link} onClick={changeLow} aria-label="Change the low-stock level">Change</button></span>
+        <span style={s.muted}>Low means {data.lowStockAt ?? 2} or fewer. <button type="button" className="btn-quiet" style={{ marginLeft: 6 }} onClick={changeLow} aria-label="Change the low-stock level">Change</button></span>
       </div>
 
       {data.items.length === 0
@@ -247,5 +247,4 @@ const s = {
   check: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, flexWrap: 'wrap' },
   filters: { display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' },
   on: { background: 'var(--accent)', borderColor: 'var(--accent)', color: '#fff' },
-  link: { border: 'none', background: 'none', padding: 0, minHeight: 0, color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' }
 }
