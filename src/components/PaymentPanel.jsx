@@ -615,7 +615,8 @@ const s = {
   method: { minHeight: 48, minWidth: 0 },
   methodOn: { background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' },
   label: { display: 'grid', gap: 6, fontSize: 13, color: 'var(--ink-soft)' },
-  quick: { display: 'flex', gap: 8, flexWrap: 'wrap' },
+  // An even row of quick amounts (17 Nov): wrapped, 'Exact' sat alone on a line of its own on a phone.
+  quick: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(86px, 1fr))', gap: 8 },
   change: { borderTop: '1px solid var(--line)', paddingTop: 10 },
   check: { display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer' },
   checkbox: { width: 22, height: 22, minHeight: 22, marginTop: 2, flex: '0 0 auto' },

@@ -157,7 +157,7 @@ export default function Settings() {
           Decides what every bill is: a tax invoice, a Bill of Supply (composition -- no GST charged), or a plain
           receipt. Bills already given out keep what they were issued as.
         </p>
-        <div style={s.actions} role="radiogroup" aria-label="How the shop is registered for GST">
+        <div style={s.actions} className="btn-row" role="radiogroup" aria-label="How the shop is registered for GST">
           {[['REGULAR', 'GST registered'], ['COMPOSITION', 'Composition'], ['UNREGISTERED', 'Not registered']].map(([value, label]) => (
             <button key={value} role="radio" aria-checked={registration === value}
               style={registration === value ? s.primary : undefined}
@@ -284,7 +284,8 @@ const s = {
   head: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 16 },
   icon: { display: 'grid', placeItems: 'center', width: 36, height: 36, borderRadius: 12, background: 'var(--brand-tint)', color: 'var(--brand-deep)', flex: 'none' },
   label: { display: 'grid', gap: 6, fontSize: 13, color: 'var(--ink-soft)' },
-  actions: { display: 'flex', gap: 8 },
+  // Short buttons keep their words together; the row wraps instead (17 Nov: 'GST / registered' on phones).
+  actions: { display: 'flex', gap: 8, flexWrap: 'wrap' },
   primary: { background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' },
   row: {
     display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 14, background: 'var(--panel)',

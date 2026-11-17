@@ -860,10 +860,13 @@ export default function Till() {
         </section>
 
         <aside style={{ ...s.right, ...(stacked ? s.rightStacked : s.rightSplit) }}>
-          <div>
+          {/* On a phone (17 Nov) the panel is a grid: who on top, the total beside the buttons below.
+              'contents' lets this wrapper's parts take their own places in that grid. */}
+          <div style={stacked ? { display: 'contents' } : undefined}>
+            <div style={stacked ? s.whoRow : undefined}>
             {/* Above the total, because it is the thing a cashier checks last before taking
                 money -- and because leaving it blank has to stay effortless. */}
-            <div style={s.customer}>
+            <div style={stacked ? { ...s.customer, marginBottom: 0 } : s.customer}>
               {customer ? (<>
                 <span style={s.customerChip}>
                   <User size={16} aria-hidden="true" />
@@ -894,8 +897,9 @@ export default function Till() {
               )}
             </div>
             {tillStaff?.staff?.length > 0 && (
-              <label style={s.servedBy}>
-                Served by
+              <label style={stacked ? { ...s.servedBy, margin: 0 } : s.servedBy}>
+                {/* On a phone the words go (the drop-down keeps its name for screen readers), so it fits beside Add customer. */}
+                {!stacked && 'Served by'}
                 <select
                   value={salesperson?.id ?? ''}
                   onChange={e => {
@@ -904,23 +908,25 @@ export default function Till() {
                   }}
                   aria-label="Served by"
                   // Never narrower than its words (seen 9 Oct: "Nobody choser" on a phone); it drops below instead.
-                  style={{ flex: '1 0 auto' }}
+                  style={stacked ? { flex: '0 1 auto', minHeight: 40, maxWidth: 190 } : { flex: '1 0 auto' }}
                 >
-                  <option value="">Nobody chosen</option>
+                  <option value="">{stacked ? 'Served by: nobody' : 'Nobody chosen'}</option>
                   {tillStaff.staff.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </label>
             )}
+            </div>
             {needsBuyer && (
-              <div style={s.muted} role="note">
+              <div style={stacked ? { ...s.muted, gridColumn: '1 / -1' } : s.muted} role="note">
                 Rs 50,000 or more: GST rules ask for the customer's name and address on this bill.{' '}
                 <button type="button" style={s.linkish} onClick={() => setAskingCustomer(true)}>
                   {customer ? 'Add them' : 'Add customer'}
                 </button>
               </div>
             )}
+            <div style={stacked ? { minWidth: 0, alignSelf: 'end' } : undefined}>
             <div style={s.totalLabel}>Total</div>
-            <div style={s.totalValue}>{rupees(totals.totalPaise)}</div>
+            <div style={stacked ? { ...s.totalValue, fontSize: 34 } : s.totalValue}>{rupees(totals.totalPaise)}</div>
             {totals.offersPaise > 0 && (
               <div style={s.offer}>Offers −{rupees(totals.offersPaise)}</div>
             )}
@@ -945,9 +951,10 @@ export default function Till() {
                 return `${n} ${n === 1 ? 'item' : 'items'}`
               })()}
             </div>
+            </div>
           </div>
 
-          <div style={{ display: 'grid', gap: 8 }}>
+          <div style={stacked ? { display: 'grid', gap: 8, alignSelf: 'end' } : { display: 'grid', gap: 8 }}>
             {/*
               * ONE primary action, and everything else behind More. On a phone this panel is a
               * single bar under the basket, and five secondary buttons round "Take payment" is the
@@ -1146,6 +1153,7 @@ const s = {
   bodyStacked: { gridTemplateRows: 'minmax(0, 1fr) auto' },
   left: { padding: 20, overflow: 'auto', minWidth: 0, display: 'grid', gap: 14, alignContent: 'start' },
   right: { background: 'var(--panel)', padding: 20, display: 'flex' },
+  whoRow: { gridColumn: '1 / -1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
   rightSplit: {
     borderLeft: '1px solid var(--line)',
     flexDirection: 'column', justifyContent: 'space-between',
@@ -1153,7 +1161,8 @@ const s = {
   },
   rightStacked: {
     borderTop: '1px solid var(--line)',
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+    // Who on the top row; the total beside More and Take payment under it (17 Nov).
+    display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', columnGap: 12, rowGap: 10, alignItems: 'end',
     padding: '12px 16px',
     paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
     boxShadow: '0 -8px 24px -18px rgba(20, 30, 16, 0.3)'
@@ -1237,11 +1246,12 @@ const s = {
   customerClear: { minHeight: 30, minWidth: 30, padding: 0, borderRadius: 999, border: 'none', boxShadow: 'none', background: 'transparent', color: 'var(--brand-deep)', display: 'grid', placeItems: 'center' },
   linkish: { background: 'none', border: 'none', padding: 0, color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: 'inherit' },
   servedBy: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-soft)', margin: '6px 0', whiteSpace: 'nowrap' },
-  customerAdd: { minHeight: 40, padding: '0 14px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 999 },
+  customerAdd: { minHeight: 40, padding: '0 14px', fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 999, whiteSpace: 'nowrap' },
   totalLabel: { fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.08em' },
   totalValue: { fontSize: 44, fontWeight: 800, lineHeight: 1.05, letterSpacing: '-0.02em' },
   complete: {
-    minHeight: 58, fontSize: 17, fontWeight: 800, borderRadius: 16,
+    // nowrap: "Take payment" broke over two lines on most phones (17 Nov).
+    minHeight: 58, fontSize: 17, fontWeight: 800, borderRadius: 16, whiteSpace: 'nowrap', padding: '0 18px',
     background: 'var(--brand)', color: 'var(--brand-deep)', borderColor: 'var(--brand)',
     boxShadow: '0 1px 2px rgba(22,75,30,0.15), 0 10px 24px -12px rgba(110,150,20,0.8)'
   }

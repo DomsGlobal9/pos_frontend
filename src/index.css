@@ -137,7 +137,11 @@ ul.card-list {
   padding: 0 16px !important;
   gap: 0 !important;
   overflow: hidden;
+  /* Never wider than the screen (17 Nov): one long name or code made every row of the list run off a phone. */
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
 }
+ul.card-list > li { min-width: 0; overflow-wrap: anywhere; }
 ul.card-list:empty { display: none; }
 ul.card-list > li:last-child > *, ul.card-list > li:last-child { border-bottom: 0 !important; }
 
@@ -230,3 +234,6 @@ html, body { max-width: 100%; overflow-x: hidden; }
   [role="dialog"][data-sheet] { align-items: center !important; padding: 16px !important; }
   [role="dialog"][data-sheet] > * { border-radius: 16px !important; }
 }
+
+/* A row of short buttons (17 Nov): each keeps its words on one line, and the row wraps instead. */
+.btn-row > button, .btn-row > a { white-space: nowrap; }

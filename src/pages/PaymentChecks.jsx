@@ -129,7 +129,7 @@ export default function PaymentChecks() {
                 {payment.reference ? ` · ${payment.reference}` : ''}
               </div>
             </div>
-            <div style={s.actions}>
+            <div style={s.actions} className="btn-row">
               <button
                 disabled={busy === payment.id}
                 onClick={() => settle(payment, true)}
@@ -161,7 +161,7 @@ const s = {
     flexWrap: 'wrap', padding: '12px 0', borderBottom: '1px solid var(--line)'
   },
   detail: { minWidth: 0 },
-  actions: { display: 'flex', gap: 8 },
+  actions: { display: 'flex', gap: 8, flexWrap: 'wrap' },
   never: { color: 'var(--bad)' },
   link: { color: 'var(--ink-soft)' },
   muted: { color: 'var(--ink-soft)', fontSize: 12 },

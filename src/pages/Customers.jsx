@@ -311,7 +311,8 @@ const s = {
     display: 'block', padding: '14px 16px', borderRadius: 14, textDecoration: 'none',
     background: 'var(--warn-tint)', color: 'var(--warn)', fontWeight: 700
   },
-  list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
+  // minmax(0, 1fr): one very long name no longer widens every row past a phone's edge (17 Nov).
+  list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 2 },
   creditRow: {
     display: 'flex', justifyContent: 'space-between', gap: 12, padding: '6px 0',
     borderBottom: '1px solid var(--line)', fontSize: 14
@@ -321,8 +322,8 @@ const s = {
     minHeight: 60, padding: '8px 0', borderBottom: '1px solid var(--line)',
     textDecoration: 'none', color: 'var(--ink)'
   },
-  main: { minWidth: 0 },
-  right: { textAlign: 'right', whiteSpace: 'nowrap' },
+  main: { minWidth: 0, flex: '1 1 auto', overflowWrap: 'anywhere' },
+  right: { textAlign: 'right', whiteSpace: 'nowrap', flex: '0 0 auto' },
   muted: { color: 'var(--ink-soft)', fontSize: 12, textDecoration: 'none' },
   bad: { color: 'var(--bad)', margin: 0 },
   linkButton: { justifySelf: 'start', background: 'none', border: 'none', padding: 0, color: 'var(--accent, #2563eb)', textDecoration: 'underline', cursor: 'pointer', fontSize: 14 },

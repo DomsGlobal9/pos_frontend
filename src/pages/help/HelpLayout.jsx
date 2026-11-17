@@ -88,7 +88,7 @@ export default function HelpLayout() {
           {/* Shown only once a second language has pages. On a phone it lives in the menu instead. */}
           {LANGUAGES.length > 1 && <LanguageMenu lang={lang} setLang={setLang} />}
           {isAuthenticated
-            ? <Link to="/" className="hp-cta">{t(lang, 'openApp')} <ArrowRight size={15} /></Link>
+            ? <Link to="/" className="hp-cta" aria-label={t(lang, 'openApp')}><span className="hp-cta-text">{t(lang, 'openApp')}</span> <ArrowRight size={15} /></Link>
             : <Link to="/" className="hp-cta">{t(lang, 'signIn')}</Link>}
         </div>
       </header>

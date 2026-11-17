@@ -255,7 +255,7 @@ function Connection({ status, offline, waiting, inventory, inventoryStopped, com
     )
   }
   return (
-    <span className="chip good" style={s.state}>
+    <span className="chip good" style={{ ...s.state, whiteSpace: 'nowrap' }}>
       {/* "Inventory connected" only when this shop's own link is on -- never from the server's setting. */}
       {/* On a phone, the short form: the long one wrapped to three lines and hid the shop's name (17 Nov). */}
       <Dot color="var(--good)" /> {inventory ? (compact ? 'Saved · Inventory on' : 'All saved · Inventory connected') : 'All saved'}

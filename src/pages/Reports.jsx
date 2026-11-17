@@ -274,7 +274,7 @@ export default function Reports() {
               {/* POS-RPT-010 */}
               {!limited && (
                 <Card title="Day closes">
-                  {r.dayCloses.length === 0 ? <p style={s.muted}>No day was closed in this period. <Link to="/day-close">Close today</Link></p> : (
+                  {r.dayCloses.length === 0 ? <p style={s.muted}>No day was closed in this period. <Link to="/day-close" style={{ whiteSpace: 'nowrap' }}>Close today</Link></p> : (
                     <ul style={s.list} className="card-list">
                       {r.dayCloses.map(c => (
                         <li key={c.date} style={s.row}>

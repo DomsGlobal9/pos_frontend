@@ -288,3 +288,16 @@ html[data-theme='dark'] .hp-box-warning .hp-box-title { color: #fcd34d; }
   .hp-pager .next { grid-column: 1; }
   .hp-grid { grid-template-columns: 1fr; }
 }
+
+/* A small phone (17 Nov): "Back to the till" was cut off the right edge. Shorter padding, and on the
+   smallest screens the button keeps just its arrow (its name stays for screen readers via the link text). */
+@media (max-width: 400px) {
+  .hp-header { gap: 8px; }
+  .hp-brand-name { font-size: 15px; }
+  .hp-cta { padding: 0 10px; font-size: 13px; }
+}
+@media (max-width: 360px) {
+  .hp-cta { gap: 0; width: 38px; justify-content: center; padding: 0; }
+  .hp-cta-text { display: none; }
+  .hp-cta svg { width: 18px; height: 18px; }
+}
