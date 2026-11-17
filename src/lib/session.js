@@ -3,6 +3,8 @@
  *
  *   tillToken   this device's till is open (an owner or manager signed in). 30 days, or until closed.
  *   staffToken  the person billing right now. 12 hours; Switch drops it and asks for a name and PIN.
+ *   offlineKey  comes with the staffToken and goes with it: what that person stamps their offline
+ *               sales with, so a sale sent later still carries their name (lib/outbox.js).
  *
  * Kept in local storage so a reload does not sign anyone out mid-sale. Listeners hear when the
  * server says the till was closed or the person's turn ended, so the shell can show the right screen.
@@ -40,13 +42,14 @@ function commit(next) {
 export const session = () => state
 export const staffToken = () => state.staffToken ?? null
 export const tillToken = () => state.tillToken ?? null
+export const offlineKey = () => state.offlineKey ?? null
 export const onSession = (fn) => { listeners.add(fn); return () => listeners.delete(fn) }
 
-export function tillOpened({ tillToken, staffToken, shop, person }) {
-  commit({ tillToken, staffToken, shopName: shop?.name ?? null, person })
+export function tillOpened({ tillToken, staffToken, offlineKey, shop, person }) {
+  commit({ tillToken, staffToken, offlineKey, shopName: shop?.name ?? null, person })
 }
-export function personIn({ staffToken, person }) {
-  commit({ ...state, staffToken, person })
+export function personIn({ staffToken, offlineKey, person }) {
+  commit({ ...state, staffToken, offlineKey, person })
 }
 /*
  * A CLEAR ONLY CLEARS WHAT THIS TAB STILL HOLDS.
@@ -69,7 +72,7 @@ function stillOurs(field, refused) {
 /** Switch: the next person chooses their name. The till stays open. */
 export function personOut(refused) {
   if (!stillOurs('staffToken', refused)) return
-  const { staffToken: _gone, person: _p, ...rest } = state
+  const { staffToken: _gone, offlineKey: _key, person: _p, ...rest } = state
   commit(rest)
 }
 /** The till is closed on this device. */

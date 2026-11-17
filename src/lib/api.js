@@ -204,8 +204,21 @@ export async function resolvePayment(id, body) {
 }
 
 export async function completeSale(body, asToken) {
-  // A sale kept on the device is sent as the person who made it (their sign-in, kept with it).
+  // A sale kept on the device by an older version of the till: sent under its maker's own sign-in.
   const { data } = await api.post('/sales', body, asToken ? { headers: { Authorization: `Bearer ${asToken}`, 'x-keep-session': '1' } } : undefined)
+  return data.data
+}
+
+/**
+ * A sale kept on the device, sent as the person who made it: by their STAMP on it, not their sign-in
+ * (lib/outbox.js). The body goes as the exact text the stamp was made over, with the till's own key
+ * to say which open till is sending. Whoever is signed in now -- or nobody -- does not matter.
+ */
+export async function completeStampedSale(bodyText, maker, tillKey) {
+  const { data } = await api.post('/sales', bodyText, {
+    headers: { 'Content-Type': 'application/json', 'x-maker': maker.claims, 'x-maker-proof': maker.proof, 'x-till-token': tillKey ?? '', 'x-keep-session': '1' },
+    transformRequest: [text => text]
+  })
   return data.data
 }
 

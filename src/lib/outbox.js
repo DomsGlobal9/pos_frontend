@@ -1,22 +1,38 @@
 import { useSyncExternalStore } from 'react'
-import { completeSale, messageFor } from './api.js'
-import { staffToken } from './session.js'
+import { completeSale, completeStampedSale, messageFor } from './api.js'
+import { staffToken, offlineKey, tillToken } from './session.js'
 
 /*
  * A SALE KEPT ON THE DEVICE IS SENT AS THE PERSON WHO MADE IT, WHOEVER IS AT THE TILL BY THEN.
+ * The bill, the shift and the drawer it is counted in all hang on that name.
  *
- * So each queued sale keeps its maker's sign-in until it is sent (or that sign-in runs out, after
- * which it goes as whoever is there). The bill, the shift and the drawer it is counted in all hang
- * on that name.
+ * It used to keep its maker's whole sign-in beside it for that, and after Switch that sign-in was
+ * still in this browser's storage for the next person to lift (security audit pos-run-1, 17 Nov).
+ * Dropping it at Switch put Ravi's sale on Priya's name, which is worse, and was taken back.
  *
- * 17 Nov: the security audit (pos-run-1) noted the cost -- after Switch, the earlier person's
- * sign-in is still in this browser's storage for as long as their sale is unsent -- and for a few
- * hours this file dropped it at Switch. That put Ravi's offline sale on Priya's name
- * (verify-signin-ui caught it), which is the worse fault: a wrong name on a bill and in a cash
- * count, every time, against a risk that needs someone with the till's own browser tools in a short
- * window. Restored. The right repair keeps the name without keeping the sign-in: a proof that only
- * this one sale was made by them. That is its own piece of work; until then this stays as it was.
+ * Now the maker leaves a STAMP instead (backend: services/auth/maker-stamp.ts). While signed in, a
+ * person holds an offline key the server gave them. Queuing a sale, the till keeps the first two
+ * parts of their sign-in -- who, which shop, until when; not the signature, so it signs nobody in --
+ * and a proof made with that key over this sale's once-key and its exact text. The server checks the
+ * proof against the bytes it receives. What stays on the device can send this one sale, unchanged,
+ * under its maker's name, and nothing else.
+ *
+ * The sign-in itself is held only for the instant it takes to make the stamp, so that a tab closed in
+ * that instant still knows whose sale it was. A till signed in before this version has no offline key
+ * until its next Switch; until then its sales are kept the old way.
  */
+
+const hex = buffer => [...new Uint8Array(buffer)].map(b => b.toString(16).padStart(2, '0')).join('')
+
+/** The stamp for one queued sale, or null where the browser or the session cannot make one. */
+async function stampFor(onceKey, bodyText, token, key) {
+  if (!token || !key || !globalThis.crypto?.subtle) return null
+  const text = new TextEncoder()
+  const bodyHash = hex(await crypto.subtle.digest('SHA-256', text.encode(bodyText)))
+  const hmacKey = await crypto.subtle.importKey('raw', text.encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const proof = hex(await crypto.subtle.sign('HMAC', hmacKey, text.encode(`${onceKey}\n${bodyHash}`)))
+  return { claims: token.split('.').slice(0, 2).join('.'), proof }
+}
 
 /**
  * Sales this till could not send, kept until it can. POS-SYNC-003..005, POS-OFF-002.
@@ -108,20 +124,28 @@ export function isNetworkFailure(error) {
 export function addToOutbox({ onceKey, body, restore, summary }) {
   if (items.some(i => i.onceKey === onceKey)) return
   const now = new Date().toISOString()
+  const queued = { ...body, madeOfflineAt: body.madeOfflineAt ?? now }
+  // The exact text the stamp is made over, and the exact text that is sent.
+  const bodyText = JSON.stringify(queued)
+  const token = staffToken()
   commit([...items, {
     onceKey,
-    body: { ...body, madeOfflineAt: body.madeOfflineAt ?? now },
+    body: queued,
+    bodyText,
     restore,
     summary,
-    // Who made it: sent later under their own sign-in, so the bill carries their name even if
-    // someone else is at the till by then.
-    token: staffToken(),
+    // Who made it. Their sign-in, for the instant until the stamp below replaces it.
+    token,
+    maker: null,
     createdAt: now,
     attempts: 1,
     state: 'waiting',
     message: null,
     lastTriedAt: now
   }])
+  stampFor(onceKey, bodyText, token, offlineKey())
+    .then(maker => { if (maker && items.some(i => i.onceKey === onceKey)) patch(onceKey, { maker, token: null }) })
+    .catch(() => { /* no stamp: it stays as it was queued, under the sign-in */ })
 }
 
 export function removeFromOutbox(onceKey) {
@@ -157,11 +181,14 @@ export function flush({ includeAttention = false } = {}) {
       try {
         let result
         try {
-          result = await completeSale(entry.body, entry.token ?? undefined)
+          result = entry.maker
+            ? await completeStampedSale(entry.bodyText, entry.maker, tillToken())
+            : await completeSale(entry.body, entry.token ?? undefined)
         } catch (error) {
-          // Their sign-in has run out (12 hours): send it as whoever is at the till now, rather
-          // than leave a paid sale stuck on the device.
-          if (entry.token && error?.response?.status === 401) result = await completeSale(entry.body)
+          // The stamp was not accepted (the maker has left the shop, the till was closed), or an old
+          // entry's sign-in has run out: send it as whoever is at the till now, rather than leave a
+          // paid sale stuck on the device.
+          if ((entry.maker || entry.token) && error?.response?.status === 401) result = await completeSale(entry.body)
           else throw error
         }
         commit(items.filter(i => i.onceKey !== entry.onceKey))
