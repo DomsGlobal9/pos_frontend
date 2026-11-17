@@ -50,7 +50,7 @@ export function Orders() {
     <div style={s.page}>
       <h1 style={s.title}>Orders</h1>
 
-      <div style={s.tabs} role="tablist">
+      <div className="chip-strip" role="tablist">
         {TABS.map(t => (
           <button
             key={t.key}
@@ -394,7 +394,6 @@ const s = {
   page: { padding: '20px 20px 28px', display: 'grid', gap: 14, maxWidth: 860, alignContent: 'start' },
   state: { padding: 16, display: 'grid', gap: 10, justifyItems: 'start' },
   title: { margin: 0, fontSize: 22 },
-  tabs: { display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 },
   tab: { minHeight: 40, padding: '0 14px', fontWeight: 400, whiteSpace: 'nowrap' },
   tabOn: { background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },

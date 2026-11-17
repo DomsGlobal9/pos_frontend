@@ -23,6 +23,21 @@ const queryClient = new QueryClient({
   }
 })
 
+/*
+ * A chip strip's edge fade follows its own scroll position (index.css, .chip-strip). When the screen
+ * widens -- a tablet turned sideways -- and the strip no longer scrolls, Chrome keeps the fade where
+ * it last was. Restarting the strips' animations after a resize puts it right.
+ */
+let stripTimer
+window.addEventListener('resize', () => {
+  clearTimeout(stripTimer)
+  stripTimer = setTimeout(() => {
+    for (const el of document.querySelectorAll('.chip-strip')) {
+      for (const a of el.getAnimations?.() ?? []) { a.cancel(); a.play() }
+    }
+  }, 150)
+})
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>

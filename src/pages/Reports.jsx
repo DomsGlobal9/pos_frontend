@@ -58,7 +58,7 @@ export default function Reports() {
       </header>
 
       {!limited && (
-        <div style={s.periods} role="group" aria-label="Period">
+        <div className="chip-strip" role="group" aria-label="Period">
           {PERIODS.map(p => (
             <button key={p.key} aria-pressed={period === p.key} style={s.period} onClick={() => setPeriod(p.key)}>{p.label}</button>
           ))}
@@ -343,7 +343,6 @@ const s = {
   page: { padding: '20px 20px 28px', display: 'grid', gap: 16, maxWidth: 1120, alignContent: 'start' },
   head: { display: 'grid', gap: 2 },
   sub: { color: 'var(--ink-soft)', fontSize: 14 },
-  periods: { display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 },
   period: { minHeight: 40, padding: '0 14px', fontWeight: 500, whiteSpace: 'nowrap', borderRadius: 999 },
   dates: { display: 'flex', gap: 10, flexWrap: 'wrap' },
   label: { display: 'grid', gap: 6, fontSize: 13, color: 'var(--ink-soft)', minWidth: 160 },

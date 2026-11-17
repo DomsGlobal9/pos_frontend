@@ -402,6 +402,32 @@ a.btn-like:hover { background: var(--panel-soft); border-color: #c5c8bf; }
 *::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
 /*
+ * A ROW OF CHIPS THAT SCROLLS SIDEWAYS (17 Nov, live sweep at 360px). With no scrollbar, a chip cut at
+ * the edge looked clipped, not scrollable. The strip now fades out at whichever edge has more: the
+ * right while there is more to the right, the left once scrolled. Driven by the strip's own scroll
+ * position, so when every chip fits (a laptop) there is no fade at all; a browser without
+ * scroll-driven animation shows the plain strip.
+ */
+.chip-strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; overscroll-behavior-x: contain; }
+.chip-strip > * { flex: none; }
+@property --strip-l { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --strip-r { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@keyframes strip-fade {
+  0%   { --strip-l: 0px;  --strip-r: 32px; }
+  12%  { --strip-l: 32px; --strip-r: 32px; }
+  88%  { --strip-l: 32px; --strip-r: 32px; }
+  100% { --strip-l: 32px; --strip-r: 0px; }
+}
+@supports (animation-timeline: scroll()) {
+  .chip-strip {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--strip-l), #000 calc(100% - var(--strip-r)), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 var(--strip-l), #000 calc(100% - var(--strip-r)), transparent);
+    animation: strip-fade linear both;
+    animation-timeline: scroll(self inline);
+  }
+}
+
+/*
  * TEXT BOXES (17 Nov). On a laptop a box ran the whole width of the screen for a phone number. A form
  * field is never wider than what goes in it; the Sell search (.wide-input) is the one that spans.
  * And no browser furniture: no resize grip on a text area, no spinner arrows on a number.
