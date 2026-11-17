@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { useOutletContext, useLocation, useNavigate, Link } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
 import { searchItems, completeSale, parkBill, quoteBasket, loadWallet, messageFor, rupees, loadTillStaff } from '../lib/api.js'
 import { isTouchFirst } from '../lib/useMedia.js'
@@ -16,6 +17,7 @@ import { isMeasured, qtyText, stepOf, perUnitPaise } from '../lib/units.js'
 import useEscape from '../lib/useEscape.js'
 import ShiftBar from '../components/ShiftBar.jsx'
 import { Search, ScanBarcode, UserPlus, User, X, Camera } from 'lucide-react'
+import Select from '../components/Select.jsx'
 // Loaded only when the camera is opened: the barcode reader is large, and the sell screen's own
 // load is on the path of every sale.
 const CameraScan = lazy(() => import('../components/CameraScan.jsx'))
@@ -901,7 +903,7 @@ export default function Till() {
               <label style={stacked ? { ...s.servedBy, margin: 0 } : s.servedBy}>
                 {/* On a phone the words go (the drop-down keeps its name for screen readers), so it fits beside Add customer. */}
                 {!stacked && 'Served by'}
-                <select
+                <Select
                   value={salesperson?.id ?? ''}
                   onChange={e => {
                     const p = tillStaff.staff.find(x => x.id === e.target.value)
@@ -913,7 +915,7 @@ export default function Till() {
                 >
                   <option value="">{stacked ? 'Who served?' : 'Nobody chosen'}</option>
                   {tillStaff.staff.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
+                </Select>
               </label>
             )}
             </div>

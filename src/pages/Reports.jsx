@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
-import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import { keepPreviousData } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import { loadReport, rupees, messageFor } from '../lib/api.js'
 import ItemSales from '../components/ItemSales.jsx'
 import { qtyText } from '../lib/units.js'
 import { isTouchFirst } from '../lib/useMedia.js'
 import { Difference } from './Shift.jsx'
+import DateField from '../components/DateField.jsx'
+import { BackButton } from '../components/NavLinks.jsx'
 
 /**
  * WF-REPORTS-01. POS-RPT-001..011.
@@ -46,7 +49,7 @@ export default function Reports() {
   const limited = r?.scope === 'MINE_TODAY'
 
   return (
-    <div style={s.page}>
+    <div style={s.page}><BackButton />
       <header style={s.head}>
         <h1 style={{ margin: 0 }}>{limited ? 'Your sales today' : 'Reports'}</h1>
         {r && !limited && (
@@ -66,8 +69,8 @@ export default function Reports() {
       )}
       {!limited && period === 'custom' && (
         <div style={s.dates}>
-          <label style={s.label}>From<input type="date" value={custom.from} max={custom.to} onChange={e => setCustom(c => ({ ...c, from: e.target.value }))} aria-label="From" /></label>
-          <label style={s.label}>To<input type="date" value={custom.to} min={custom.from} max={daysAgo(0)} onChange={e => setCustom(c => ({ ...c, to: e.target.value }))} aria-label="To" /></label>
+          <label style={s.label}>From<DateField value={custom.from} max={custom.to} onChange={e => setCustom(c => ({ ...c, from: e.target.value }))} aria-label="From" /></label>
+          <label style={s.label}>To<DateField value={custom.to} min={custom.from} max={daysAgo(0)} onChange={e => setCustom(c => ({ ...c, to: e.target.value }))} aria-label="To" /></label>
         </div>
       )}
 

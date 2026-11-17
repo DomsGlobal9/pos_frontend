@@ -1,12 +1,14 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { HelpCircle, ArrowLeftRight } from 'lucide-react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from './lib/query.js'
 import toast from 'react-hot-toast'
 import { health, loadShop, whoAmI, loadInventoryLink } from './lib/api.js'
 import { useDevice, isTouchFirst } from './lib/useMedia.js'
 import NavBar from './components/NavBar.jsx'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import PageLoading from './components/PageLoading.jsx'
+import ScreenBoundary from './components/ScreenBoundary.jsx'
 import { checkIn } from './lib/device.js'
 import { applyUpdate, updateReady, tillIsIdle } from './lib/update.js'
 import { useOutbox, flush, outboxItems } from './lib/outbox.js'
@@ -32,6 +34,8 @@ const DEFAULT_IDLE_MINUTES = 10
 
 export default function AppShell() {
   const device = useDevice()
+  // The screen now showing: the key of the safety net around it, so going elsewhere clears a failure.
+  const { pathname: screenPath } = useLocation()
   const bottomNav = isTouchFirst(device)
 
   const queryClient = useQueryClient()
@@ -181,9 +185,11 @@ export default function AppShell() {
 
         <div style={s.content} className="shell-content">
           {/* Each screen loads its own file the first time; the header and the bar stay put meanwhile. */}
-          <Suspense fallback={<PageLoading />}>
-            <Outlet context={{ device, shop }} />
-          </Suspense>
+          <ScreenBoundary key={screenPath} onRetry={() => queryClient.removeQueries({ type: 'inactive' })}>
+            <Suspense fallback={<PageLoading />}>
+              <Outlet context={{ device, shop }} />
+            </Suspense>
+          </ScreenBoundary>
         </div>
       </div>
 

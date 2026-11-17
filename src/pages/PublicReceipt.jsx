@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import { loadPublicReceipt, messageFor } from '../lib/api.js'
 import Receipt from '../components/Receipt.jsx'
 

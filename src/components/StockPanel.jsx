@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
 import { moveStock, loadStockBook, messageFor } from '../lib/api.js'
+import Select from './Select.jsx'
 
 /**
  * One item's stock, for a shop without Inventory (28 Oct): a parcel came in, some were damaged or found,
@@ -57,9 +59,9 @@ export default function StockPanel({ item }) {
         {kind === 'ADJUSTED' && (
           <label style={s.label}>
             Why
-            <select value={reason} onChange={e => setReason(e.target.value)} aria-label="Why">
+            <Select value={reason} onChange={e => setReason(e.target.value)} aria-label="Why">
               {REASONS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
-            </select>
+            </Select>
           </label>
         )}
         <label style={s.label}>

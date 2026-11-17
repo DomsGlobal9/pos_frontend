@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
 import { CreditCard } from 'lucide-react'
 import { loadCardMachines, addCardMachine, changeCardMachine, messageFor } from '../lib/api.js'
+import Select from './Select.jsx'
 
 /**
  * Card machines (24 Oct). The owner adds the shop's Pine Labs or Razorpay POS machine with the ids its
@@ -80,9 +82,9 @@ export default function CardMachinesSettings({ owner, counters = [] }) {
               {!form.id && (
                 <label style={s.label}>
                   Company
-                  <select value={form.provider} onChange={e => setForm({ ...form, provider: e.target.value, config: {} })}>
+                  <Select aria-label="Card machine company" value={form.provider} onChange={e => setForm({ ...form, provider: e.target.value, config: {} })}>
                     {providers.map(p => <option key={p.key} value={p.key}>{p.name}</option>)}
-                  </select>
+                  </Select>
                 </label>
               )}
               {fields.map(f => (
@@ -99,10 +101,10 @@ export default function CardMachinesSettings({ owner, counters = [] }) {
               {counters.length > 1 && (
                 <label style={s.label}>
                   Sits at
-                  <select value={form.counterId} onChange={e => setForm({ ...form, counterId: e.target.value })}>
+                  <Select aria-label="Counter" value={form.counterId} onChange={e => setForm({ ...form, counterId: e.target.value })}>
                     <option value="">Any counter</option>
                     {counters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  </Select>
                 </label>
               )}
               <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 15 }}>

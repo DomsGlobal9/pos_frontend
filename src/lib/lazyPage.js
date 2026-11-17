@@ -1,4 +1,5 @@
 import { lazy } from 'react'
+import ScreenUnavailable from '../components/ScreenUnavailable.jsx'
 
 /**
  * EVERY SCREEN LOADS ON ITS OWN (17 Nov, owner: lazy loading for every page). The till downloads the
@@ -8,6 +9,10 @@ import { lazy } from 'react'
  * One trap: a till left open across a deploy asks for a screen file of the OLD version, which the new
  * deploy no longer serves. Then the page is reloaded once onto the new version -- the basket and any
  * unsent sales are kept in storage, so nothing is lost -- and only a second failure is an error.
+ *
+ * And one more (17 Nov): with the internet OFF there is no new version to reload onto, and a reload
+ * would put the browser's own "no internet" page where the till was. Offline, a screen that cannot
+ * be fetched shows ScreenUnavailable instead, which reloads by itself when the line returns.
  */
 const RELOADED = 'pos.reloadedForPage'
 
@@ -18,6 +23,7 @@ export function lazyPage(load, name = 'default') {
       return { default: m[name] }
     },
     err => {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return { default: ScreenUnavailable }
       let tried = true
       try { tried = sessionStorage.getItem(RELOADED) === '1'; sessionStorage.setItem(RELOADED, '1') } catch { /* no storage */ }
       if (!tried) {
@@ -29,9 +35,14 @@ export function lazyPage(load, name = 'default') {
   ))
 }
 
-/** Fetch the screens a cashier opens first, while the till is idle, so the first tap is instant. */
-export function warmUp(loads) {
-  const go = () => loads.forEach(l => l().catch(() => {}))
-  if ('requestIdleCallback' in window) window.requestIdleCallback(go, { timeout: 4000 })
-  else setTimeout(go, 1500)
+/**
+ * Fetch the screens while the till is idle: the ones a cashier opens first so the first tap is
+ * instant, then EVERY other one, so the whole till is on the device before the internet can drop.
+ * (17 Nov: only six were fetched, and Sync -- the screen opened precisely when the line is down --
+ * was not one of them.)
+ */
+export function warmUp(first, rest = []) {
+  const fetchAll = loads => loads.forEach(l => l().catch(() => {}))
+  const whenIdle = (fn, timeout) => ('requestIdleCallback' in window ? window.requestIdleCallback(fn, { timeout }) : setTimeout(fn, Math.min(timeout, 1500)))
+  whenIdle(() => { fetchAll(first); whenIdle(() => fetchAll(rest), 6000) }, 4000)
 }

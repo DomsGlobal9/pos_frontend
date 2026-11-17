@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import useEscape from '../lib/useEscape.js'
+import DateField from './DateField.jsx'
 
 /**
  * Keeping the goods for a customer: when they will collect, and what to remember. POS-ORD-004, -005.
@@ -54,8 +55,8 @@ export default function KeepSheet({ customer, onNext, onCancel }) {
 
         <label style={s.label}>
           Collect on
-          <input
-            type="date"
+          <DateField
+           
             min={min}
             value={date}
             onChange={e => setDate(e.target.value)}

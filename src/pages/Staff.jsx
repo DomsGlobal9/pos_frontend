@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
 import { UserPlus } from 'lucide-react'
 import { loadStaff, addStaff, changeStaff, closeEveryTill, messageFor } from '../lib/api.js'
 import { tillClosed } from '../lib/session.js'
 import { askYesNo } from '../components/Ask.jsx'
+import { BackButton } from '../components/NavLinks.jsx'
 
 /**
  * Staff, for the owner. POS-CORE-002, POS-SET-008. Approved layout 27 Sep.
@@ -26,7 +28,7 @@ export default function Staff() {
   const [busy, setBusy] = useState(false)
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['staff'] })
 
-  if (!owner) return <div style={s.page}><h1 style={{ margin: 0 }}>Staff</h1><p style={s.muted}>Only the owner can change who works the till.</p></div>
+  if (!owner) return <div style={s.page}><BackButton /><h1 style={{ margin: 0 }}>Staff</h1><p style={s.muted}>Only the owner can change who works the till.</p></div>
 
   async function add(e) {
     e.preventDefault()
@@ -62,7 +64,7 @@ export default function Staff() {
   const needsPassword = (role) => role === 'OWNER' || role === 'MANAGER'
 
   return (
-    <div style={s.page}>
+    <div style={s.page}><BackButton />
       <div style={s.headRow}>
         <h1 style={{ margin: 0 }}>Staff</h1>
         {!adding && <button onClick={() => setAdding({ name: '', role: 'CASHIER', pin: '', email: '', phone: '', password: '' })}><UserPlus size={16} aria-hidden="true" /> Add person</button>}

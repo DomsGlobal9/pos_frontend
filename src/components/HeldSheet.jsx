@@ -1,4 +1,5 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
 import { loadHeldBills, recallBill, discardHeldBill, messageFor } from '../lib/api.js'
 import { askYesNo } from './Ask.jsx'

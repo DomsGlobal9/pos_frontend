@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import { loadVariants, rupees, messageFor } from '../lib/api.js'
 import useEscape from '../lib/useEscape.js'
 import { isMeasured, qtyText, perUnitPaise } from '../lib/units.js'

@@ -1,5 +1,5 @@
 import { Link, useOutletContext } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import { ScanBarcode, Receipt, Undo2, Wallet, ClipboardList, ChevronRight, Search } from 'lucide-react'
 import { homeSummary, rupees } from '../lib/api.js'
 import { isTouchFirst } from '../lib/useMedia.js'

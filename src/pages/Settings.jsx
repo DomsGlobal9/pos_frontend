@@ -7,6 +7,7 @@ import CardMachinesSettings from '../components/CardMachinesSettings.jsx'
 import ShopDetailsSettings from '../components/ShopDetailsSettings.jsx'
 import IdleSignOutSettings from '../components/IdleSignOutSettings.jsx'
 import { setShopUpi, setShopLogo, setShopGst, setShopPaymentMethods, messageFor } from '../lib/api.js'
+import { BackButton } from '../components/NavLinks.jsx'
 
 /**
  * Shop settings. POS-SET-003 (partly), POS-PAY-012.
@@ -98,7 +99,7 @@ export default function Settings() {
   }
 
   return (
-    <div style={s.page}>
+    <div style={s.page}><BackButton />
       <h1 style={{ margin: 0 }}>Settings</h1>
 
       <ShopDetailsSettings shop={shop} owner={owner} connected={connected} />

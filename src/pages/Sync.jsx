@@ -8,6 +8,7 @@ import { useOutbox, flush, removeFromOutbox, storageAvailable } from '../lib/out
 import { loadDraft } from '../lib/basket.js'
 import { checkIn } from '../lib/device.js'
 import { askYesNo } from '../components/Ask.jsx'
+import { BackButton } from '../components/NavLinks.jsx'
 
 /**
  * WF-SYNC-01. What this till is holding that the server has not got. POS-SYNC-003, -004.
@@ -73,7 +74,7 @@ export default function Sync() {
   }
 
   return (
-    <div style={s.page}>
+    <div style={s.page}><BackButton />
       <h1 style={s.title}>Waiting to sync</h1>
 
       {!storageAvailable() && (

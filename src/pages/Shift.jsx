@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { useOutletContext, Link } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
 import { loadShift, openShift, moveCash, closeShift, rupees, messageFor } from '../lib/api.js'
 import { newOnceKey } from '../lib/basket.js'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
 import { useOutbox } from '../lib/outbox.js'
 import useEscape from '../lib/useEscape.js'
+import { BackButton } from '../components/NavLinks.jsx'
 
 /**
  * WF-SHIFT-01 and WF-CASH-01. POS-SHIFT-001..009.
@@ -46,7 +48,7 @@ export default function Shift() {
   const shift = data.open
 
   return (
-    <div style={s.page}>
+    <div style={s.page}><BackButton />
       <h1 style={s.title}>Shift · {data.counter.name}</h1>
 
       {!shift && <OpenForm key={data.suggestedOpeningPaise ?? 'none'} counterId={counter.id} suggested={data.suggestedOpeningPaise} onOpened={refresh} />}

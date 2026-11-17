@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { BackLink, LinkChip } from '../components/NavLinks.jsx'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import { loadSends } from '../lib/api.js'
 import { loadBill, messageFor, rupees } from '../lib/api.js'
 import Receipt from '../components/Receipt.jsx'

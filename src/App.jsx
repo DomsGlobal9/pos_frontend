@@ -4,6 +4,7 @@ import AppShell from './AppShell.jsx'
 import AskHost from './components/Ask.jsx'
 import PageLoading from './components/PageLoading.jsx'
 import { lazyPage, warmUp } from './lib/lazyPage.js'
+import { ScreenProblem } from './components/ScreenBoundary.jsx'
 
 /*
  * EVERY SCREEN IS ITS OWN FILE (17 Nov), fetched the first time it is opened -- and kept by the
@@ -65,7 +66,8 @@ const Labels = lazyPage(load.Labels)
 const ShopSetup = lazyPage(load.ShopSetup)
 
 // The screens a cashier opens first, fetched while the till is idle so the first tap is instant.
-warmUp([load.Till, load.Home, load.Bills, load.Orders, load.Customers, load.More])
+// ...then all the rest, so every screen is on the device before the internet can drop (17 Nov).
+warmUp([load.Till, load.Home, load.Bills, load.Orders, load.Customers, load.More], Object.values(load))
 
 // The guide loads on its own, only when opened: the till never downloads it otherwise.
 const HelpLayout = lazyPage(() => import('./pages/help/HelpLayout.jsx'))
@@ -84,14 +86,14 @@ const page = (el) => <Suspense fallback={<PageLoading />}>{el}</Suspense>
  */
 const router = createBrowserRouter([
   // The customer's digital receipt, outside the till: no navigation, no sign-in. POS-RCPT-009.
-  { path: '/r/:token', element: page(<PublicReceipt />) },
+  { path: '/r/:token', element: page(<PublicReceipt />), errorElement: <ScreenProblem /> },
   // Setting up a new shop -- ScaleEzy staff, with the setup key. Outside the till: no sign-in.
-  { path: '/setup', element: page(<ShopSetup />) },
+  { path: '/setup', element: page(<ShopSetup />), errorElement: <ScreenProblem /> },
   // The guide, outside the till: readable when the till is locked or not yet opened. The "?" in the
   // header opens /help?from=<this screen> and the page about that screen opens itself.
   {
     path: '/help',
-    element: page(<HelpLayout />),
+    element: page(<HelpLayout />), errorElement: <ScreenProblem />,
     children: [
       { index: true, element: page(<HelpHome />) },
       { path: ':section/:slug', element: page(<HelpArticle />) }
@@ -99,7 +101,7 @@ const router = createBrowserRouter([
   },
   {
     path: '/',
-    element: <AppShell />,
+    element: <AppShell />, errorElement: <ScreenProblem />,
     children: [
       { index: true, element: <Home /> },
       { path: 'sell', element: <Till /> },

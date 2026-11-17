@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
 import { KeyRound, Send, FileSpreadsheet, ReceiptIndianRupee, Download, Upload, Copy } from 'lucide-react'
 import {
@@ -8,6 +9,8 @@ import {
   testWebhook, loadDeliveries, resendDelivery, importItems, download, messageFor
 } from '../lib/api.js'
 import { askYesNo } from '../components/Ask.jsx'
+import DateField from '../components/DateField.jsx'
+import { BackButton } from '../components/NavLinks.jsx'
 
 /**
  * WF-INTEGRATIONS-01. Connections, for the owner. Approved layout 27 Sep: one page, four sections.
@@ -42,7 +45,7 @@ export default function Connections() {
   const reports = perms.includes('report:view')
 
   return (
-    <div style={s.page}>
+    <div style={s.page}><BackButton />
       <h1 style={{ margin: 0 }}>Connections</h1>
       {!owner && <p style={s.muted}>Only the owner can set up connections to other software.{reports ? ' You can still download sales for the accountant below.' : ''}</p>}
       {owner && <Keys />}
@@ -392,8 +395,8 @@ function Export() {
   return (
     <Section Icon={ReceiptIndianRupee} title="Sales for your accountant" hint="Every bill and credit note with the GST split. Excel has four sheets: bills, GST by rate, HSN summary (for GSTR-1), days.">
       <div style={s.dates}>
-        <label style={s.label}>From<input type="date" value={from} max={today} onChange={e => setFrom(e.target.value)} aria-label="From" /></label>
-        <label style={s.label}>To<input type="date" value={to} max={today} onChange={e => setTo(e.target.value)} aria-label="To" /></label>
+        <label style={s.label}>From<DateField value={from} max={today} onChange={e => setFrom(e.target.value)} aria-label="From" /></label>
+        <label style={s.label}>To<DateField value={to} max={today} onChange={e => setTo(e.target.value)} aria-label="To" /></label>
       </div>
       <div style={s.actions}>
         <button style={s.primary} onClick={() => get('xlsx')} disabled={!!busy}>{busy === 'xlsx' ? 'Preparing…' : 'Download Excel'}</button>

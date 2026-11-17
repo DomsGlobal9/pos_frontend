@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Lock } from 'lucide-react'
 import { setIdleSignOut, messageFor } from '../lib/api.js'
+import Select from './Select.jsx'
 
 /**
  * SIGN OUT WHEN IDLE (12 Nov, owner: "why it signs out, fix it").
@@ -38,9 +39,9 @@ export default function IdleSignOutSettings({ shop, owner }) {
       </p>
       <label style={s.label}>
         Ask for the PIN again after
-        <select value={current} disabled={!owner || busy} onChange={e => choose(Number(e.target.value))} aria-label="Ask for the PIN again after">
+        <Select value={current} disabled={!owner || busy} onChange={e => choose(Number(e.target.value))} aria-label="Ask for the PIN again after">
           {CHOICES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
-        </select>
+        </Select>
       </label>
       {current === 0 && <p style={s.warn}>Never: whoever signed in last stays signed in until someone presses Switch. Use this only if one person works the till.</p>}
       {!owner && <p style={s.muted}>Only the owner can change this.</p>}

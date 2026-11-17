@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
 import { loadAwaitingCheck, resolvePayment, rupees, messageFor } from '../lib/api.js'
 import ApprovalSheet from '../components/ApprovalSheet.jsx'
 import { askText } from '../components/Ask.jsx'
+import { BackButton } from '../components/NavLinks.jsx'
 
 const NAME = { CASH: 'Cash', UPI: 'UPI', CARD: 'Card', BANK_TRANSFER: 'Bank transfer', CHEQUE: 'Cheque' }
 
@@ -90,7 +92,7 @@ export default function PaymentChecks() {
   const payments = data ?? []
 
   return (
-    <div style={s.page}>
+    <div style={s.page}><BackButton />
       <h1 style={s.title}>Payments to check</h1>
       <p style={s.intro}>
         These were taken without confirmation. Check each one against the bank, then say what you

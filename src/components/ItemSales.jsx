@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import { loadItemSales, rupees, messageFor } from '../lib/api.js'
 import { qtyText } from '../lib/units.js'
 

@@ -1,10 +1,12 @@
 import { cloneElement, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
 import { Plus } from 'lucide-react'
 import { loadItems, saveItem, setLowStockAt, rupees, messageFor } from '../lib/api.js'
 import StockPanel from '../components/StockPanel.jsx'
+import { BackButton } from '../components/NavLinks.jsx'
 
 /**
  * The owner's item list, and the form that adds to it. POS-STAND-003.
@@ -80,7 +82,7 @@ export default function Items() {
    */
   if (data.fromInventory) {
     return (
-      <div style={s.page}>
+      <div style={s.page}><BackButton />
         <h1>Items</h1>
         <p style={s.muted}>
           This shop’s items come from Inventory. Add and price them there, then press{' '}
@@ -91,7 +93,7 @@ export default function Items() {
   }
 
   return (
-    <div style={s.page}>
+    <div style={s.page}><BackButton />
       <div style={s.head}>
         <h1>Items</h1>
         <Link to="/labels" className="btn-quiet">Print barcode labels</Link>

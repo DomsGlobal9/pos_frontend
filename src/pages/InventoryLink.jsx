@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
 import { loadInventoryLink, connectInventory, disconnectInventory, retryInventory, leaveOutOfInventory, syncInventoryItems, setInventoryWhenDown, resendInventoryFrom, messageFor } from '../lib/api.js'
 import { askYesNo } from '../components/Ask.jsx'
+import { BackButton } from '../components/NavLinks.jsx'
 
 /**
  * The owner's Inventory link. POS-INV-001, -009, POS-SYNC-006.
@@ -20,6 +22,8 @@ export default function InventoryLink() {
   const [leaving, setLeaving] = useState(false)
   const [why, setWhy] = useState('')
   const [resendDoc, setResendDoc] = useState('')
+  // A repair tool, not a daily one: closed until someone needs it (17 Nov, owner: "what's this for?").
+  const [resendOpen, setResendOpen] = useState(false)
 
   // The shop too: the header's "Inventory connected" comes from it, and it is otherwise kept for good.
   const refresh = () => { queryClient.invalidateQueries({ queryKey: ['inventory-link'] }); queryClient.invalidateQueries({ queryKey: ['shop'] }) }
@@ -64,7 +68,7 @@ export default function InventoryLink() {
   const manage = data.mayManage
 
   return (
-    <div style={s.page}>
+    <div style={s.page}><BackButton />
       <h1 style={s.title}>Inventory link</h1>
 
       <p style={s.lead}>
@@ -218,12 +222,17 @@ export default function InventoryLink() {
       )}
 
       {/* 12 Nov: two bills went to another shop under a wrong key. Send them again to this one. */}
-      {manage && connected && (
+      {manage && connected && !resendOpen && (
+        <p style={{ margin: 0 }}>
+          <button type="button" className="btn-quiet" onClick={() => setResendOpen(true)}>Bills went to the wrong shop in Inventory?</button>
+        </p>
+      )}
+      {manage && connected && resendOpen && (
         <section style={s.card}>
-          <h2 style={s.heading}>Send again</h2>
+          <h2 style={s.heading}>Send bills again</h2>
           <label style={s.label}>
             From bill or credit note
-            <input value={resendDoc} onChange={e => setResendDoc(e.target.value)} placeholder="INV/2026-27/0004" aria-label="Send again from" />
+            <input value={resendDoc} onChange={e => setResendDoc(e.target.value)} placeholder="For example INV/2026-27/0004" aria-label="Send again from" autoFocus />
             <span style={s.muted}>Only when bills went to the wrong shop in Inventory. That one and everything after it go again to {data.inventoryShop ?? 'this shop'}; what Inventory already has is skipped.</span>
           </label>
           <button disabled={busy || !resendDoc.trim()} onClick={async () => {

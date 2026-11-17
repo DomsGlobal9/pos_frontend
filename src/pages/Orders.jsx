@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { BackLink } from '../components/NavLinks.jsx'
 import { MessageCircle } from 'lucide-react'
 import { Link, useOutletContext, useParams } from 'react-router-dom'
-import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
 import {
   loadOrders, loadBill, collectOnOrder, writeOffOrder, markOrderReady, handOverOrder,

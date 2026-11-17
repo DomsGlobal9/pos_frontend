@@ -1,24 +1,22 @@
 import { useSyncExternalStore } from 'react'
 import { completeSale, messageFor } from './api.js'
-import { staffToken, onSession } from './session.js'
+import { staffToken } from './session.js'
 
 /*
- * A PERSON'S SIGN-IN LEAVES THE DEVICE WITH THEM (17 Nov, security audit pos-run-1).
+ * A SALE KEPT ON THE DEVICE IS SENT AS THE PERSON WHO MADE IT, WHOEVER IS AT THE TILL BY THEN.
  *
- * A sale queued offline kept a copy of its maker's 12-hour sign-in, so it could be sent later under
- * their name. But after Switch that copy stayed in storage, where the next person at the same browser
- * -- a cashier after a manager -- could take it and act as the manager. Now the moment a person's
- * sign-in leaves this device (Switch, sign-out when idle, an expired or refused sign-in, the till
- * closed), their copy is dropped from every queued sale. The sale is sent under whoever is at the
- * till when the line comes back; anything that needed the earlier person's authority waits under
- * "needs a look" for a manager, instead of riding on a stray token.
+ * So each queued sale keeps its maker's sign-in until it is sent (or that sign-in runs out, after
+ * which it goes as whoever is there). The bill, the shift and the drawer it is counted in all hang
+ * on that name.
+ *
+ * 17 Nov: the security audit (pos-run-1) noted the cost -- after Switch, the earlier person's
+ * sign-in is still in this browser's storage for as long as their sale is unsent -- and for a few
+ * hours this file dropped it at Switch. That put Ravi's offline sale on Priya's name
+ * (verify-signin-ui caught it), which is the worse fault: a wrong name on a bill and in a cash
+ * count, every time, against a risk that needs someone with the till's own browser tools in a short
+ * window. Restored. The right repair keeps the name without keeping the sign-in: a proof that only
+ * this one sale was made by them. That is its own piece of work; until then this stays as it was.
  */
-let signedIn = staffToken()
-onSession((s) => {
-  const now = s.staffToken ?? null
-  if (signedIn && now !== signedIn) forgetToken(signedIn)
-  signedIn = now
-})
 
 /**
  * Sales this till could not send, kept until it can. POS-SYNC-003..005, POS-OFF-002.
@@ -105,12 +103,6 @@ export function isNetworkFailure(error) {
   if (!error) return false
   if (!error.response) return true
   return [502, 503, 504].includes(error.response.status)
-}
-
-/** Drop one person's sign-in from every queued sale (see the note at the top). */
-function forgetToken(token) {
-  if (!items.some(i => i.token === token)) return
-  commit(items.map(i => (i.token === token ? { ...i, token: null } : i)))
 }
 
 export function addToOutbox({ onceKey, body, restore, summary }) {

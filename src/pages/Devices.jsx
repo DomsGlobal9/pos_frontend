@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
 import { Monitor, Smartphone, Camera, Printer, Circle } from 'lucide-react'
 import { loadDevices, updateDevice, messageFor } from '../lib/api.js'
 import { deviceId } from '../lib/device.js'
+import { BackButton } from '../components/NavLinks.jsx'
 
 /**
  * WF-DEVICES-01. POS-DEV-001..004.
@@ -38,7 +40,7 @@ export default function Devices() {
   const me = deviceId()
 
   return (
-    <div style={s.page}>
+    <div style={s.page}><BackButton />
       <h1 style={{ margin: 0 }}>Devices</h1>
       <p style={s.muted}>Every screen the till has been opened on. A device appears here by itself the first time it opens the till.</p>
 

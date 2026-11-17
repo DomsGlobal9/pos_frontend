@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import { loadAudit, messageFor, rupees } from '../lib/api.js'
+import { BackButton } from '../components/NavLinks.jsx'
 
 /**
  * Who did what. POS-CORE-010. Owner and managers only.
@@ -83,7 +84,7 @@ export default function Audit() {
   const { data, isLoading, isError, error } = useQuery({ queryKey: ['audit'], queryFn: loadAudit })
 
   return (
-    <div style={s.page}>
+    <div style={s.page}><BackButton />
       <h1 style={s.title}>Activity</h1>
       <p style={s.muted}>Discounts over the limit, price changes and approvals — newest first.</p>
 

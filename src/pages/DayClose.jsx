@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
 import { loadDay, closeTheDay, rupees, messageFor } from '../lib/api.js'
 import { Difference } from './Shift.jsx'
 import { askYesNo, askText } from '../components/Ask.jsx'
+import DateField from '../components/DateField.jsx'
+import { BackButton } from '../components/NavLinks.jsx'
 
 /**
  * WF-DAY-01. POS-DAY-001..005.
@@ -77,12 +80,12 @@ export default function DayClose() {
   const f = data?.closed?.figures ?? data?.live
 
   return (
-    <div style={s.page}>
+    <div style={s.page}><BackButton />
       <h1 style={s.title}>Close the day</h1>
 
       <label style={s.label}>
         Day
-        <input type="date" value={date} max={today()} onChange={e => setDate(e.target.value)} aria-label="Day" />
+        <DateField value={date} max={today()} onChange={e => setDate(e.target.value)} aria-label="Day" />
       </label>
 
       {isLoading && <p style={s.muted}>Adding it up…</p>}

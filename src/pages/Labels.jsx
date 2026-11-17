@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { BackLink } from '../components/NavLinks.jsx'
 import { Link, useOutletContext } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import { Printer, Plus, X } from 'lucide-react'
 import { loadItems, rupees, messageFor } from '../lib/api.js'
 import { code128Svg, encodable } from '../lib/code128.js'

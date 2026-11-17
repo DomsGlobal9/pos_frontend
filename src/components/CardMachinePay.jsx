@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '../lib/query.js'
 import { loadCardMachines, startCardPayment, loadCardPayment, cancelCardPayment, rupees, messageFor } from '../lib/api.js'
 import { newOnceKey } from '../lib/basket.js'
+import Select from './Select.jsx'
 
 /**
  * CARD MACHINES THAT CONFIRM THEMSELVES (24 Oct). The amount is sent to the shop's card machine; the
@@ -109,9 +110,9 @@ export default function CardMachinePay({ amountPaise, counterId, onChange }) {
             {state === 'sending' ? 'Sending…' : `Send ${rupees(amountPaise)} to the card machine`}
           </button>
           {machines.length > 1 && (
-            <select value={machineId} onChange={e => setPicked(e.target.value)} aria-label="Card machine">
+            <Select value={machineId} onChange={e => setPicked(e.target.value)} aria-label="Card machine">
               {machines.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
+            </Select>
           )}
         </div>
         {machine?.testMode && <p style={s.muted}>{machine.name} is on its test system: no real money moves.</p>}

@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query'
+import { keepPreviousData } from '@tanstack/react-query'
+import { useInfiniteQuery } from '../lib/query.js'
 import { loadBills, rupees, messageFor } from '../lib/api.js'
+import Select from '../components/Select.jsx'
+import { BackButton } from '../components/NavLinks.jsx'
 
 /**
  * WF-SALES-01. POS-SALE-001..006.
@@ -43,7 +46,7 @@ export default function Bills() {
   const bills = data?.pages.flatMap(p => p?.bills ?? []) ?? []
 
   return (
-    <div style={s.page}>
+    <div style={s.page}><BackButton />
       <h1 style={s.title}>Bills</h1>
 
       {/* One row on a computer, search over two drop-downs on a phone (17 Nov: three boxes stacked full width). */}
@@ -54,20 +57,20 @@ export default function Bills() {
           placeholder="Invoice number, phone or name"
           aria-label="Find a bill"
         />
-        <select value={when} onChange={e => reset(setWhen)(e.target.value)} aria-label="When">
+        <Select value={when} onChange={e => reset(setWhen)(e.target.value)} aria-label="When">
           <option value="">Any date</option>
           <option value="today">Today</option>
           <option value="week">Last 7 days</option>
           <option value="month">Last 30 days</option>
-        </select>
-        <select value={method} onChange={e => reset(setMethod)(e.target.value)} aria-label="Paid by">
+        </Select>
+        <Select value={method} onChange={e => reset(setMethod)(e.target.value)} aria-label="Paid by">
           <option value="">Any payment</option>
           <option value="CASH">Cash</option>
           <option value="UPI">UPI</option>
           <option value="BANK_TRANSFER">Bank transfer</option>
           <option value="CHEQUE">Cheque</option>
           <option value="CARD">Card</option>
-        </select>
+        </Select>
       </div>
 
       {isError && <p style={s.bad}>{messageFor(error)}</p>}
