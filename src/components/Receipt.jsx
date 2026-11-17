@@ -1,4 +1,5 @@
 import { HEADING, COMPOSITION_DECLARATION, kindOf, stateOf } from '../lib/gst.js'
+import { usePageFit } from '../lib/printPage.js'
 import { Fragment, useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -62,7 +63,8 @@ async function openPdf(e, saleId) {
  * `publicView`: the customer's own digital receipt (/r/:token). No print counting, no sending -- it
  * is their copy, opened from the QR on the paper. `pdfHref` is where its PDF comes from.
  */
-export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
+export default function Receipt({ sale, onDone, publicView = false, pdfHref, crumb, chips, below }) {
+  usePageFit('.receipt')
   // Which copy is in the printer's hand right now. Null until Print is pressed.
   const [copyNumber, setCopyNumber] = useState(null)
   const [printing, setPrinting] = useState(false)
@@ -172,18 +174,23 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
   const igst = sale.lines.reduce((sum, l) => sum + (l.igstPaise ?? 0), 0)
 
   return (
-    <div style={s.page}>
+    <div style={s.page} className="print-page">
       <style>{printCss()}</style>
 
-      <div style={s.bar} className="no-print doc-bar">
-        <div>
-          <b>{onDone ? `Saved as ${sale.invoiceNo}` : sale.invoiceNo}</b>
+      <div className="no-print doc-bar">
+        {/* crumb, chips, below: the bill screen's way back, status and history (BillDetail), in one card. */}
+        {crumb && <div className="doc-crumb">{crumb}</div>}
+        <div className="doc-head">
+          <div className="doc-title">
+            <b>{onDone ? `Saved as ${sale.invoiceNo}` : sale.invoiceNo}</b>
+            {chips}
+          </div>
           <div style={s.muted}>
             {rupees(sale.totalPaise)} · {new Date(sale.createdAt).toLocaleString('en-IN')}
             {(sale.printCount ?? 0) > 0 && ` · printed ${sale.printCount} ${sale.printCount === 1 ? 'time' : 'times'}`}
           </div>
         </div>
-        <div style={s.tools} className="doc-tools">
+        <div className="doc-tools">
           <button onClick={print} disabled={printing} style={s.tool}>
             <Printer size={16} aria-hidden="true" />
             {printing ? 'Preparing…' : publicView ? 'Print' : (sale.printCount ?? 0) > 0 ? 'Print again' : 'Print'}
@@ -221,6 +228,7 @@ export default function Receipt({ sale, onDone, publicView = false, pdfHref }) {
           {onDone && <button style={s.next} onClick={onDone}>Next sale</button>}
         </div>
       </div>
+      {below && <div className="no-print doc-below">{below}</div>}
 
       <div style={s.sheet} className="receipt">
         {isDuplicate && (
@@ -443,12 +451,12 @@ const Rule = () => <div style={{ borderTop: '1px dashed #999', margin: '6px 0' }
 // The paper width is the device's (POS-DEV-002): 80 mm unless a manager set this device to 58 mm.
 const printCss = () => `
 @media print {
-  @page { size: ${paperWidthMm()}mm auto; margin: 0; }
+  @page { margin: 0; }
   body { background: #fff; }
   .no-print { display: none !important; }
   .receipt {
     /* !important: the on-screen sheet sets 80mm inline, which beats a stylesheet (14 Oct: 58 mm never printed narrow). */
-    width: ${paperWidthMm()}mm !important; max-width: none !important; margin: 0; padding: 4mm 3mm;
+    width: ${paperWidthMm()}mm !important; max-width: none !important; margin: 0 !important; padding: 4mm 3mm;
     border: none; box-shadow: none; font-size: 11px;
   }
   /* The till hides itself below 768px on screen. Printing is not a narrow screen, so that rule

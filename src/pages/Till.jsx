@@ -711,6 +711,7 @@ export default function Till() {
               onChange={e => setQuery(e.target.value)}
               placeholder="Scan a barcode, or type a code or name"
               aria-label="Find an item"
+              className="wide-input"
               style={{ ...s.search, ...(canCamera ? { paddingRight: 60 } : null) }}
             />
             {canCamera && (

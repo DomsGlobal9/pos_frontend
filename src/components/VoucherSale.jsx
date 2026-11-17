@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { usePageFit } from '../lib/printPage.js'
 import QRCode from 'qrcode'
 import toast from 'react-hot-toast'
 import PaymentPanel from './PaymentPanel.jsx'
@@ -15,6 +17,7 @@ import useEscape from '../lib/useEscape.js'
  * after a slow answer gets the same voucher, never two. Not a bill: no GST until it is spent.
  */
 export default function VoucherSale({ shop, counterId, onClose }) {
+  usePageFit('.voucher-slip')
   const [step, setStep] = useState('amount') // amount | pay | done
   const [amount, setAmount] = useState('')
   const [name, setName] = useState('')
@@ -68,11 +71,14 @@ export default function VoucherSale({ shop, counterId, onClose }) {
   }
 
   const valid = sold?.expiresAt ? new Date(sold.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
-  return (
+  // Outside the till's #root (17 Nov): printing can then drop the whole till instead of hiding it,
+  // and a hidden till no longer pushes a blank second page out of the printer.
+  return createPortal((
     <div style={s.backdrop} role="dialog" aria-label="Gift voucher">
       <style>{`
         @media print {
-          @page { size: ${paperWidthMm()}mm auto; margin: 0; }
+          @page { margin: 0; }
+          #root { display: none !important; }
           body * { visibility: hidden !important; }
           .voucher-slip, .voucher-slip * { visibility: visible !important; }
           .voucher-slip { position: absolute; left: 0; top: 0; width: ${paperWidthMm()}mm; padding: 4mm 3mm; }
@@ -124,7 +130,7 @@ export default function VoucherSale({ shop, counterId, onClose }) {
         )}
       </div>
     </div>
-  )
+  ), document.body)
 }
 
 const s = {

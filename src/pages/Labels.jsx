@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { BackLink } from '../components/NavLinks.jsx'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Printer, Plus, X } from 'lucide-react'
@@ -69,7 +70,7 @@ export default function Labels() {
 
       <div className="no-print" style={s.head}>
         <h1 style={{ margin: 0 }}>Labels</h1>
-        <Link to="/items" style={s.muted}>← Items</Link>
+        <BackLink to="/items">Items</BackLink>
       </div>
 
       <section className="no-print" style={s.card}>

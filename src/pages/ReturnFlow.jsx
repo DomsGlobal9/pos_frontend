@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { BackLink, LinkChip } from '../components/NavLinks.jsx'
 import { Link, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -156,7 +157,7 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
     )
   }
 
-  const back = <Link to={`/bills/${id}`} style={s.muted}>← Bill {info.invoiceNo}</Link>
+  const back = <BackLink to={`/bills/${id}`}>Bill {info.invoiceNo}</BackLink>
 
   if (info.blocked) {
     return (
@@ -164,8 +165,8 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
         {back}
         <h1 style={s.title}>{exchange ? 'Exchange' : 'Return'}</h1>
         <p style={s.blocked}>{info.blocked.message}</p>
-        {info.blocked.code === 'PAYMENT_BEING_CHECKED' && <Link to="/payment-checks">Open Payment checks →</Link>}
-        {info.blocked.code === 'MONEY_OWED' && <Link to={`/orders/${id}`}>Open the order →</Link>}
+        {info.blocked.code === 'PAYMENT_BEING_CHECKED' && <LinkChip to="/payment-checks" style={{ justifySelf: 'start' }}>Open Payment checks</LinkChip>}
+        {info.blocked.code === 'MONEY_OWED' && <LinkChip to={`/orders/${id}`} style={{ justifySelf: 'start' }}>Open the order</LinkChip>}
       </div>
     )
   }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BackLink, LinkChip } from '../components/NavLinks.jsx'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -203,7 +204,7 @@ export function CustomerDetail() {
 
   return (
     <div style={s.page}>
-      <Link to="/customers" style={s.muted}>← All customers</Link>
+      <BackLink to="/customers">All customers</BackLink>
 
       <div>
         <h1 style={s.title}>{data.name || 'No name'}</h1>
@@ -225,9 +226,9 @@ export function CustomerDetail() {
 
       {/* POS-CUST-011. Only when there is something -- a zero here is noise on every card. */}
       {data.owedPaise > 0 && (
-        <Link to="/orders" style={s.owes}>
-          Owes {rupees(data.owedPaise)} →
-        </Link>
+        <LinkChip to="/orders" tone="warn" style={{ justifySelf: 'start' }}>
+          Owes {rupees(data.owedPaise)}
+        </LinkChip>
       )}
 
       {/* POS-CUST-012. Only when there is some, with the reason under it. */}

@@ -148,11 +148,11 @@ export default function AppShell() {
   if (gate === 'who') return <WhoAtTill />
 
   return (
-    <div style={{ ...s.page, flexDirection: bottomNav ? 'column' : 'row' }}>
+    <div style={{ ...s.page, flexDirection: bottomNav ? 'column' : 'row' }} className="app-page">
       {!bottomNav && <NavBar device={device} />}
 
-      <div style={s.main}>
-        <header style={bottomNav ? { ...s.header, ...s.headerPhone } : s.header}>
+      <div style={s.main} className="app-main">
+        <header style={bottomNav ? { ...s.header, ...s.headerPhone } : s.header} className="app-header no-print">
           <div style={bottomNav ? { ...s.brand, gap: 8 } : s.brand}>
             {/* On a phone the rail is gone, so the mark lives here instead. */}
             {bottomNav && <img src="/scaleezy-mark.svg" alt="" width="26" height="26" />}
@@ -224,7 +224,7 @@ function UpdateReady() {
   }, [])
   if (!ready) return null
   return (
-    <div style={s.updateBar} role="status">
+    <div style={s.updateBar} role="status" className="no-print">
       <span>A new version is ready. It goes in by itself when the till is free.</span>
       <button type="button" onClick={applyUpdate} style={s.updateBtn}>Update now</button>
     </div>

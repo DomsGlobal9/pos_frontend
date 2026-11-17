@@ -1,4 +1,6 @@
 import { kindOf } from '../lib/gst.js'
+import { usePageFit } from '../lib/printPage.js'
+import { BackLink, LinkChip } from '../components/NavLinks.jsx'
 import { qtyText, unitOfLine } from '../lib/units.js'
 import { waLink } from '../lib/whatsapp.js'
 import { useState } from 'react'
@@ -42,6 +44,7 @@ function SendCreditNote({ returnId }) {
 }
 
 export default function CreditNote() {
+  usePageFit('.receipt')
   const whatsappReady = (useOutletContext() ?? {})?.shop?.whatsappReady === true
   const { id } = useParams()
   const { data: note, isLoading, isError, error } = useQuery({
@@ -69,17 +72,29 @@ export default function CreditNote() {
   const igst = note.lines.reduce((n, l) => n + l.igstPaise, 0)
 
   return (
-    <div style={s.page}>
+    <div style={s.page} className="print-page">
       <style>{printCss()}</style>
 
-      <div style={s.bar} className="no-print doc-bar">
-        <div>
-          <b>{note.creditNoteNo}</b>
+      {/* One card, like the bill (17 Nov): the way back and the new bill, the number, then the tools. */}
+      <div className="no-print doc-bar">
+        <div className="doc-crumb">
+          <BackLink to={`/bills/${note.originalSale.id}`}>Bill {note.originalSale.invoiceNo}</BackLink>
+        </div>
+        <div className="doc-head">
+          <div className="doc-title">
+            <b>{note.creditNoteNo}</b>
+            <span className="chip warn">Credit note</span>
+            {note.exchangeSale && (
+              <LinkChip to={`/bills/${note.exchangeSale.id}`}>
+                New bill {note.exchangeSale.invoiceNo}
+              </LinkChip>
+            )}
+          </div>
           <div style={s.soft}>
             {rupees(note.totalPaise)} back · {new Date(note.createdAt).toLocaleString('en-IN')}
           </div>
         </div>
-        <div className="doc-tools" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <div className="doc-tools">
         <button onClick={() => window.print()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><Printer size={16} aria-hidden="true" />Print</button>
         {(() => {
           const back = note.refunds.map(r => `${rupees(r.amountPaise)} ${HOW[r.method] ?? r.method}`.trim()).join(', ')
@@ -95,7 +110,7 @@ export default function CreditNote() {
       </div>
 
       {sends?.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }} className="no-print">
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', maxWidth: 720, margin: '14px auto 0', padding: '0 16px' }} className="no-print">
           {sends.map(x => (
             <span key={x.id} className={`chip${x.status === 'FAILED' || x.status === 'EXPIRED' ? ' bad' : x.status === 'DELIVERED' || x.status === 'READ' ? ' good' : ''}`} title={x.failReason ?? ''}>
               WhatsApp to {x.to} · {SEND[x.status] ?? x.status}
@@ -104,14 +119,6 @@ export default function CreditNote() {
         </div>
       )}
 
-      <div style={s.links} className="no-print">
-        <Link to={`/bills/${note.originalSale.id}`} style={s.back}>← Bill {note.originalSale.invoiceNo}</Link>
-        {note.exchangeSale && (
-          <Link to={`/bills/${note.exchangeSale.id}`} style={s.newBill}>
-            New bill {note.exchangeSale.invoiceNo} →
-          </Link>
-        )}
-      </div>
 
       {note.customer && note.refunds.some(r => r.method === 'STORE_CREDIT') && (
         <p style={s.credit} className="no-print">
@@ -208,10 +215,10 @@ const Rule = () => <div style={{ borderTop: '1px dashed #999', margin: '6px 0' }
 // The device's paper, as the bill (14 Oct: a 58 mm till printed credit notes 80 mm wide, totals off the edge).
 const printCss = () => `
 @media print {
-  @page { size: ${paperWidthMm()}mm auto; margin: 0; }
+  @page { margin: 0; }
   body { background: #fff; }
   .no-print { display: none !important; }
-  .receipt { width: ${paperWidthMm()}mm !important; max-width: none !important; margin: 0; padding: 4mm 3mm; border: none; font-size: 11px; }
+  .receipt { width: ${paperWidthMm()}mm !important; max-width: none !important; margin: 0 !important; padding: 4mm 3mm; border: none; font-size: 11px; }
 }
 `
 

@@ -1,9 +1,10 @@
 import { useParams, Link } from 'react-router-dom'
+import { BackLink, LinkChip } from '../components/NavLinks.jsx'
 import { useQuery } from '@tanstack/react-query'
 import { loadSends } from '../lib/api.js'
 import { loadBill, messageFor, rupees } from '../lib/api.js'
 import Receipt from '../components/Receipt.jsx'
-import { Undo2, Repeat } from 'lucide-react'
+import { Undo2, Repeat, ChevronRight, User } from 'lucide-react'
 
 /**
  * WF-SALE-02. POS-SALE-007..009, POS-RCPT-003.
@@ -48,64 +49,87 @@ export default function BillDetail() {
     )
   }
 
+  /*
+   * ONE HEADER, ONE HISTORY (17 Nov, owner: "what is this layout" -- loose links on grey, a white strip
+   * of oversized buttons, then the paper). The way back, Return and Exchange, the number with where it
+   * stands, the customer and the print tools are one card; what has happened since is one card under it.
+   */
+  const partReturned = data.status !== 'RETURNED' && data.returns?.length > 0
+  const crumb = (
+    <>
+      <BackLink to="/bills">All bills</BackLink>
+      {data.status !== 'RETURNED' && data.status !== 'PENDING_SYNC' && (
+        <div className="doc-actions">
+          <Link to={`/bills/${data.id}/return`} className="btn-quiet"><Undo2 size={15} aria-hidden="true" /> Return</Link>
+          <Link to={`/bills/${data.id}/exchange`} className="btn-quiet"><Repeat size={15} aria-hidden="true" /> Exchange</Link>
+        </div>
+      )}
+    </>
+  )
+  const chips = (
+    <>
+      {data.status === 'RETURNED' && <span className="chip warn">Returned</span>}
+      {partReturned && <span className="chip warn">Part returned</span>}
+      {data.status === 'PENDING_SYNC' && <span className="chip warn">Waiting to send</span>}
+      {/* POS-SALE-009. Only when the bill has one -- most will not. */}
+      {data.customer && (
+        <LinkChip to={`/customers/${data.customer.id}`} Icon={User}>
+          {data.customer.name || data.customer.phoneMasked}
+        </LinkChip>
+      )}
+    </>
+  )
+  const hasHistory = data.returns?.length > 0 || sends?.length > 0 || data.exchangedFrom
+  const below = hasHistory && (
+    <section className="doc-history" aria-label="What happened to this bill">
+      {data.returns?.length > 0 && (
+        <ul style={s.returns} className="card-list">
+          {data.returns.map(r => (
+            <li key={r.id}>
+              <Link to={`/returns/${r.id}`} style={s.returnRow}>
+                <span>
+                  {r.exchangeSale ? 'Exchanged' : 'Returned'} · <span style={{ whiteSpace: 'nowrap' }}>{r.creditNoteNo}</span>
+                  <span style={s.soft}> · {new Date(r.createdAt).toLocaleDateString('en-IN')}</span>
+                </span>
+                <b style={{ whiteSpace: 'nowrap', flex: 'none' }}>{rupees(r.totalPaise)}</b>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* POS-RCPT-006. What was sent to the customer, and how far it got. */}
+      {sends?.length > 0 && (
+        <div style={s.sends}>
+          {sends.map(x => (
+            <span key={x.id} className={`chip${x.status === 'FAILED' || x.status === 'EXPIRED' ? ' bad' : x.status === 'DELIVERED' || x.status === 'READ' ? ' good' : ''}`}
+              title={x.failReason ?? ''}>
+              WhatsApp to {x.to} · {SEND[x.status] ?? x.status}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {data.exchangedFrom && (
+        // A card like the returns above, the numbers kept whole (17 Nov, live: "CN/2026-" / "27/0005" on a phone).
+        <Link to={`/returns/${data.exchangedFrom.returnId}`} style={s.exchangeCard}>
+          <span style={{ display: 'grid', gap: 2, minWidth: 0 }}>
+            <span style={s.soft}>Exchange against</span>
+            <span>
+              <b style={{ whiteSpace: 'nowrap' }}>{data.exchangedFrom.originalInvoiceNo}</b>
+              <span style={s.soft}> · credit note </span>
+              <span style={{ whiteSpace: 'nowrap' }}>{data.exchangedFrom.creditNoteNo}</span>
+            </span>
+          </span>
+          <ChevronRight size={18} aria-hidden="true" style={{ flex: 'none', color: 'var(--ink-soft)' }} />
+        </Link>
+      )}
+    </section>
+  )
+
   return (
     <div>
-      <div style={s.crumb} className="no-print">
-        <div style={s.crumbLeft}>
-          <Link to="/bills" style={s.back}>← All bills</Link>
-          {/* POS-SALE-009. Only when the bill has one -- most will not. */}
-          {data.customer && (
-            <Link to={`/customers/${data.customer.id}`} style={s.customerLink}>
-              {data.customer.name || data.customer.phoneMasked} →
-            </Link>
-          )}
-        </div>
-        {data.status !== 'RETURNED' && data.status !== 'PENDING_SYNC' && (
-          <div style={s.actions}>
-            <Link to={`/bills/${data.id}/return`} style={s.action}><Undo2 size={16} aria-hidden="true" /> Return</Link>
-            <Link to={`/bills/${data.id}/exchange`} style={s.action}><Repeat size={16} aria-hidden="true" /> Exchange</Link>
-          </div>
-        )}
-      </div>
-      <div style={s.panel} className="no-print">
-        {data.status === 'RETURNED' && <span className="chip warn" style={{ justifySelf: 'start' }}>Everything on this bill has been returned</span>}
-
-        {data.returns?.length > 0 && (
-          <ul style={s.returns} className="card-list">
-            {data.returns.map(r => (
-              <li key={r.id}>
-                <Link to={`/returns/${r.id}`} style={s.returnRow}>
-                  <span>
-                    {r.exchangeSale ? 'Exchanged' : 'Returned'} · {r.creditNoteNo}
-                    <span style={s.soft}> · {new Date(r.createdAt).toLocaleDateString('en-IN')}</span>
-                  </span>
-                  <b>{rupees(r.totalPaise)}</b>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {/* POS-RCPT-006. What was sent to the customer, and how far it got. */}
-        {sends?.length > 0 && (
-          <div style={s.sends}>
-            {sends.map(x => (
-              <span key={x.id} className={`chip${x.status === 'FAILED' || x.status === 'EXPIRED' ? ' bad' : x.status === 'DELIVERED' || x.status === 'READ' ? ' good' : ''}`}
-                title={x.failReason ?? ''}>
-                WhatsApp to {x.to} · {SEND[x.status] ?? x.status}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {data.exchangedFrom && (
-          <Link to={`/returns/${data.exchangedFrom.returnId}`} style={s.back}>
-            Exchange against {data.exchangedFrom.originalInvoiceNo} ({data.exchangedFrom.creditNoteNo}) →
-          </Link>
-        )}
-      </div>
-
-      <Receipt sale={data} />
+      <Receipt sale={data} crumb={crumb} chips={chips} below={below} />
     </div>
   )
 }
@@ -141,5 +165,9 @@ const s = {
     borderBottom: '1px solid var(--line)', textDecoration: 'none', color: 'var(--ink)', fontSize: 14
   },
   soft: { color: 'var(--ink-soft)', fontSize: 12 },
+  exchangeCard: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 14px',
+    background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 12, color: 'var(--ink)', fontSize: 14, textDecoration: 'none'
+  },
   bad: { color: 'var(--bad)', margin: 0 }
 }

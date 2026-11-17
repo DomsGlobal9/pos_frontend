@@ -1,6 +1,24 @@
 import { useSyncExternalStore } from 'react'
 import { completeSale, messageFor } from './api.js'
-import { staffToken } from './session.js'
+import { staffToken, onSession } from './session.js'
+
+/*
+ * A PERSON'S SIGN-IN LEAVES THE DEVICE WITH THEM (17 Nov, security audit pos-run-1).
+ *
+ * A sale queued offline kept a copy of its maker's 12-hour sign-in, so it could be sent later under
+ * their name. But after Switch that copy stayed in storage, where the next person at the same browser
+ * -- a cashier after a manager -- could take it and act as the manager. Now the moment a person's
+ * sign-in leaves this device (Switch, sign-out when idle, an expired or refused sign-in, the till
+ * closed), their copy is dropped from every queued sale. The sale is sent under whoever is at the
+ * till when the line comes back; anything that needed the earlier person's authority waits under
+ * "needs a look" for a manager, instead of riding on a stray token.
+ */
+let signedIn = staffToken()
+onSession((s) => {
+  const now = s.staffToken ?? null
+  if (signedIn && now !== signedIn) forgetToken(signedIn)
+  signedIn = now
+})
 
 /**
  * Sales this till could not send, kept until it can. POS-SYNC-003..005, POS-OFF-002.
@@ -87,6 +105,12 @@ export function isNetworkFailure(error) {
   if (!error) return false
   if (!error.response) return true
   return [502, 503, 504].includes(error.response.status)
+}
+
+/** Drop one person's sign-in from every queued sale (see the note at the top). */
+function forgetToken(token) {
+  if (!items.some(i => i.token === token)) return
+  commit(items.map(i => (i.token === token ? { ...i, token: null } : i)))
 }
 
 export function addToOutbox({ onceKey, body, restore, summary }) {

@@ -1,4 +1,6 @@
 import { rupees } from '../lib/api.js'
+import { createPortal } from 'react-dom'
+import { usePageFit } from '../lib/printPage.js'
 import { paperWidthMm } from '../lib/device.js'
 import { lineTotal, offerOn, unitPrice } from '../lib/basket.js'
 import { waLink } from '../lib/whatsapp.js'
@@ -16,17 +18,21 @@ import { isMeasured, qtyText, perUnitPaise } from '../lib/units.js'
 const VALID_DAYS = 7
 
 export default function Estimate({ shop, lines, totals, offers, customer, onClose }) {
+  usePageFit('.estimate-print')
   useEscape(onClose)
   const today = new Date()
   const until = new Date(today.getTime() + VALID_DAYS * 86_400_000)
   const day = (d) => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 
-  return (
+  // Outside the till's #root (17 Nov): printing can then drop the whole till instead of hiding it,
+  // and a hidden till no longer pushes a blank second page out of the printer.
+  return createPortal((
     <div style={s.backdrop} role="dialog" aria-label="Estimate">
       {/* Only the paper prints, as wide as this device's bill paper -- not the till behind it. */}
       <style>{`
         @media print {
-          @page { size: ${paperWidthMm()}mm auto; margin: 0; }
+          @page { margin: 0; }
+          #root { display: none !important; }
           body * { visibility: hidden !important; }
           .estimate-print, .estimate-print * { visibility: visible !important; }
           .estimate-print { position: absolute; left: 0; top: 0; width: ${paperWidthMm()}mm; }
@@ -81,7 +87,7 @@ export default function Estimate({ shop, lines, totals, offers, customer, onClos
         </div>
       </div>
     </div>
-  )
+  ), document.body)
 }
 
 const s = {

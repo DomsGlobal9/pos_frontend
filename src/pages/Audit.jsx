@@ -16,6 +16,8 @@ const LABEL = {
   'sale.price_override': 'Price changed',
   'approval.granted': 'Manager approved',
   'approval.refused': 'Approvals locked after wrong PINs',
+  'auth.pin_locked': 'PIN locked after wrong tries',
+  'sale.offline_cash_over_limit': 'Offline sale over the cash limit',
   'payment.unconfirmed': 'Payment not confirmed',
   'payment.resolved': 'Payment checked',
   'bill.reprinted': 'Bill reprinted',

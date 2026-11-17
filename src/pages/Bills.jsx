@@ -46,14 +46,14 @@ export default function Bills() {
     <div style={s.page}>
       <h1 style={s.title}>Bills</h1>
 
-      <input
-        value={q}
-        onChange={e => reset(setQ)(e.target.value)}
-        placeholder="Invoice number, phone or name"
-        aria-label="Find a bill"
-      />
-
-      <div style={s.filters}>
+      {/* One row on a computer, search over two drop-downs on a phone (17 Nov: three boxes stacked full width). */}
+      <div className="filter-row">
+        <input
+          value={q}
+          onChange={e => reset(setQ)(e.target.value)}
+          placeholder="Invoice number, phone or name"
+          aria-label="Find a bill"
+        />
         <select value={when} onChange={e => reset(setWhen)(e.target.value)} aria-label="When">
           <option value="">Any date</option>
           <option value="today">Today</option>
@@ -136,7 +136,6 @@ function stamp(at) {
 const s = {
   page: { padding: '20px 20px 28px', display: 'grid', gap: 14, maxWidth: 760, alignContent: 'start' },
   title: { margin: 0, fontSize: 22 },
-  filters: { display: 'flex', gap: 8, flexWrap: 'wrap' },
   list: { listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 2 },
   row: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,

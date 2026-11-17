@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BackLink } from '../components/NavLinks.jsx'
 import { MessageCircle } from 'lucide-react'
 import { Link, useOutletContext, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
@@ -263,7 +264,7 @@ export function OrderDetail() {
   return (
     <div>
       <div style={s.panel} className="no-print">
-        <Link to="/orders" style={s.muted}>← All orders</Link>
+        <BackLink to="/orders">All orders</BackLink>
 
         <div style={s.headline}>
           <div>
