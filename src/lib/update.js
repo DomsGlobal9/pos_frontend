@@ -14,6 +14,7 @@ import { registerSW } from 'virtual:pwa-register'
  */
 const CHECK_EVERY_MS = 15 * 60 * 1000
 const IDLE_CHECK_MS = 10 * 1000
+const BUSY_AFTER_TOUCH_MS = 2 * 60 * 1000
 let ready = false
 
 const updateSW = registerSW({
@@ -41,6 +42,11 @@ export function tillIsIdle() {
   } catch { /* unreadable storage: treat as busy rather than risk it */ return false }
   if (document.querySelector('[role="dialog"]')) return false
   if (/\/(return|exchange)$/.test(location.pathname)) return false
+  // Touched in the last 2 minutes: someone is at the till (17 Nov, live on sphl: the new version went in
+  // the moment a sale completed, and the receipt vanished before it could be printed or sent).
+  try {
+    if (Date.now() - (Number(localStorage.getItem('pos.lastTouch')) || 0) < BUSY_AFTER_TOUCH_MS) return false
+  } catch { /* no storage: the other checks decide */ }
   return true
 }
 
