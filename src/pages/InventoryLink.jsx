@@ -156,6 +156,18 @@ export default function InventoryLink() {
         </section>
       )}
 
+      {/* 19 Nov: ScaleEzy CRM owns who a customer is; the till links each of its customers to CRM's one person. */}
+      {connected && data.crmLink?.on && (
+        <section style={s.card} aria-label="Customers linked to CRM">
+          <h2 style={s.heading}>Customers in ScaleEzy CRM</h2>
+          <Row label="Linked" value={String(data.crmLink.linked)} />
+          <Row label="Waiting to link" value={String(data.crmLink.waiting)} />
+          <Row label="Last linked" value={data.crmLink.lastLinkedAt ? shortWhen(data.crmLink.lastLinkedAt) : 'Not yet'} />
+          <Row label="Last from CRM" value={!data.crmLink.eventsOn ? 'Not set up yet' : data.crmLink.lastEventAt ? shortWhen(data.crmLink.lastEventAt) : 'None yet'} />
+          {data.crmLink.problem && <p style={s.muted}>{data.crmLink.problem} It tries again by itself; selling is never held up.</p>}
+        </section>
+      )}
+
       {connected && (
         <button style={s.primary} disabled={busy}
           onClick={() => act(syncInventoryItems, (r) => `${r.added} added, ${r.updated} updated${r.switchedOff ? `, ${r.switchedOff} switched off` : ''}.`)}>
@@ -271,6 +283,9 @@ export default function InventoryLink() {
 const Row = ({ label, value }) => (
   <div style={s.row}><span style={s.muted}>{label}</span><span>{value}</span></div>
 )
+
+/** A day and a time, short enough for one line on a phone: 19 Nov, 3:50 pm. */
+const shortWhen = (at) => new Date(at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 
 const s = {
   page: { padding: '20px 20px 28px', display: 'grid', gap: 14, maxWidth: 760, alignContent: 'start' },
