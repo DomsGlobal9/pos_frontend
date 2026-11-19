@@ -9,6 +9,7 @@ import NavBar from './components/NavBar.jsx'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import PageLoading from './components/PageLoading.jsx'
 import ScreenBoundary from './components/ScreenBoundary.jsx'
+import WaitingForInternet from './components/WaitingForInternet.jsx'
 import { checkIn } from './lib/device.js'
 import { applyUpdate, updateReady, tillIsIdle } from './lib/update.js'
 import { useOutbox, flush, outboxItems } from './lib/outbox.js'
@@ -185,6 +186,7 @@ export default function AppShell() {
 
         <div style={s.content} className="shell-content">
           {/* Each screen loads its own file the first time; the header and the bar stay put meanwhile. */}
+          <WaitingForInternet />
           <ScreenBoundary key={screenPath} onRetry={() => queryClient.removeQueries({ type: 'inactive' })}>
             <Suspense fallback={<PageLoading />}>
               <Outlet context={{ device, shop }} />
@@ -241,13 +243,14 @@ function Connection({ status, offline, waiting, inventory, inventoryStopped, com
   // Sales on this till that the server has not got. POS-SYNC-003: never "All saved" while any are.
   const held = waiting > 0 && (
     <Link to="/sync" className="chip warn" style={s.state}>
-      <Dot color="var(--warn)" /> {waiting === 1 ? '1 sale' : `${waiting} sales`} waiting to send
+      <Dot color="var(--warn)" /> {waiting === 1 ? '1 sale' : `${waiting} sales`} {compact ? 'to send' : 'waiting to send'}
     </Link>
   )
   if (offline) {
     return held || (
       <span className="chip bad" style={s.state}>
-        <Dot color="var(--bad)" /> No connection. Sales are kept on this till.
+        {/* Short on a phone (17 Nov): the long sentence squeezed the shop's name to "Laksh...". */}
+        <Dot color="var(--bad)" /> {compact ? 'Offline' : 'No connection. Sales are kept on this till.'}
       </span>
     )
   }
@@ -258,7 +261,7 @@ function Connection({ status, offline, waiting, inventory, inventoryStopped, com
   if (status.database !== 'up') {
     return (
       <span className="chip bad" style={s.state}>
-        <Dot color="var(--bad)" /> Saving is paused. Nothing you have entered is lost.
+        <Dot color="var(--bad)" /> {compact ? 'Saving paused · nothing lost' : 'Saving is paused. Nothing you have entered is lost.'}
       </span>
     )
   }

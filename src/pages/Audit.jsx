@@ -74,6 +74,8 @@ const LABEL = {
   'shop.details_set': 'Shop details changed',
   'shop.idle_set': 'Sign-out-when-idle time changed',
   'customer.erased': 'Customer erased (asked by Inventory)',
+  'customer.merged': 'Customers joined (ScaleEzy CRM)',
+  'customer.unmerged': 'Customers separated again (ScaleEzy CRM)',
   'customer.updated': 'Customer details changed',
   'item.added': 'Item added',
   'item.changed': 'Item changed',

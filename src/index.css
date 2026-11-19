@@ -468,6 +468,10 @@ a.btn-like:hover { background: var(--panel-soft); border-color: #c5c8bf; }
 @keyframes skel-shine { from { background-position: 100% 50%; } to { background-position: 0 50%; } }
 @media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
 
+/* A screen waiting on the internet for its figures (components/WaitingForInternet.jsx). */
+.waiting-internet { display: flex; align-items: flex-start; gap: 8px; margin: 12px auto 0; padding: 10px 14px; border-radius: 12px; background: var(--warn-tint); color: var(--warn); font-size: 14px; font-weight: 600; line-height: 1.4; max-width: 1120px; width: calc(100% - 40px); }
+.waiting-internet svg { flex: none; margin-top: 2px; }
+
 /* A screen not yet on this till, with the internet off (components/ScreenUnavailable.jsx). */
 .screen-unavailable { max-width: 460px; margin: 0 auto; padding: 40px 20px; display: grid; gap: 10px; justify-items: start; }
 .screen-unavailable h1 { margin: 0; font-size: 22px; }
