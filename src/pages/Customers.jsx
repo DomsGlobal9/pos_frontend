@@ -209,8 +209,10 @@ export function CustomerDetail() {
 
       <div>
         <h1 style={s.title}>{data.name || 'No name'}</h1>
-        <div style={s.muted}>
-          {data.phoneDisplay} · <ChangeName customer={data} />
+        {/* The number, and beside it (or under it, on a narrow screen) the way to fix the name: no dot left hanging when it wraps. */}
+        <div style={{ ...s.muted, display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 10, rowGap: 6 }}>
+          <span style={{ whiteSpace: 'nowrap' }}>{data.phoneDisplay}</span>
+          <ChangeName customer={data} />
         </div>
         {data.gstin && <div style={s.muted}>GSTIN {data.gstin}</div>}
         {data.address && <div style={{ ...s.muted, whiteSpace: 'pre-line' }}>{data.address}</div>}
