@@ -168,6 +168,16 @@ export default function InventoryLink() {
         </section>
       )}
 
+      {/* 20 Nov: whether Inventory links a boutique (the Boutique app billing here), and when POS last asked. */}
+      {connected && data.boutique && (
+        <section style={s.card} aria-label="The Boutique app">
+          <h2 style={s.heading}>The Boutique app</h2>
+          <Row label="Boutique" value={data.boutique.tenant ? `${data.boutique.tenant}${data.boutique.paused ? ' (paused)' : ''}` : 'None linked'} />
+          <Row label="Last checked" value={data.boutique.lastCheckedAt ? shortWhen(data.boutique.lastCheckedAt) : 'Not yet'} />
+          {data.boutique.lastAnswer && <p style={s.muted}>{data.boutique.lastAnswer}</p>}
+        </section>
+      )}
+
       {connected && (
         <button style={s.primary} disabled={busy}
           onClick={() => act(syncInventoryItems, (r) => `${r.added} added, ${r.updated} updated${r.switchedOff ? `, ${r.switchedOff} switched off` : ''}.`)}>
