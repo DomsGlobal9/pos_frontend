@@ -57,7 +57,12 @@ export default function Staff() {
     } catch (err) { toast.error(messageFor(err)) } finally { setBusy(false) }
   }
   async function setActive(p, active) {
-    if (!active && !await askYesNo(`Remove ${p.name}?`, { note: 'They can no longer sign in. Their name stays on the bills they made.', confirmLabel: 'Remove', danger: true })) return
+    if (!active && !await askYesNo(p.fromBoutique ? `Stop ${p.name} billing at this shop?` : `Remove ${p.name}?`, {
+      note: p.fromBoutique
+        ? 'The Boutique app can no longer bill here as them. Their name stays on the bills they made.'
+        : 'They can no longer sign in. Their name stays on the bills they made.',
+      confirmLabel: p.fromBoutique ? 'Stop billing here' : 'Remove', danger: true
+    })) return
     try { await changeStaff(p.id, { active }); toast(active ? `${p.name} is back.` : `${p.name} removed.`); refresh() } catch (err) { toast.error(messageFor(err)) }
   }
 
@@ -120,13 +125,16 @@ export default function Staff() {
                 <div style={{ minWidth: 0 }}>
                   <div style={s.name}>{p.name}{p.isYou ? ' (you)' : ''}</div>
                   <div style={s.muted}>
-                    {p.roleLabel} · {p.hasPin ? 'PIN set' : 'no PIN yet'}{p.hasPassword ? ' · can open the till' : ''}{!p.active ? ' · removed' : ''}
+                    {/* 20 Nov: someone billing through the Boutique app is named and changed there, never here. */}
+                    {p.fromBoutique
+                      ? <>{p.roleLabel} · bills through the Boutique app{!p.active ? ' · stopped' : ''}</>
+                      : <>{p.roleLabel} · {p.hasPin ? 'PIN set' : 'no PIN yet'}{p.hasPassword ? ' · can open the till' : ''}{!p.active ? ' · removed' : ''}</>}
                   </div>
                 </div>
                 <div style={s.actions}>
-                  {p.active && <button onClick={() => setEditing({ orig: p, name: p.name ?? '', role: p.role, pin: '', password: '', email: p.email ?? '' })}>Change</button>}
-                  {p.active && !p.isYou && <button style={s.danger} onClick={() => setActive(p, false)}>Remove</button>}
-                  {!p.active && <button onClick={() => setActive(p, true)}>Bring back</button>}
+                  {p.active && !p.fromBoutique && <button onClick={() => setEditing({ orig: p, name: p.name ?? '', role: p.role, pin: '', password: '', email: p.email ?? '' })}>Change</button>}
+                  {p.active && !p.isYou && <button style={s.danger} onClick={() => setActive(p, false)}>{p.fromBoutique ? 'Stop billing here' : 'Remove'}</button>}
+                  {!p.active && <button onClick={() => setActive(p, true)}>{p.fromBoutique ? 'Let them bill again' : 'Bring back'}</button>}
                 </div>
               </>
             )}

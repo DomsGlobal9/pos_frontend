@@ -3,10 +3,10 @@ import { useOutletContext } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
-import { KeyRound, Send, FileSpreadsheet, ReceiptIndianRupee, Download, Upload, Copy } from 'lucide-react'
+import { KeyRound, Send, FileSpreadsheet, ReceiptIndianRupee, Download, Upload, Copy, Store } from 'lucide-react'
 import {
   loadApiKeys, createApiKey, revokeApiKey, loadWebhooks, createWebhook, updateWebhook, removeWebhook,
-  testWebhook, loadDeliveries, resendDelivery, importItems, download, messageFor
+  testWebhook, loadDeliveries, resendDelivery, importItems, download, messageFor, loadBoutiqueLink, changeBoutiqueLink
 } from '../lib/api.js'
 import { askYesNo } from '../components/Ask.jsx'
 import DateField from '../components/DateField.jsx'
@@ -48,6 +48,7 @@ export default function Connections() {
     <div style={s.page}><BackButton />
       <h1 style={{ margin: 0 }}>Connections</h1>
       {!owner && <p style={s.muted}>Only the owner can set up connections to other software.{reports ? ' You can still download sales for the accountant below.' : ''}</p>}
+      {owner && <Boutique />}
       {owner && <Keys />}
       {owner && <Updates />}
       {owner && <Import />}
@@ -86,6 +87,71 @@ function Shown({ label, value, onDone }) {
         <button onClick={onDone}>Done</button>
       </div>
     </div>
+  )
+}
+
+// ------------------------------------------------------------------------------------------------
+/*
+ * THE BOUTIQUE APP (20 Nov). A boutique linked to this shop in Inventory bills its retail pieces through POS, at
+ * its own Boutique counter, as named people. Shown only once Inventory has linked one; the owner chooses what it
+ * may do here, or pauses it.
+ */
+const BOUTIQUE_SCOPES = [
+  ['pos:customer', 'Find and add customers'],
+  ['pos:bill:create', 'Make bills'],
+  ['pos:bill:read', 'Read bills and send receipts'],
+  ['pos:payment', 'Take payments and balances'],
+  ['pos:return', 'Returns and exchanges'],
+  ['pos:day', 'Its drawer and the day close']
+]
+function Boutique() {
+  const queryClient = useQueryClient()
+  const { data } = useQuery({ queryKey: ['boutique-link'], queryFn: loadBoutiqueLink })
+  const link = data?.links?.[0]
+  const [scopes, setScopes] = useState(null)
+  const [busy, setBusy] = useState(false)
+  if (!link) return null
+  const chosen = scopes ?? link.scopes
+  const changed = scopes && (scopes.length !== link.scopes.length || scopes.some(x => !link.scopes.includes(x)))
+
+  async function change(body, done) {
+    setBusy(true)
+    try {
+      await changeBoutiqueLink(body)
+      toast.success(done)
+      setScopes(null)
+      queryClient.invalidateQueries({ queryKey: ['boutique-link'] })
+    } catch (err) { toast.error(messageFor(err)) } finally { setBusy(false) }
+  }
+  async function pause() {
+    if (!await askYesNo('Pause billing from the Boutique app?', { note: 'Its staff cannot bill, take money or return anything here until you resume it. Bills already made stay as they are.', confirmLabel: 'Pause', danger: true })) return
+    change({ active: false }, 'Boutique app paused.')
+  }
+  const paused = link.paused
+
+  return (
+    <Section Icon={Store} title="The Boutique app" hint={`Bills retail pieces at its own ${link.counter}, through this shop's bills and stock.${link.lastCallAt ? ` Last used ${when(link.lastCallAt)}.` : ''}`}
+      action={paused
+        ? <button style={s.primary} disabled={busy} onClick={() => change({ active: true }, 'Boutique app billing again.')}>Resume</button>
+        : <button style={s.danger} disabled={busy} onClick={pause}>Pause</button>}>
+      {paused && <p style={s.muted} role="status">Paused: the Boutique app cannot bill here.</p>}
+      {!link.active && !paused && <p style={s.muted} role="status">Inventory no longer links a boutique to this shop.</p>}
+      <fieldset style={s.fieldset}>
+        <legend style={s.legend}>It may</legend>
+        {BOUTIQUE_SCOPES.map(([v, label]) => (
+          <label key={v} style={s.check}>
+            <input type="checkbox" checked={chosen.includes(v)} onChange={e => setScopes(e.target.checked ? [...chosen, v] : chosen.filter(x => x !== v))} />
+            {label}
+          </label>
+        ))}
+      </fieldset>
+      {changed && (
+        <div style={s.actions}>
+          <button style={s.primary} disabled={busy} onClick={() => change({ scopes: chosen }, 'Saved.')}>Save</button>
+          <button type="button" onClick={() => setScopes(null)}>Cancel</button>
+        </div>
+      )}
+    </Section>
   )
 }
 

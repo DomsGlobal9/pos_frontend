@@ -532,6 +532,9 @@ export function rupees(paise) {
 
 // ---- Connections: keys, webhooks, import, export. WF-INTEGRATIONS-01.
 const got = (p) => p.then(r => r.data.data)
+// The Boutique app billing at this shop through POS (20 Nov).
+export const loadBoutiqueLink = () => got(api.get('/connections/boutique'))
+export const changeBoutiqueLink = (body) => got(api.patch('/connections/boutique', body))
 export const loadApiKeys = () => got(api.get('/connections/api-keys'))
 export const createApiKey = (body) => got(api.post('/connections/api-keys', body))
 export const revokeApiKey = (id) => got(api.post(`/connections/api-keys/${id}/revoke`))
