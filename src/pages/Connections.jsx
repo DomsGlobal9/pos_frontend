@@ -107,7 +107,8 @@ const BOUTIQUE_SCOPES = [
 function Boutique() {
   const queryClient = useQueryClient()
   const { data } = useQuery({ queryKey: ['boutique-link'], queryFn: loadBoutiqueLink })
-  const link = data?.links?.[0]
+  // Only while Inventory links a boutique to this shop (the owner, 20 Nov: a module's screens only when connected).
+  const link = data?.links?.find(l => l.active || l.paused)
   const [scopes, setScopes] = useState(null)
   const [busy, setBusy] = useState(false)
   if (!link) return null
@@ -135,7 +136,6 @@ function Boutique() {
         ? <button style={s.primary} disabled={busy} onClick={() => change({ active: true }, 'Boutique app billing again.')}>Resume</button>
         : <button style={s.danger} disabled={busy} onClick={pause}>Pause</button>}>
       {paused && <p style={s.muted} role="status">Paused: the Boutique app cannot bill here.</p>}
-      {!link.active && !paused && <p style={s.muted} role="status">Inventory no longer links a boutique to this shop.</p>}
       <fieldset style={s.fieldset}>
         <legend style={s.legend}>It may</legend>
         {BOUTIQUE_SCOPES.map(([v, label]) => (

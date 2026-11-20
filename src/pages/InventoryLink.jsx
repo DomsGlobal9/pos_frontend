@@ -145,10 +145,9 @@ export default function InventoryLink() {
       )}
 
       {/* 28 Oct: customers made or changed at the counter, and consent ticked there, go to ScaleEzy CRM. */}
-      {connected && data.crm?.configured && (
+      {/* 20 Nov (the owner): a module's screens only when the shop uses it. CRM has taken this shop's customers before. */}
+      {connected && data.crm?.configured && !data.crm.notOnCrm && (data.crm.lastSentAt || data.crm.setAside > 0) && (
         <section style={s.card} aria-label="Customers to CRM">
-          {/* 11 Nov: CRM refuses shops that do not use it; that is how it should be, not a fault. */}
-          {data.crm.notOnCrm && <p>This shop does not use ScaleEzy CRM, so its customers stay on the till. If the shop starts using CRM, they go across within a day.</p>}
           <Row label="Customers to CRM, waiting" value={String(data.crm.waiting)} />
           <Row label="Last sent to CRM" value={data.crm.lastSentAt ? new Date(data.crm.lastSentAt).toLocaleString('en-IN') : 'Nothing yet'} />
           {data.crm.setAside > 0 && <p style={s.warn}>{data.crm.setAside} could not be taken by CRM. Ask ScaleEzy support.</p>}
@@ -169,10 +168,10 @@ export default function InventoryLink() {
       )}
 
       {/* 20 Nov: whether Inventory links a boutique (the Boutique app billing here), and when POS last asked. */}
-      {connected && data.boutique && (
+      {connected && data.boutique?.tenant && (
         <section style={s.card} aria-label="The Boutique app">
           <h2 style={s.heading}>The Boutique app</h2>
-          <Row label="Boutique" value={data.boutique.tenant ? `${data.boutique.tenant}${data.boutique.paused ? ' (paused)' : ''}` : 'None linked'} />
+          <Row label="Boutique" value={`${data.boutique.tenant}${data.boutique.paused ? ' (paused)' : ''}`} />
           <Row label="Last checked" value={data.boutique.lastCheckedAt ? shortWhen(data.boutique.lastCheckedAt) : 'Not yet'} />
           {data.boutique.lastAnswer && <p style={s.muted}>{data.boutique.lastAnswer}</p>}
         </section>
