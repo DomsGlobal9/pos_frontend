@@ -53,6 +53,8 @@ const LABEL = {
   'shop.upi_set': 'UPI ID set',
   'whatsapp.link_started': 'WhatsApp linking started',
   'whatsapp.unlinked': 'WhatsApp number unlinked',
+  'module.linked': 'Linked to the Boutique app',
+  'module.changed': 'POS switched on or off by ScaleEzy or the Boutique app',
   'shop.payment_methods_set': 'Ways to pay changed',
   'shop.logo_set': 'Logo changed',
   'sale.offers_applied': 'Offers applied',

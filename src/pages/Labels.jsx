@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { BackLink } from '../components/NavLinks.jsx'
+import { useOutletContext } from 'react-router-dom'
 import { useQuery } from '../lib/query.js'
 import { Printer, Plus, X } from 'lucide-react'
 import { loadItems, rupees, messageFor } from '../lib/api.js'
@@ -23,6 +24,7 @@ const LAYOUTS = {
 }
 
 export default function Labels() {
+  const { shop } = useOutletContext() ?? {}   // the shop's name prints on every label
   const [q, setQ] = useState('')
   const [picked, setPicked] = useState([])
   const [layout, setLayout] = useState('ROLL')
