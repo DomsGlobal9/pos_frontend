@@ -42,6 +42,15 @@ needs the password again. Use it when a tablet is taken home or the counter is m
 
 ## Common problems
 
+:::faq I forgot my password
+Nobody can read a password back. There are three ways in:
+- **The till is still open on another device:** choose your name there, enter your PIN, then **More → Staff**, your name, **Change**, and type a new password.
+- **There is another owner:** they set a new password for you in **More → Staff**.
+- **Otherwise:** ask ScaleEzy support, or your Boutique app's administrator, for a new sign-in link. It lets you choose a new password and PIN.
+
+The sign-in screen has the same answer under **Forgot your password?**
+:::
+
 :::faq I forgot my PIN
 Nobody can read a PIN back. Ask the owner or a manager to set a new one in **More → Staff**.
 :::

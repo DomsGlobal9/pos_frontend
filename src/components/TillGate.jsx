@@ -17,6 +17,7 @@ export function OpenTill({ onDone }) {
   const [shops, setShops] = useState(null)
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [forgot, setForgot] = useState(false)
 
   async function submit(e, shopId) {
     e?.preventDefault()
@@ -51,6 +52,15 @@ export function OpenTill({ onDone }) {
             </label>
             {error && <p style={s.bad} role="alert">{error}</p>}
             <button type="submit" style={s.primary} disabled={busy}>{busy ? 'Opening…' : 'Open the till'}</button>
+            {/* 25 Nov: a forgotten password had no answer on this screen. Nobody can read a password back, so these are the ways in. */}
+            <button type="button" style={s.link} aria-expanded={forgot} onClick={() => setForgot(!forgot)}>Forgot your password?</button>
+            {forgot && (
+              <div style={s.help} role="region" aria-label="Forgot your password">
+                <p style={s.helpLine}><strong>Till still open on another device?</strong> Choose your name there and enter your PIN, then <strong>More → Staff</strong>, your name, <strong>Change</strong>, and type a new password.</p>
+                <p style={s.helpLine}><strong>Another owner?</strong> They can set a new password for you in <strong>More → Staff</strong>.</p>
+                <p style={s.helpLine}><strong>Otherwise</strong>, ask ScaleEzy support, or your Boutique app's administrator, for a new sign-in link. It lets you choose a new password.</p>
+              </div>
+            )}
           </>
         )}
       </form>
@@ -151,6 +161,9 @@ const s = {
   label: { display: 'grid', gap: 6, fontSize: 13, color: 'var(--ink-soft)' },
   primary: { minHeight: 'var(--tap)', fontSize: 16, fontWeight: 700, background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' },
   bad: { margin: 0, padding: '8px 12px', borderRadius: 10, background: 'var(--bad-tint)', color: 'var(--bad)', fontSize: 14, textAlign: 'center' },
+  link: { justifySelf: 'center', background: 'none', border: 'none', boxShadow: 'none', color: 'var(--brand-deep)', fontWeight: 600, fontSize: 14, textDecoration: 'underline', minHeight: 'var(--tap)' },
+  help: { display: 'grid', gap: 8, padding: '12px 14px', borderRadius: 12, background: 'var(--brand-tint)', border: '1px solid var(--brand-tint-strong)' },
+  helpLine: { margin: 0, fontSize: 13.5, lineHeight: 1.5 },
   tiles: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 8 },
   tile: { display: 'grid', gap: 2, padding: '12px 8px', minHeight: 64, textAlign: 'center', borderRadius: 12 },
   tileOn: { borderColor: 'var(--accent)', boxShadow: '0 0 0 2px var(--brand-tint-strong)', background: 'var(--brand-tint)' },

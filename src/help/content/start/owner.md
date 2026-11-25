@@ -40,6 +40,15 @@ GST, GST by rate, the HSN summary for GSTR-1, and the days. See
 
 ## Common problems
 
+:::faq I forgot my password
+Nobody can read a password back. There are three ways in:
+- **The till is still open on another device:** choose your name there, enter your PIN, then **More → Staff**, your name, **Change**, and type a new password.
+- **There is another owner:** they set a new password for you in **More → Staff**.
+- **Otherwise:** ask ScaleEzy support, or your Boutique app's administrator, for a new sign-in link. It lets you choose a new password and PIN.
+
+The sign-in screen has the same answer under **Forgot your password?**
+:::
+
 :::faq A cashier forgot their PIN
 A PIN cannot be read back — not even by you. Set a new one: **More → Staff**, the person, **New PIN**.
 :::
