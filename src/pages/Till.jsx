@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, lazy, Suspense } from 'react'
+import { useEffect, useMemo, useRef, useState, lazy, Suspense } from 'react'
 import { useOutletContext, useLocation, useNavigate, Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
-import { searchItems, completeSale, parkBill, quoteBasket, loadWallet, messageFor, rupees, loadTillStaff } from '../lib/api.js'
+import { searchItems, loadScanIndex, completeSale, parkBill, quoteBasket, loadWallet, messageFor, rupees, loadTillStaff } from '../lib/api.js'
 import { isTouchFirst } from '../lib/useMedia.js'
 import { askYesNo } from '../components/Ask.jsx'
 import { basketTotals, estimatedTaxablePaise, lineTotal, unitPrice, offerOn, saveDraft, loadDraft, clearDraft, newOnceKey } from '../lib/basket.js'
@@ -312,6 +312,21 @@ export default function Till() {
    */
   const episode = useRef(0)
   const pending = useRef(null)
+
+  /*
+   * THE SCAN LIST (25 Nov, owner: "within milliseconds, like DMart's scanner"). Every item's code and barcode,
+   * loaded once when the till opens and again the moment items change (the live 'items' message invalidates
+   * ['items', ...]). A scan that matches exactly one item goes into the bill straight from here -- no round trip,
+   * so a scanner can fire codes back to back and none waits for, or joins, another's lookup. Anything else (a
+   * name, half a code, a code two items share) still asks the server.
+   */
+  const { data: scanList } = useQuery({ queryKey: ['items', 'scan-index'], queryFn: loadScanIndex, staleTime: 5 * 60_000, retry: 1 })
+  const scanMap = useMemo(() => {
+    const m = new Map()
+    const put = (k, it) => { if (!k) return; const key = String(k).trim().toLowerCase(); m.set(key, [...(m.get(key) ?? []), it]) }
+    for (const it of scanList?.items ?? []) { put(it.barcode, it); if ((it.code ?? '').toLowerCase() !== (it.barcode ?? '').toLowerCase()) put(it.code, it) }
+    return m
+  }, [scanList])
   const queryNow = useRef('')
   queryNow.current = query
   useEffect(() => {
@@ -339,32 +354,48 @@ export default function Till() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, paying, receipt, keeping])
 
-  async function find(event, typed) {
+  /*
+   * Answers what happened, for the camera (25 Nov: it keeps scanning while items go straight in):
+   * 'added' (with the item), 'measuring' or 'choose' (a choice is needed on screen), 'none' or 'error'.
+   */
+  async function find(event, typed, { quiet = false } = {}) {
     event?.preventDefault?.()
     const q = (typed ?? query).trim()
-    if (!q) return
+    if (!q) return { status: 'none' }
+    // A scan of a known code: straight in, from the till's own list (milliseconds, no lookup to wait on or join).
+    const local = scanMap.get(q.toLowerCase())
+    if (local?.length === 1) {
+      const item = local[0]
+      addItem(item, q)
+      return { status: isMeasured(item.unit) ? 'measuring' : 'added', item }
+    }
     // The pause's lookup for this same text is already out: wait for it, and stop if it added the item.
     const joined = pending.current && pending.current.q === q && pending.current.episode === episode.current ? pending.current : null
     setBusy(true)
     try {
       const found = joined ? await joined.promise : await searchItems(q)
-      if (joined?.added) return
+      if (joined?.added) return { status: 'added', item: found?.items?.[0] }
       if (found.exact && found.items.length === 1) {
         // Straight into the basket. Asking the cashier to click the only result is a click a sale,
         // all day.
-        addItem(found.items[0], q)
+        const item = found.items[0]
+        addItem(item, q)
+        return { status: isMeasured(item.unit) ? 'measuring' : 'added', item }
       } else if (found.items.length === 0) {
         // The box keeps what was typed: a scan that read badly is usually retyped, not re-scanned.
-        toast.error(`Nothing found for "${q}"`)
+        if (!quiet) toast.error(`Nothing found for "${q}"`)
         setResults([])
         refocusSelected()
+        return { status: 'none' }
       } else {
         setResults(found.items)
+        return { status: 'choose' }
       }
     } catch (error) {
       // Same as nothing-found: the typed code stays, so the next scan must replace it, not append.
-      toast.error(messageFor(error))
+      if (!quiet) toast.error(messageFor(error))
       refocusSelected()
+      return { status: 'error', message: messageFor(error) }
     } finally {
       setBusy(false)
     }
@@ -726,7 +757,15 @@ export default function Till() {
             <Suspense fallback={null}>
               <CameraScan
                 onClose={() => { setScanning(false); refocus() }}
-                onCode={(code) => { setScanning(false); setQuery(code); find(null, code) }}
+                onCode={async (code) => {
+                  // The camera stays open while items go straight in (25 Nov); a choice on screen closes it.
+                  const r = await find(null, code, { quiet: true })
+                  if (r.status === 'added') return { added: true, name: r.item?.name }
+                  if (r.status === 'none') return { added: false, message: `Nothing found for ${code}` }
+                  if (r.status === 'error') return { added: false, message: r.message }
+                  setScanning(false)
+                  return { close: true }
+                }}
               />
             </Suspense>
           )}

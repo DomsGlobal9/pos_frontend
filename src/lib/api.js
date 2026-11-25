@@ -103,6 +103,9 @@ export async function loadShop() {
   return data.data
 }
 
+/** Every sellable item by code and barcode: scans are answered from it on the till (25 Nov). */
+export const loadScanIndex = () => api.get('/sales/scan-index', { timeout: 30_000 }).then(r => r.data.data)
+
 export async function searchItems(q) {
   const { data } = await api.get('/sales/items', { params: { q } })
   return data.data
