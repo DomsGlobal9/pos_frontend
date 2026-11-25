@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Home, ScanBarcode, ClipboardList, Users, LayoutGrid } from 'lucide-react'
+import { Home, ScanBarcode, ClipboardList, Users, LayoutGrid, LogOut } from 'lucide-react'
 import { isTouchFirst } from '../lib/useMedia.js'
 
 /**
@@ -27,7 +27,12 @@ const TABS = [
   { to: '/more', label: 'More', Icon: LayoutGrid }
 ]
 
-export default function NavBar({ device }) {
+/*
+ * SIGN OUT has its own place (25 Nov, owner: it was "mixed up" squeezed beside the person's name): at the foot
+ * of the side bar on a computer, under who is signed in, apart from the pages. On a phone it is in the top bar's
+ * right corner and at the top of More. Not a destination, so it never sits among the five.
+ */
+export default function NavBar({ device, person, onSignOut }) {
   const bottom = isTouchFirst(device)
   return (
     <nav className={bottom ? 'nav-bottom' : 'nav-rail'} aria-label="Main">
@@ -56,6 +61,15 @@ export default function NavBar({ device }) {
           </NavLink>
         ))}
       </div>
+      {!bottom && onSignOut && (
+        <div className="nav-foot">
+          {person && <span className="nav-person" title={person}>{person}</span>}
+          <button type="button" className="nav-item nav-signout" onClick={onSignOut} title="Sign out: the next person picks their name and PIN">
+            <span className="nav-icon"><LogOut size={19} aria-hidden="true" /></span>
+            <span className="nav-label">Sign out</span>
+          </button>
+        </div>
+      )}
     </nav>
   )
 }

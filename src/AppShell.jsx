@@ -154,7 +154,7 @@ export default function AppShell() {
 
   return (
     <div style={{ ...s.page, flexDirection: bottomNav ? 'column' : 'row' }} className="app-page">
-      {!bottomNav && <NavBar device={device} />}
+      {!bottomNav && <NavBar device={device} person={shop?.cashier?.name ?? null} onSignOut={tillToken() ? () => personOut() : null} />}
 
       <div style={s.main} className="app-main">
         <header style={bottomNav ? { ...s.header, ...s.headerPhone } : s.header} className="app-header no-print">
@@ -166,19 +166,18 @@ export default function AppShell() {
               {shop?.cashier?.name && (
                 <div style={s.who}>
                   <span style={s.whoName}>{shop.cashier.name}</span>
-                  {/* The next person takes the till with their own PIN. Only on an opened till. On a phone, just the
-                      icon (17 Nov): the word squeezed the name onto two lines and ran into the status. */}
-                  {tillToken() && (
-                    <button type="button" style={bottomNav ? s.switchIcon : s.switch} onClick={() => personOut()}
-                      aria-label="Sign out" title="Sign out: the next person picks their name and PIN">
-                      <LogOut size={bottomNav ? 15 : 13} aria-hidden="true" />{!bottomNav && 'Sign out'}
-                    </button>
-                  )}
                 </div>
               )}
             </div>
           </div>
           <Connection status={status} offline={!online || unreachable} waiting={waiting.length} inventory={shop?.inventoryConnected === true} inventoryStopped={!!link?.blocked} compact={bottomNav} />
+          {/* Sign out on a phone: its own button in the corner, apart from the name (25 Nov). On a computer it is at
+              the foot of the side bar. */}
+          {bottomNav && tillToken() && shop?.cashier?.name && (
+            <button type="button" style={s.switchIcon} onClick={() => personOut()} aria-label="Sign out" title="Sign out: the next person picks their name and PIN">
+              <LogOut size={16} aria-hidden="true" />
+            </button>
+          )}
           <HelpButton />
         </header>
         {/* Under the header, not in it (17 Nov): squeezed in beside the status it pushed the shop's name to "S." on a phone. */}

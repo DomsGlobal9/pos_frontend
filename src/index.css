@@ -546,6 +546,13 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
 .nav-rail .nav-item:hover { background: var(--panel-soft); color: var(--ink); }
 .nav-rail .nav-item.active { color: var(--brand-deep); }
 .nav-rail .nav-item.active .nav-icon { background: var(--brand-deep); color: var(--brand); box-shadow: 0 6px 14px -8px rgba(22, 75, 30, 0.7); }
+/* Sign out at the foot of the side bar, apart from the pages (25 Nov). */
+.nav-foot { margin-top: auto; display: flex; flex-direction: column; gap: 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+.nav-person { font-size: 11px; font-weight: 600; color: var(--ink-soft); text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 4px; }
+.nav-rail .nav-signout { border: 0; box-shadow: none; background: none; min-height: 0; cursor: pointer; font: inherit; font-size: 11.5px; font-weight: 600; width: 100%; }
+.nav-rail .nav-signout .nav-icon { display: grid; place-items: center; color: var(--ink-soft); }
+.nav-rail .nav-signout:hover { color: var(--bad); }
+.nav-rail .nav-signout:hover .nav-icon { color: var(--bad); }
 .nav-rail .nav-sell:not(.active) .nav-icon { background: var(--brand-tint-strong); color: var(--brand-deep); }
 
 @media (min-width: 1200px) {
@@ -557,6 +564,8 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
   .nav-rail .nav-item { flex-direction: row; gap: 12px; padding: 7px 10px 7px 8px; border-radius: 12px; font-size: 14.5px; }
   .nav-rail .nav-icon { width: 36px; height: 36px; border-radius: 10px; }
   .nav-rail .nav-item.active { background: var(--brand-tint); font-weight: 700; }
+  .nav-person { text-align: left; padding: 0 10px; font-size: 12.5px; }
+  .nav-rail .nav-signout { font-size: 14.5px; }
 }
 
 /* A phone or tablet: a bar lifted off the bottom edge, the thumb's own place. */
