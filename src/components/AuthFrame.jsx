@@ -54,7 +54,18 @@ function ProblemBox({ children }) {
 function Receipt() {
   return (
     <div className="af-stage" aria-hidden="true">
-      <div className="af-printer"><span className="af-led" /><span className="af-slot" /></div>
+      {/* A counter's thermal printer (25 Nov, owner: it did not look like a machine, and the bill did not tear):
+          a lid, a face with the badge, a feed button and a light, and a toothed tear bar the paper leaves through. */}
+      <div className="af-printer">
+        <div className="af-lid"><span className="af-seam" /></div>
+        <div className="af-face">
+          <span className="af-badge">POS</span>
+          <span className="af-feed" />
+          <span className="af-led" />
+        </div>
+        <div className="af-mouth"><span className="af-stub" /></div>
+        <div className="af-teeth" />
+      </div>
       <div className="af-clip">
         <div className="af-shade">
           <div className="af-receipt">
@@ -97,18 +108,41 @@ export default function AuthFrame({ title, subtitle, caption = 'Bills, payments 
 
         /* ---- the printer and the receipt ---- */
         .af-stage { align-self: center; justify-self: center; width: 280px; max-width: 100%; display: grid; justify-items: center; }
-        .af-printer { position: relative; z-index: 1; width: 100%; height: 30px; border-radius: 10px 10px 6px 6px;
-          background: linear-gradient(#0c2e12, #082409); box-shadow: 0 10px 24px -8px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08); }
-        .af-slot { position: absolute; left: 18px; right: 18px; bottom: 7px; height: 4px; border-radius: 4px; background: #020a03; }
-        .af-led { position: absolute; right: 12px; top: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--brand);
-          box-shadow: 0 0 8px var(--brand); animation: af-led 9s ease-in-out infinite; }
-        .af-clip { width: 236px; height: 318px; margin-top: -9px; overflow: hidden; }
-        .af-shade { filter: drop-shadow(0 14px 18px rgba(0,0,0,.28)); }
-        .af-receipt { --paper: #fffdf6; position: relative; padding: 20px 16px 26px; background: var(--paper); color: #1f2420;
-          font: 12.5px/1.65 ui-monospace, 'Cascadia Mono', Consolas, 'SFMono-Regular', Menlo, monospace;
+        .af-printer { position: relative; z-index: 1; width: 100%; display: grid; filter: drop-shadow(0 16px 20px rgba(0,0,0,.45));
+          animation: af-hum 9s linear infinite; }
+        .af-lid { position: relative; height: 30px; border-radius: 16px 16px 4px 4px;
+          background: linear-gradient(180deg, #3b423d 0%, #262b27 55%, #1d211e 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.14); }
+        .af-seam { position: absolute; left: 14px; right: 14px; bottom: 6px; height: 2px; border-radius: 2px; background: rgba(0,0,0,.45);
+          box-shadow: 0 1px 0 rgba(255,255,255,.06); }
+        .af-face { position: relative; height: 36px; display: flex; align-items: center; gap: 10px; padding: 0 14px;
+          background: linear-gradient(180deg, #202421, #171a18); }
+        .af-badge { font: 800 10px/1 system-ui, sans-serif; letter-spacing: .16em; color: var(--brand); padding: 3px 6px 3px 7px;
+          border: 1px solid color-mix(in srgb, var(--brand) 45%, transparent); border-radius: 4px; }
+        .af-feed { margin-left: auto; width: 15px; height: 15px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #4a524c, #222723);
+          box-shadow: 0 1px 0 rgba(255,255,255,.08), inset 0 -1px 2px rgba(0,0,0,.6); }
+        .af-led { width: 7px; height: 7px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 9px var(--brand);
+          animation: af-led 9s steps(1, end) infinite; }
+        .af-mouth { position: relative; height: 12px; margin: 0 6px; border-radius: 0 0 8px 8px; background: #0b0d0c;
+          box-shadow: inset 0 3px 4px rgba(0,0,0,.8); }
+        /* The paper's end, always waiting in the mouth: what is left after each tear. */
+        .af-stub { position: absolute; left: 22px; right: 22px; bottom: -2px; height: 7px; background: #fffdf6;
           -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 12px 100%;
-                  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 12px 100%;
-          animation: af-print 9s cubic-bezier(.3,.7,.4,1) infinite; }
+                  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 12px 100%; }
+        /* The tear bar: brushed metal with teeth, the edge every receipt is torn against. */
+        .af-teeth { position: relative; z-index: 2; height: 7px; margin: -3px 14px 0; background: linear-gradient(180deg, #d9ddd9, #9aa19b);
+          -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 8px 100%;
+                  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 8px 100%; }
+        .af-clip { width: 236px; height: 330px; margin-top: -4px; overflow: hidden; }
+        .af-shade { filter: drop-shadow(0 14px 18px rgba(0,0,0,.28)); }
+        /* Torn at both ends: the bottom where the last bill was torn off, the top where this one will be. */
+        .af-receipt { --paper: #fffdf6; position: relative; padding: 22px 16px 26px; background: var(--paper); color: #1f2420;
+          font: 12.5px/1.65 ui-monospace, 'Cascadia Mono', Consolas, 'SFMono-Regular', Menlo, monospace;
+          -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% 100% / 12px 51% repeat-x,
+                        conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% 0 / 12px 51% repeat-x;
+                  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% 100% / 12px 51% repeat-x,
+                        conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% 0 / 12px 51% repeat-x;
+          transform-origin: 50% 0;
+          animation: af-print 9s linear infinite; }
         .af-r-head { display: grid; justify-items: center; gap: 1px; }
         .af-r-head strong { font-size: 13.5px; }
         .af-r-head span { color: #66706a; font-size: 11.5px; }
@@ -122,20 +156,35 @@ export default function AuthFrame({ title, subtitle, caption = 'Bills, payments 
         .af-stamp small { font-size: 10.5px; letter-spacing: .04em; margin-top: 2px; font-weight: 700; }
         .af-r-thanks { text-align: center; color: #66706a; font-size: 11.5px; }
 
-        /* One 9-second loop, all parts on the same clock: print out (0-30%), stamp (36%), hold, tear off (86-94%). */
+        /* One 9-second loop, all parts on the same clock:
+             2-32%   the paper feeds out in small steps, as a thermal printer's motor drives it (and the machine hums);
+             36%     the PAID stamp;
+             78-83%  a hand tugs it down against the teeth, a little to one side;
+             84%     it snaps free -- the torn top edge shows -- and drops away;
+             96-100% hidden, back inside, ready for the next bill. */
         @keyframes af-print {
-          0%   { transform: translateY(-101%); opacity: 1; }
-          30%  { transform: translateY(0); }
-          86%  { transform: translateY(0); opacity: 1; }
-          94%  { transform: translateY(46px) rotate(2deg); opacity: 0; }
-          100% { transform: translateY(-101%); opacity: 0; }
+          0%, 2% { transform: translateY(-100%); opacity: 1; animation-timing-function: steps(26, end); }
+          32%    { transform: translateY(0); animation-timing-function: ease-in-out; }
+          78%    { transform: translateY(0) rotate(0); opacity: 1; animation-timing-function: cubic-bezier(.5,0,.8,.3); }
+          83%    { transform: translateY(7px) rotate(1.4deg); opacity: 1; animation-timing-function: cubic-bezier(.2,.9,.3,1); }
+          84.5%  { transform: translateY(20px) rotate(-2.5deg); opacity: 1; animation-timing-function: cubic-bezier(.5,0,1,.6); }
+          95%    { transform: translateY(150px) rotate(7deg); opacity: 0; }
+          96%, 100% { transform: translateY(-100%); opacity: 0; }
+        }
+        /* The machine hums while it prints, and gives a little as the paper is torn. */
+        @keyframes af-hum {
+          0%, 2%, 32%, 82%, 86%, 100% { transform: none; }
+          5%, 11%, 17%, 23%, 29% { transform: translateX(.6px); }
+          8%, 14%, 20%, 26% { transform: translateX(-.6px); }
+          84% { transform: translateY(2px); }
         }
         @keyframes af-stamp {
           0%, 33% { opacity: 0; transform: rotate(-8deg) scale(1.7); }
           37%     { opacity: 1; transform: rotate(-8deg) scale(.96); }
           40%, 100% { opacity: 1; transform: rotate(-8deg) scale(1); }
         }
-        @keyframes af-led { 0%, 30% { opacity: 1; } 15% { opacity: .35; } 31%, 100% { opacity: 1; } }
+        /* The light blinks while printing, then stays on. */
+        @keyframes af-led { 0%, 4%, 8%, 12%, 16%, 20%, 24%, 28% { opacity: 1; } 2%, 6%, 10%, 14%, 18%, 22%, 26%, 30% { opacity: .25; } 32%, 100% { opacity: 1; } }
 
         /* ---- the form side ---- */
         .af-main { min-width: 0; display: grid; justify-items: center; align-content: center; align-content: safe center;
@@ -185,7 +234,7 @@ export default function AuthFrame({ title, subtitle, caption = 'Bills, payments 
         @media (max-width: 759px) and (max-height: 640px) { .af-panel { height: 150px; } .af-stage { transform: scale(.64); } .af-stage-scene { transform: scale(.5); } }
 
         @media (prefers-reduced-motion: reduce) {
-          .af-receipt, .af-stamp, .af-led, .af-body .spin, .af-col, .af-problem, .af-pop { animation: none; }
+          .af-receipt, .af-stamp, .af-led, .af-printer, .af-body .spin, .af-col, .af-problem, .af-pop { animation: none; }
           .af-go:hover svg:last-child { transform: none; }
         }
       `}</style>
