@@ -35,7 +35,8 @@ const load = {
   Staff: () => import('./pages/Staff.jsx'),
   Items: () => import('./pages/Items.jsx'),
   Labels: () => import('./pages/Labels.jsx'),
-  ShopSetup: () => import('./pages/ShopSetup.jsx')
+  ShopSetup: () => import('./pages/ShopSetup.jsx'),
+  Welcome: () => import('./pages/Welcome.jsx')
 }
 const Home = lazyPage(load.Home)
 const Till = lazyPage(load.Till)
@@ -64,6 +65,7 @@ const Staff = lazyPage(load.Staff)
 const Items = lazyPage(load.Items)
 const Labels = lazyPage(load.Labels)
 const ShopSetup = lazyPage(load.ShopSetup)
+const Welcome = lazyPage(load.Welcome)
 
 // The screens a cashier opens first, fetched while the till is idle so the first tap is instant.
 // ...then all the rest, so every screen is on the device before the internet can drop (17 Nov).
@@ -89,6 +91,8 @@ const router = createBrowserRouter([
   { path: '/r/:token', element: page(<PublicReceipt />), errorElement: <ScreenProblem /> },
   // Setting up a new shop -- ScaleEzy staff, with the setup key. Outside the till: no sign-in.
   { path: '/setup', element: page(<ShopSetup />), errorElement: <ScreenProblem /> },
+  // A boutique owner's one-time welcome link (25 Nov): choose a password and PIN. Outside the till.
+  { path: '/welcome', element: page(<Welcome />), errorElement: <ScreenProblem /> },
   // The guide, outside the till: readable when the till is locked or not yet opened. The "?" in the
   // header opens /help?from=<this screen> and the page about that screen opens itself.
   {
