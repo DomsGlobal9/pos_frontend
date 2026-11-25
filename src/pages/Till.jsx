@@ -998,7 +998,7 @@ export default function Till() {
          * button on a computer (a scrolling sheet on a phone), each choice with a line saying what it
          * does, grouped, and Clear bill apart and asking first.
          */
-        <div style={{ ...s.moreBackdrop, ...(stacked ? {} : s.moreBackdropDesk) }} role="dialog" aria-label="More actions" onClick={() => { setShowMore(false); refocus() }}>
+        <div style={{ ...s.moreBackdrop, ...(stacked ? s.moreBackdropPhone : s.moreBackdropDesk) }} role="dialog" aria-label="More actions" onClick={() => { setShowMore(false); refocus() }}>
           <div style={{ ...s.moreSheet, ...(stacked ? s.moreSheetPhone : s.moreSheetDesk) }} onClick={e => e.stopPropagation()}>
             <OnEscape run={() => { setShowMore(false); refocus() }} />
             <div style={s.moreHead}>
@@ -1218,8 +1218,10 @@ const s = {
     padding: 14, width: 400, maxWidth: '100%', display: 'grid', gap: 4, alignContent: 'start',
     overflowY: 'auto', overscrollBehavior: 'contain'
   },
-  // A phone: a sheet from the bottom that never runs off the screen.
-  moreSheetPhone: { borderRadius: '20px 20px 0 0', maxHeight: '85vh', paddingBottom: 'calc(14px + env(safe-area-inset-bottom, 0px))' },
+  // A phone or tablet: a card that floats just above the bottom bar (25 Nov, owner's screenshot: it slid in over
+  // the bar, Home and More poking out either side, its last choice pressed against the screen's edge).
+  moreBackdropPhone: { padding: '0 12px calc(84px + env(safe-area-inset-bottom, 0px))' },
+  moreSheetPhone: { borderRadius: 20, maxHeight: 'calc(100dvh - 170px)' },
   // A computer: a menu just above the More button, bottom right.
   moreBackdropDesk: { alignItems: 'flex-end', justifyContent: 'flex-end', padding: '0 20px 92px', background: 'rgba(16, 24, 14, 0.18)' },
   moreSheetDesk: { borderRadius: 16, maxHeight: 'calc(100vh - 120px)', width: 360 },
