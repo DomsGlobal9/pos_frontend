@@ -104,7 +104,7 @@ export default function AuthFrame({ title, subtitle, caption = 'Bills, payments 
         .af-logo img { position: absolute; max-width: none; width: auto; height: calc(var(--h) * 422 / 142); left: calc(var(--h) * -49 / 142); top: calc(var(--h) * -150 / 142); }
         .af-brand { display: flex; align-items: center; gap: 10px; }
         .af-tag { font-size: 12.5px; font-weight: 700; color: var(--brand-deep); background: var(--brand); padding: 2px 9px; border-radius: 6px; }
-        .af-caption { margin: 0; max-width: 24ch; font-size: clamp(19px, 1.9vw, 26px); line-height: 1.3; font-weight: 600; letter-spacing: -.01em; }
+        .af-caption { position: relative; z-index: 3; margin: 0; max-width: 24ch; font-size: clamp(19px, 1.9vw, 26px); line-height: 1.3; font-weight: 600; letter-spacing: -.01em; }
 
         /* ---- the printer and the receipt ---- */
         .af-stage { align-self: center; justify-self: center; width: 280px; max-width: 100%; display: grid; justify-items: center; }
@@ -132,7 +132,9 @@ export default function AuthFrame({ title, subtitle, caption = 'Bills, payments 
         .af-teeth { position: relative; z-index: 2; height: 7px; margin: -3px 14px 0; background: linear-gradient(180deg, #d9ddd9, #9aa19b);
           -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 8px 100%;
                   mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 8px 100%; }
-        .af-clip { width: 236px; height: 330px; margin-top: -4px; overflow: hidden; }
+        /* Only above the printer's mouth is the paper hidden (25 Nov, owner: the torn bill was cut off square by
+           this box). Below and to the sides it is free: the bill shows whole, and floats down when torn off. */
+        .af-clip { width: 236px; margin-top: -4px; clip-path: inset(0 -400px -900px -400px); }
         .af-shade { filter: drop-shadow(0 14px 18px rgba(0,0,0,.28)); }
         /* Torn at both ends: the bottom where the last bill was torn off, the top where this one will be. */
         .af-receipt { --paper: #fffdf6; position: relative; padding: 22px 16px 26px; background: var(--paper); color: #1f2420;
@@ -159,24 +161,31 @@ export default function AuthFrame({ title, subtitle, caption = 'Bills, payments 
         /* One 9-second loop, all parts on the same clock:
              2-32%   the paper feeds out in small steps, as a thermal printer's motor drives it (and the machine hums);
              36%     the PAID stamp;
-             78-83%  a hand tugs it down against the teeth, a little to one side;
-             84%     it snaps free -- the torn top edge shows -- and drops away;
-             96-100% hidden, back inside, ready for the next bill. */
+             72-77%  a hand tugs it down against the teeth, a little to one side;
+             78.5%   it snaps free -- the torn top edge shows --
+             79-97%  and floats down like paper, swaying and tipping, fading as it goes;
+             98-100% hidden, back inside, ready for the next bill. */
         @keyframes af-print {
-          0%, 2% { transform: translateY(-100%); opacity: 1; animation-timing-function: steps(26, end); }
-          32%    { transform: translateY(0); animation-timing-function: ease-in-out; }
-          78%    { transform: translateY(0) rotate(0); opacity: 1; animation-timing-function: cubic-bezier(.5,0,.8,.3); }
-          83%    { transform: translateY(7px) rotate(1.4deg); opacity: 1; animation-timing-function: cubic-bezier(.2,.9,.3,1); }
-          84.5%  { transform: translateY(20px) rotate(-2.5deg); opacity: 1; animation-timing-function: cubic-bezier(.5,0,1,.6); }
-          95%    { transform: translateY(150px) rotate(7deg); opacity: 0; }
-          96%, 100% { transform: translateY(-100%); opacity: 0; }
+          0%, 2% { transform: perspective(700px) translate(0, -100%) rotate(0) rotateX(0); opacity: 1; animation-timing-function: steps(26, end); }
+          32%    { transform: perspective(700px) translate(0, 0) rotate(0) rotateX(0); opacity: 1; animation-timing-function: ease-in-out; }
+          72%    { transform: perspective(700px) translate(0, 0) rotate(0) rotateX(0); opacity: 1; animation-timing-function: cubic-bezier(.5,0,.8,.3); }
+          /* a hand tugs it down against the teeth */
+          77%    { transform: perspective(700px) translate(2px, 7px) rotate(1.4deg) rotateX(0); opacity: 1; animation-timing-function: cubic-bezier(.2,.9,.3,1); }
+          /* snap: it comes free */
+          78.5%  { transform: perspective(700px) translate(-4px, 22px) rotate(-3deg) rotateX(6deg); opacity: 1; animation-timing-function: ease-in-out; }
+          /* and floats down like paper: drifting one way, then the other, tipping as it goes */
+          84%    { transform: perspective(700px) translate(26px, 74px) rotate(-8deg) rotateX(-12deg); opacity: 1; animation-timing-function: ease-in-out; }
+          89%    { transform: perspective(700px) translate(-18px, 136px) rotate(6deg) rotateX(14deg); opacity: .5; animation-timing-function: ease-in-out; }
+          94%    { transform: perspective(700px) translate(14px, 200px) rotate(-4deg) rotateX(-8deg); opacity: 0; animation-timing-function: ease-in; }
+          97.5%  { transform: perspective(700px) translate(-6px, 250px) rotate(3deg) rotateX(6deg); opacity: 0; }
+          98%, 100% { transform: perspective(700px) translate(0, -100%) rotate(0) rotateX(0); opacity: 0; }
         }
         /* The machine hums while it prints, and gives a little as the paper is torn. */
         @keyframes af-hum {
-          0%, 2%, 32%, 82%, 86%, 100% { transform: none; }
+          0%, 2%, 32%, 76%, 80%, 100% { transform: none; }
           5%, 11%, 17%, 23%, 29% { transform: translateX(.6px); }
           8%, 14%, 20%, 26% { transform: translateX(-.6px); }
-          84% { transform: translateY(2px); }
+          78.5% { transform: translateY(2px); }
         }
         @keyframes af-stamp {
           0%, 33% { opacity: 0; transform: rotate(-8deg) scale(1.7); }
