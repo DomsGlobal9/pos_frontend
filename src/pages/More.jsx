@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useOutletContext } from 'react-router-dom'
-import { tillToken, tillClosed } from '../lib/session.js'
+import { tillToken, tillClosed, personOut } from '../lib/session.js'
 import { closeThisTill } from '../lib/api.js'
-import { Users, Receipt, ShieldCheck, History, Wallet, CalendarCheck, Boxes, BarChart3, RefreshCw, Settings, Plug, ChevronRight, Monitor } from 'lucide-react'
+import { Users, Receipt, ShieldCheck, History, Wallet, CalendarCheck, Boxes, BarChart3, RefreshCw, Settings, Plug, ChevronRight, Monitor, LogOut, Power } from 'lucide-react'
 import { askYesNo } from '../components/Ask.jsx'
 
 /**
@@ -38,6 +38,32 @@ export default function More() {
     <div style={s.page}>
       <h1 style={s.title}>More</h1>
 
+      {/* SIGN OUT (25 Nov, owner: "there is no sign-out button"): both ways, said plainly, at the TOP of More (it sat under 13 rows). */}
+      {shop?.shop && (
+        <section style={s.shop} aria-label="Sign out">
+          <div style={s.muted}>Signed in to</div>
+          <div><b>{shop.shop.shopName}</b>{shop.cashier?.name ? <> · {shop.cashier.name}</> : null}</div>
+          {shop.shop.gstin && <div style={s.muted}>GSTIN {shop.shop.gstin}</div>}
+          {tillToken() && (
+            <div style={s.signOut}>
+              <button type="button" style={s.signOutBtn} onClick={() => personOut()}>
+                <LogOut size={17} aria-hidden="true" /> Sign out{shop.cashier?.name ? ` ${shop.cashier.name}` : ''}
+              </button>
+              <span style={s.muted}>The till stays open; the next person picks their name and enters their PIN.</span>
+              <button type="button" className="btn-quiet danger" style={s.signOutBtn} onClick={async () => {
+                if (!await askYesNo('Close the till on this device?', { note: 'Everyone is signed out here. An owner or manager will need their password to open it again.', confirmLabel: 'Close the till', danger: true })) return
+                try { await closeThisTill() } catch { /* closing here is what matters */ }
+                tillClosed()
+              }}>
+                <Power size={17} aria-hidden="true" /> Close the till on this device
+              </button>
+              <span style={s.muted}>For the end of the day, or a device you are leaving: it needs the owner's or a manager's password again.</span>
+            </div>
+          )}
+        </section>
+      )}
+
+
       <ul style={s.list} className="card-list">
         {ROWS.map(row => (
           <li key={row.to}>
@@ -66,24 +92,7 @@ export default function More() {
         ))}
       </ul>
 
-      {shop?.shop && (
-        <section style={s.shop}>
-          <div style={s.muted}>Signed in to</div>
-          <div><b>{shop.shop.shopName}</b></div>
-          {shop.shop.gstin && <div style={s.muted}>GSTIN {shop.shop.gstin}</div>}
-          {shop.cashier?.name && <div style={s.muted}>{shop.cashier.name}</div>}
-        </section>
-      )}
-
       <Link to="/sell" style={s.action}>Go to Sell</Link>
-      {/* Only on a till that was opened with a password -- not in development's stand-in mode. */}
-      {tillToken() && (
-        <button className="btn-quiet danger" style={{ justifySelf: 'start' }} onClick={async () => {
-          if (!await askYesNo('Close the till on this device?', { note: 'An owner or manager will need to open it again.', confirmLabel: 'Close the till' })) return
-          try { await closeThisTill() } catch { /* closing here is what matters */ }
-          tillClosed()
-        }}>Close the till on this device</button>
-      )}
     </div>
   )
 }
@@ -106,7 +115,9 @@ const s = {
     fontSize: 11, color: 'var(--ink-soft)', border: '1px solid var(--line)',
     borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap'
   },
-  shop: { border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: 'var(--panel)', boxShadow: 'var(--shadow)' },
+  shop: { border: '1px solid var(--line)', borderRadius: 14, padding: 16, background: 'var(--panel)', boxShadow: 'var(--shadow)', display: 'grid', gap: 4 },
+  signOut: { display: 'grid', gap: 6, marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--line)', justifyItems: 'start' },
+  signOutBtn: { display: 'inline-flex', alignItems: 'center', gap: 8 },
   action: {
     justifySelf: 'start', display: 'inline-flex', alignItems: 'center', minHeight: 48,
     padding: '0 18px', borderRadius: 10, textDecoration: 'none',

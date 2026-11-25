@@ -16,8 +16,8 @@ At the start of your turn, the screen says **Who's at the till?**
 1. Tap your name.
 2. Type your 4-digit PIN.
 
-Every bill you make now carries your name as **Cashier**. When you go for lunch, tap **Switch** at the
-top so the next person takes the till with their own PIN. Your bill in progress stays as it is.
+Every bill you make now carries your name as **Cashier**. When you go for lunch, tap **Sign out** at the
+top (or **More → Sign out**) so the next person takes the till with their own PIN. Your bill in progress stays as it is.
 
 :::warning Your PIN is yours
 Never tell it to anyone, and never type someone else's. The bills, the drawer and the cash out are all

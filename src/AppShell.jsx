@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { HelpCircle, ArrowLeftRight } from 'lucide-react'
+import { HelpCircle, LogOut } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useQuery } from './lib/query.js'
 import toast from 'react-hot-toast'
@@ -170,8 +170,8 @@ export default function AppShell() {
                       icon (17 Nov): the word squeezed the name onto two lines and ran into the status. */}
                   {tillToken() && (
                     <button type="button" style={bottomNav ? s.switchIcon : s.switch} onClick={() => personOut()}
-                      aria-label="Switch person" title="Switch person">
-                      <ArrowLeftRight size={bottomNav ? 15 : 13} aria-hidden="true" />{!bottomNav && 'Switch'}
+                      aria-label="Sign out" title="Sign out: the next person picks their name and PIN">
+                      <LogOut size={bottomNav ? 15 : 13} aria-hidden="true" />{!bottomNav && 'Sign out'}
                     </button>
                   )}
                 </div>

@@ -3,7 +3,7 @@ title: Open the till and take it with your PIN
 summary: The owner or a manager opens the till on a counter once with a password; after that each person takes it with their own 4-digit PIN, and Switch hands it to the next person without losing the bill.
 for: Everyone; opening a new counter is for the owner or a manager
 minutes: 2
-keywords: sign in login open till pin password switch who's at the till lock close the till on this device new counter
+keywords: sign in login sign out log out logout open till pin password switch who's at the till lock close the till on this device new counter
 ---
 
 The till has two locks:
@@ -32,12 +32,12 @@ The screen now says **Who's at the till?** with everyone's name.
 
 ## 3. Hand over to the next person
 
-Tap **Switch** next to your name at the top. The next person taps their name and types their PIN. A bill
+Tap **Sign out** next to your name at the top (on a phone, the door icon), or **More → Sign out**. The next person taps their name and types their PIN. A bill
 that was being made stays on the screen exactly as it was.
 
 ## Close the till on this device
 
-On the **Who's at the till?** screen, **Close the till on this device** locks the counter itself. It then
+On the **Who's at the till?** screen, or at **More → Sign out**, **Close the till on this device** locks the counter itself. It then
 needs the password again. Use it when a tablet is taken home or the counter is moved.
 
 ## Common problems
@@ -58,6 +58,6 @@ Nobody can read a PIN back. Ask the owner or a manager to set a new one in **Mor
 :::faq The till went back to "Who's at the till?" on its own
 After **10 minutes** with nobody touching the till, it asks for a name and PIN again, so nobody can
 use a manager's or owner's name while they are away. It never does this with items on the bill, a box
-open, or a return part-done. It also happens after 12 hours, or when someone pressed **Switch**. Take it
+open, or a return part-done. It also happens after 12 hours, or when someone pressed **Sign out**. Take it
 again with your PIN. Nothing on the bill is lost.
 :::
