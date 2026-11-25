@@ -93,6 +93,8 @@ const router = createBrowserRouter([
   { path: '/setup', element: page(<ShopSetup />), errorElement: <ScreenProblem /> },
   // A boutique owner's one-time welcome link (25 Nov): choose a password and PIN. Outside the till.
   { path: '/welcome', element: page(<Welcome />), errorElement: <ScreenProblem /> },
+  // A forgotten password's link from email (25 Nov): a new password only. Outside the till.
+  { path: '/reset', element: page(<Welcome mode="reset" />), errorElement: <ScreenProblem /> },
   // The guide, outside the till: readable when the till is locked or not yet opened. The "?" in the
   // header opens /help?from=<this screen> and the page about that screen opens itself.
   {

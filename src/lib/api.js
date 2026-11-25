@@ -44,6 +44,8 @@ api.interceptors.response.use(r => r, error => {
 
 // ---- signing in at the till. POS-CORE-002.
 export const openTill = (body) => api.post('/auth/open', body).then(r => r.data.data)
+// Forgot your password? (25 Nov): a link by email; the same answer whether or not the email has a login.
+export const requestPasswordLink = (email) => api.post('/auth/forgot', { email }).then(r => r.data.data)
 export const loadTillStaff = () => api.get('/auth/staff').then(r => r.data.data)
 export const switchPerson = (body) => api.post('/auth/switch', body).then(r => r.data.data)
 export const whoAmI = () => api.get('/auth/me').then(r => r.data.data)
