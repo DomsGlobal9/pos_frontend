@@ -31,7 +31,8 @@ The page shows **Waiting to send**, **Being applied in Inventory** and **Last se
 ## Connect a till (owner)
 
 In Inventory make a key (Settings → POS (billing counter)), paste it here, and **Connect**. Then
-**Check Inventory now**. Inventory's guide:
+**Check Inventory now**. A shop the Boutique app runs has no key to paste: its Boutique admin's POS switch
+connects it, and a key that stops working is replaced by itself. Inventory's guide:
 [Connect your POS till](https://inventory.scaleezy.com/help/settings/pos-billing-counter).
 
 ## "Sending to Inventory has stopped"

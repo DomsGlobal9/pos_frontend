@@ -1,5 +1,5 @@
 import { cloneElement, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
@@ -27,6 +27,7 @@ import { BackButton } from '../components/NavLinks.jsx'
 const EMPTY = { code: '', name: '', price: '', gst: '5', hsn: '', barcode: '', qty: '', colour: '', size: '', group: '', active: true }
 
 export default function Items() {
+  const { shop } = useOutletContext() ?? {}
   const [q, setQ] = useState('')
   // Standalone stock (28 Oct): all items, the low ones, or the ones out; and whose stock panel is open.
   const [stock, setStock] = useState('')
@@ -85,8 +86,8 @@ export default function Items() {
       <div style={s.page}><BackButton />
         <h1>Items</h1>
         <p style={s.muted}>
-          This shop’s items come from Inventory. Add and price them there; they show here by themselves within
-          seconds. Barcode labels are printed on <Link to="/inventory-link">Inventory link</Link>.
+          This shop’s items come from {shop?.boutiqueRun ? 'the Boutique app' : 'Inventory'}. Add and price them there; they
+          show here by themselves within seconds. <Link to="/labels">Print barcode labels</Link> for them here.
         </p>
       </div>
     )

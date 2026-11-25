@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { QrCode, Boxes, Monitor, Image as ImageIcon, ImagePlus, Receipt, Wallet, MessageCircle } from 'lucide-react'
+import { QrCode, Boxes, Monitor, Image as ImageIcon, ImagePlus, Receipt, Wallet } from 'lucide-react'
 import CardMachinesSettings from '../components/CardMachinesSettings.jsx'
+import WhatsAppSettings from '../components/WhatsAppSettings.jsx'
 import ShopDetailsSettings from '../components/ShopDetailsSettings.jsx'
 import IdleSignOutSettings from '../components/IdleSignOutSettings.jsx'
 import { setShopUpi, setShopLogo, setShopGst, setShopPaymentMethods, messageFor } from '../lib/api.js'
@@ -122,7 +123,7 @@ export default function Settings() {
         ) : <p style={s.muted}>Only the owner can change this.</p>}
       </section>
 
-      <WhatsAppSettings shop={shop} />
+      <WhatsAppSettings />
 
       <CardMachinesSettings owner={owner} counters={shop?.counters ?? []} />
 
@@ -181,12 +182,16 @@ export default function Settings() {
           so a simple mark reads better than fine detail.
         </p>
         {logo && <img src={logo} alt="The logo as it will print" style={s.logoPreview} />}
-        {connected ? (
+        {/* 25 Nov: Inventory's logo (a web address) wins; with none there, the shop chooses its own here -- a
+            boutique-run shop has no Inventory login, so this is its only way to a logo. */}
+        {connected && (logo ?? '').startsWith('https://') ? (
           <p style={s.muted}>
             Comes from Inventory (Settings → Name, logo and bill details), like the items and prices. It reaches
             the till with the next item refresh.
           </p>
         ) : owner ? (
+          <>
+          {connected && <p style={s.muted}>Inventory has no logo for this shop, so the picture chosen here prints. A logo set in Inventory later takes its place.</p>}
           <div style={s.actions}>
             <label className="btn-file" aria-disabled={busyLogo || undefined}>
               <ImagePlus size={18} aria-hidden="true" />
@@ -195,6 +200,7 @@ export default function Settings() {
             </label>
             {logo && <button disabled={busyLogo} onClick={() => saveLogo(null)} aria-label="Remove the logo">Remove</button>}
           </div>
+          </>
         ) : <p style={s.muted}>Only the owner can change this.</p>}
       </section>
 
@@ -234,53 +240,6 @@ function toJpeg(file) {
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('That file is not a picture the browser can read.')) }
     img.src = url
   })
-}
-
-/*
- * WHATSAPP (12 Oct): what this till sends bills from. A person presses Send, one bill per press -- the
- * WhatsApp service's rule, kept by the owner's decision: a number that sends by itself gets banned. The number is
- * the one the shop linked in Inventory (Settings -> WhatsApp) -- one link per shop, shared by every
- * ScaleEzy app; the till only reads it and never links a number of its own.
- */
-const LINK = {
-  CONNECTED: 'Connected',
-  LINKING: 'Being linked',
-  DISCONNECTED: 'Disconnected — the phone is offline or WhatsApp was closed on it',
-  LOGGED_OUT: 'Logged out — link it again in Inventory',
-  NOT_LINKED: 'No number linked'
-}
-function WhatsAppSettings({ shop }) {
-  const w = shop?.whatsapp
-  if (!w) return null
-  const account = w.account
-  const connected = account?.status === 'CONNECTED'
-
-  return (
-    <section style={s.card} aria-label="WhatsApp">
-      <div style={s.head}><span style={s.icon}><MessageCircle size={18} aria-hidden="true" /></span><b>WhatsApp</b></div>
-      {!w.configured ? (
-        <p style={s.muted}>
-          This till is not connected to ScaleEzy WhatsApp yet, so cashiers share bills from their own phone
-          (Share). Ask ScaleEzy to switch it on.
-        </p>
-      ) : (
-        <>
-          <p style={{ margin: 0 }}>
-            Sending from: <b>{account?.phone ?? '—'}</b> · {account ? (LINK[account.status] ?? account.status) : 'Could not be checked just now'}
-          </p>
-          <p style={s.muted}>
-            The shop's own number, linked once in Inventory → Settings → WhatsApp and used by every ScaleEzy app
-            (shop id <code>{w.sendsAs}</code>).
-            {!connected && account && ' Until it is connected, cashiers share bills from their own phone (Share).'}
-          </p>
-          <p style={s.muted}>
-            A bill goes when the cashier presses <b>WhatsApp</b> on it, one per press. A newly linked number sends
-            about 40 messages a day for its first two weeks, then 200, and anyone who replies STOP gets nothing more.
-          </p>
-        </>
-      )}
-    </section>
-  )
 }
 
 const s = {

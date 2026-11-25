@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useQuery } from '../lib/query.js'
 import toast from 'react-hot-toast'
@@ -14,6 +15,7 @@ import { BackButton } from '../components/NavLinks.jsx'
  * Inventory" and a Retry button -- never a status code or a queue term.
  */
 export default function InventoryLink() {
+  const boutiqueRun = (useOutletContext() ?? {}).shop?.boutiqueRun === true
   const queryClient = useQueryClient()
   const { data, isLoading, isError, error } = useQuery({ queryKey: ['inventory-link'], queryFn: loadInventoryLink, refetchInterval: 15_000 })
   const [key, setKey] = useState('')
@@ -236,7 +238,19 @@ export default function InventoryLink() {
         </section>
       )}
 
-      {manage && data.deploymentHasInventory && (
+      {/* 25 Nov: a shop the Boutique app runs has no Inventory login, so no key to paste: its admin's POS switch
+          reconnects it, and Inventory mends a broken key by itself. */}
+      {manage && data.deploymentHasInventory && boutiqueRun && (
+        <section style={s.card} aria-label="Connection">
+          <p style={s.inkSmall}>
+            This shop's link to Inventory is looked after by the Boutique app. A key that stops working is replaced by
+            itself within a few hours. If the till was disconnected, ask your Boutique admin to switch POS on again; it
+            reconnects straight away.
+          </p>
+        </section>
+      )}
+
+      {manage && data.deploymentHasInventory && !boutiqueRun && (
         <section style={s.card}>
           <h2 style={s.heading}>{connected ? 'Use a new key' : 'Connect'}</h2>
           <label style={s.label}>
@@ -287,7 +301,7 @@ export default function InventoryLink() {
       )}
 
       {manage && connected && (
-        <button disabled={busy} onClick={async () => { if (await askYesNo('Disconnect from Inventory?', { note: 'The till keeps selling from its own list.', confirmLabel: 'Disconnect', danger: true })) act(disconnectInventory, 'Disconnected.') }}>
+        <button disabled={busy} onClick={async () => { if (await askYesNo('Disconnect from Inventory?', { note: boutiqueRun ? 'The till keeps selling from its own list. Only your Boutique admin can connect it again (by switching POS on).' : 'The till keeps selling from its own list.', confirmLabel: 'Disconnect', danger: true })) act(disconnectInventory, 'Disconnected.') }}>
           Disconnect
         </button>
       )}

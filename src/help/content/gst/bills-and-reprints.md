@@ -29,8 +29,10 @@ Open the bill:
 The link opens the bill on the customer's own phone, any time — without your till.
 
 :::note Which number sends it
-**More → Settings → WhatsApp** shows the shop's number the till sends from. It is linked once, in
-Inventory → Settings → WhatsApp, and used by every ScaleEzy app. Bills go one per press, never by
+**More → Settings → WhatsApp** shows the shop's number the till sends from. Anyone at the till can link
+it there with **Link your WhatsApp**: on the shop's phone, open WhatsApp → Linked devices → Link a device
+and scan the QR (or choose **Link with a code instead**). It can also be linked in Inventory; either way it
+is one number, used by every ScaleEzy app. Bills go one per press, never by
 themselves: a number that sends on its own gets banned by WhatsApp. A newly linked number sends about 40
 messages a day for its first two weeks, then 200. Anyone who replies STOP gets nothing more.
 :::

@@ -18,7 +18,8 @@ The owner can do everything on the till. Most of it you set up once.
    registration** when the till is not linked to Inventory, and the **logo on the bill**. See
    [Settings](/help/setup/settings).
 4. **Inventory link**: paste the key from Inventory. Items, prices, GST rates, stock,
-   your shop's name, address and GSTIN come from Inventory by themselves. See
+   your shop's name, address and GSTIN come from Inventory by themselves. A shop the Boutique app set up
+   is connected already, with no key to paste: its items come from the Boutique app. See
    [Inventory link](/help/behind/inventory-link).
 
 :::note GST is your choice

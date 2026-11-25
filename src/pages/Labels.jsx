@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { BackLink } from '../components/NavLinks.jsx'
-import { Link, useOutletContext } from 'react-router-dom'
 import { useQuery } from '../lib/query.js'
 import { Printer, Plus, X } from 'lucide-react'
 import { loadItems, rupees, messageFor } from '../lib/api.js'
@@ -24,7 +23,6 @@ const LAYOUTS = {
 }
 
 export default function Labels() {
-  const { shop } = useOutletContext() ?? {}
   const [q, setQ] = useState('')
   const [picked, setPicked] = useState([])
   const [layout, setLayout] = useState('ROLL')
@@ -39,21 +37,11 @@ export default function Labels() {
   const L = LAYOUTS[layout]
 
   /*
-   * A SHOP CONNECTED TO INVENTORY PRINTS ITS LABELS THERE. Inventory already makes them (a product's
-   * Variants tab -> Print Labels), from the same barcodes and the same store price, and two places to
-   * print the same label is one too many. This screen is for a shop with no Inventory.
+   * EVERY SHOP PRINTS LABELS HERE (25 Nov, owner: nothing may depend on another module). A connected shop's
+   * labels used to be Inventory-only, which a boutique-run shop (no Inventory login) could never reach. The
+   * barcodes and prices are the ones the till sells with, so a label printed here scans exactly like one
+   * printed in Inventory.
    */
-  if (shop?.inventoryConnected) {
-    return (
-      <div style={s.page}>
-        <h1 style={{ margin: 0 }}>Labels</h1>
-        <p style={s.muted}>
-          This shop's labels are printed in Inventory: open a product, go to its Variants tab, and press
-          Print Labels. They carry the same barcodes the till scans.
-        </p>
-      </div>
-    )
-  }
 
   return (
     <div style={s.page}>

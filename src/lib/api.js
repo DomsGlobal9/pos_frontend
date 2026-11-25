@@ -92,6 +92,12 @@ export async function homeSummary() {
   return data.data
 }
 
+/** The shop's WhatsApp number (25 Nov): state, and whether this person may link it. fresh while linking. */
+export const loadWhatsApp = (fresh = false) => api.get('/shop/whatsapp', { params: fresh ? { fresh: 1 } : {} }).then(r => r.data.data)
+/** A QR ({ method: 'qr' }) or a code ({ method: 'code', phone }). The service can take ~30 s to make one. */
+export const linkWhatsApp = (body) => api.post('/shop/whatsapp/link', body, { timeout: 50_000 }).then(r => r.data.data)
+export const unlinkWhatsApp = () => api.post('/shop/whatsapp/unlink').then(r => r.data.data)
+
 export async function loadShop() {
   const { data } = await api.get('/shop')
   return data.data
