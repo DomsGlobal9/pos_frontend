@@ -105,6 +105,25 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
   // The scan box on "Coming back". A hook, so it lives up here with the others, above the early returns.
   const scanBox = useRef(null)
 
+  /*
+   * (A hook, so up here above the early returns.) THE REPLACEMENT, FOUND AS YOU TYPE (25 Nov, owner: no buttons to press, everything fast). Two letters and the
+   * list fills; a scan (which ends with Enter) or Enter on an exact code still adds it straight away.
+   */
+  const lookedFor = useRef(0)
+  useEffect(() => {
+    const q = query.trim()
+    if (q.length < 2) { setResults([]); return undefined }
+    const mine = ++lookedFor.current
+    const t = setTimeout(async () => {
+      try {
+        const found = await searchItems(q)
+        if (mine === lookedFor.current) setResults(found.items)
+      } catch { /* the Enter path says why */ }
+    }, 180)
+    return () => clearTimeout(t)
+  }, [query])
+
+
   const { data: info, isLoading, isError, error } = useQuery({
     queryKey: ['return-info', id],
     queryFn: () => loadReturnInfo(id)
@@ -305,6 +324,7 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
     event.preventDefault()
     const q = query.trim()
     if (!q) return
+    lookedFor.current++
     try {
       const found = await searchItems(q)
       if (found.items.length === 0) toast.error(`Nothing found for "${q}"`)
@@ -463,8 +483,7 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
         <section style={s.section}>
           <h2 style={s.heading}>Taking instead</h2>
           <form onSubmit={find} style={s.searchRow}>
-            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search or scan" aria-label="Find the replacement" />
-            <button type="submit">Find</button>
+            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Type or scan: the list fills as you type" aria-label="Find the replacement" autoComplete="off" />
           </form>
           {results.length > 0 && (
             <ul style={s.list} className="card-list">

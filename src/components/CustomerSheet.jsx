@@ -30,30 +30,54 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
   const [busy, setBusy] = useState(false)
   const phoneBox = useRef(null)
   const nameBox = useRef(null)
+  const useBtn = useRef(null)
+  // Each look gets a number; an answer for a number the cashier has already changed is dropped.
+  const asked = useRef(0)
 
   useEffect(() => { phoneBox.current?.focus() }, [])
 
+  /*
+   * NO "LOOK UP" BUTTON (25 Nov, owner: everything automatic, the sale must be fast). The moment the number is
+   * complete -- ten digits, or with +91 or a leading 0 -- the till looks by itself. Half a number is never sent.
+   * Enter still looks at once.
+   */
+  const complete = (() => {
+    let d = phone.replace(/\D/g, '')
+    if (d.length === 12 && d.startsWith('91')) d = d.slice(2)
+    if (d.length === 11 && d.startsWith('0')) d = d.slice(1)
+    return /^[6-9]\d{9}$/.test(d)
+  })()
+  useEffect(() => {
+    if (!complete || searched) return undefined
+    const t = setTimeout(() => look(), 120)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phone, complete, searched])
+
   async function look(event) {
-    event.preventDefault()
-    if (!phone.trim() || busy) return
+    event?.preventDefault()
+    if (!phone.trim()) return
+    const mine = ++asked.current
     setBusy(true)
     try {
       const answer = await findCustomerByPhone(phone)
+      if (mine !== asked.current) return
       // Known only in Inventory: still new here, with Inventory's name filled in for the cashier.
       const customer = answer?.inventoryName ? null : answer
       setInventoryName(answer?.inventoryName ?? null)
       if (answer?.inventoryName) setName(answer.inventoryName)
       setFound(customer)
       setSearched(true)
-      // Not known: the cashier's next move is the name, so put them there.
-      if (!customer) requestAnimationFrame(() => nameBox.current?.focus())
+      // Not known: the cashier's next move is the name, so put them there. Known: Enter uses them.
+      requestAnimationFrame(() => (customer ? useBtn.current : nameBox.current)?.focus())
     } catch (error) {
+      if (mine !== asked.current) return
       // The server's phone messages are already written for a person -- "An Indian mobile number
       // starts with 6, 7, 8 or 9" -- so they go straight through.
       toast.error(messageFor(error))
       setSearched(false)
     } finally {
-      setBusy(false)
+      if (mine === asked.current) setBusy(false)
     }
   }
 
@@ -143,15 +167,14 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
               ref={phoneBox}
               inputMode="tel"
               value={phone}
-              onChange={e => { setPhone(e.target.value); setSearched(false); setFound(null); setInventoryName(null) }}
+              onChange={e => { asked.current++; setBusy(false); setPhone(e.target.value); setSearched(false); setFound(null); setInventoryName(null) }}
               placeholder="10-digit mobile"
               aria-label="Customer phone number"
+              autoComplete="off"
             />
           </label>
           {!searched && (
-            <button type="submit" disabled={!phone.trim() || busy}>
-              {busy ? 'Looking…' : 'Look up'}
-            </button>
+            <p style={s.muted} aria-live="polite">{busy ? 'Looking…' : 'They show up as soon as the number is complete.'}</p>
           )}
         </form>
 
@@ -181,7 +204,7 @@ export default function CustomerSheet({ onPick, onSkip, onClose, needAddress = f
                 <button type="button" onClick={useKnown} disabled={busy}>Use without them</button>
               </>
             ) : (
-              <button style={s.primary} onClick={useKnown} disabled={busy}>
+              <button ref={useBtn} style={s.primary} onClick={useKnown} disabled={busy}>
                 {busy ? 'Saving…' : `Use ${found.name ? found.name.split(' ')[0] : 'this customer'}`}
               </button>
             )}
