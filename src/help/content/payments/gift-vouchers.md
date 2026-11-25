@@ -44,5 +44,6 @@ drawer, and the shift and day close count it.
 
 :::faq Gift voucher is not offered
 The shop must be connected to Inventory and online, and gift vouchers switched on in Inventory →
-Settings → Gift vouchers.
+Settings → Gift vouchers. A shop the Boutique app runs switches them on in the Boutique app → Settings →
+Gift vouchers.
 :::

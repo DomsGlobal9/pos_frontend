@@ -422,7 +422,7 @@ export default function ReturnFlow({ mode = 'RETURN' }) {
                   </div>
                 </div>
                 {!none && kept && (
-                  <span style={s.muted}>Cut cloth: not returnable. The owner can allow it on the product in Inventory.</span>
+                  <span style={s.muted}>Cut cloth: not returnable. The owner can allow it on the product in {shop?.boutiqueRun ? 'the Boutique app' : 'Inventory'}.</span>
                 )}
                 {!none && !kept && (
                   <div style={s.stepper}>
