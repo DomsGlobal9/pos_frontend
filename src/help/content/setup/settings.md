@@ -59,6 +59,6 @@ Switch; use it only if one person works the till. The till never signs anyone ou
 ## With the Inventory link
 
 The shop's name, address, phone, GSTIN, footer, items, prices, GST rates, offers and the cashier's discount
-limit come from Inventory with **Refresh items from Inventory**, and Shop details is shown here read-only. See [Inventory link](/help/behind/inventory-link).
+limit come from Inventory by themselves, and Shop details is shown here read-only. See [Inventory link](/help/behind/inventory-link).
 
 Also under Settings: **Inventory link** and **Devices** (see [Devices](/help/setup/devices)).

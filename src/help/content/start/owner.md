@@ -17,8 +17,8 @@ The owner can do everything on the till. Most of it you set up once.
 3. **Settings**: the shop's **UPI ID** (so the payment screen shows a QR with the amount), **GST
    registration** when the till is not linked to Inventory, and the **logo on the bill**. See
    [Settings](/help/setup/settings).
-4. **Inventory link**: paste the key from Inventory, then **Refresh items from Inventory**. Items, prices,
-   GST rates, stock, your shop's name, address and GSTIN come from Inventory. See
+4. **Inventory link**: paste the key from Inventory. Items, prices, GST rates, stock,
+   your shop's name, address and GSTIN come from Inventory by themselves. See
    [Inventory link](/help/behind/inventory-link).
 
 :::note GST is your choice

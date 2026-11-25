@@ -85,8 +85,8 @@ export default function Items() {
       <div style={s.page}><BackButton />
         <h1>Items</h1>
         <p style={s.muted}>
-          This shop’s items come from Inventory. Add and price them there, then press{' '}
-          <Link to="/inventory-link">Refresh items from Inventory</Link>. Barcode labels are printed there too.
+          This shop’s items come from Inventory. Add and price them there; they show here by themselves within
+          seconds. Barcode labels are printed on <Link to="/inventory-link">Inventory link</Link>.
         </p>
       </div>
     )

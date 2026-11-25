@@ -16,8 +16,9 @@ keywords: inventory link connect key refresh items catalogue sending stopped wai
 ## What comes from Inventory
 
 Items, prices, offers, GST rates, stock, the shop's name, address, phone and GSTIN, the logo, the discount
-limit, points and store credit. **Refresh items from Inventory** brings them now; the till also refreshes on
-its own.
+limit, points and store credit. They come in by themselves: Inventory tells the till within
+seconds of a change, and every open screen redraws with no reload. **Check Inventory now** is there if you
+want to be sure.
 
 ## What goes to Inventory
 
@@ -30,7 +31,7 @@ The page shows **Waiting to send**, **Being applied in Inventory** and **Last se
 ## Connect a till (owner)
 
 In Inventory make a key (Settings → POS (billing counter)), paste it here, and **Connect**. Then
-**Refresh items from Inventory**. Inventory's guide:
+**Check Inventory now**. Inventory's guide:
 [Connect your POS till](https://inventory.scaleezy.com/help/settings/pos-billing-counter).
 
 ## "Sending to Inventory has stopped"

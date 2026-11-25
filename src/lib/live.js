@@ -15,8 +15,14 @@ const TOPICS = {
   sales: ['home', 'bills', 'bill', 'orders', 'held-bills', 'shift', 'day', 'report', 'item-sales', 'awaiting-check', 'sends', 'credit-note', 'audit', 'return-info'],
   customers: ['customers', 'customer', 'wallet'],
   items: ['items', 'variants', 'stock-book'],
-  'inventory-link': ['inventory-link', 'deliveries', 'shop', 'wallet']
+  'inventory-link': ['inventory-link', 'deliveries', 'shop', 'wallet'],
+  // Anything a person changed -- settings, staff, card machines, keys, a till's name (25 Nov: those
+  // only showed on another screen after a reload). Everything on screen is asked again; only what is
+  // showing is fetched, so this costs a few requests, not the whole shop.
+  shop: '*'
 }
+// A server from before 25 Nov says all four of these for a person's change, never 'shop'.
+const PERSON_CHANGE = ['sales', 'customers', 'inventory-link', 'items']
 
 const base = import.meta.env.VITE_API_BASE || '/api/v1'
 
@@ -30,7 +36,11 @@ export function startLive(queryClient) {
   let wait = 1000
 
   const refresh = (topics) => {
-    const keys = new Set(topics.flatMap(t => TOPICS[t] ?? []))
+    if (topics.includes('shop') || PERSON_CHANGE.every(t => topics.includes(t))) {
+      queryClient.invalidateQueries({ predicate: q => !['health', 'public-receipt'].includes(q.queryKey?.[0]) })
+      return
+    }
+    const keys = new Set(topics.flatMap(t => (Array.isArray(TOPICS[t]) ? TOPICS[t] : [])))
     // Only what is on screen is fetched again; the rest is marked old and fetched when next shown.
     queryClient.invalidateQueries({ predicate: q => keys.has(q.queryKey?.[0]) })
   }
@@ -44,7 +54,7 @@ export function startLive(queryClient) {
       if (!res.ok || !res.body) throw new Error(`live ${res.status}`)
       wait = 1000
       // Back from a drop: whatever changed meanwhile is fetched now.
-      refresh(Object.keys(TOPICS))
+      refresh(['shop'])
       const reader = res.body.pipeThrough(new TextDecoderStream()).getReader()
       let buffer = ''
       for (;;) {
@@ -66,6 +76,16 @@ export function startLive(queryClient) {
     wait = Math.min(wait * 2, 30_000)
   }
 
+  // A till that slept (lid shut, tablet locked) may hold a line that died quietly and missed news:
+  // back in view after more than a minute away, everything on screen is asked again.
+  let hiddenAt = 0
+  const onView = () => {
+    if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return }
+    if (hiddenAt && Date.now() - hiddenAt > 60_000) refresh(['shop'])
+    hiddenAt = 0
+  }
+  document.addEventListener('visibilitychange', onView)
+
   connect()
-  return () => { stopped = true; controller?.abort() }
+  return () => { stopped = true; controller?.abort(); document.removeEventListener('visibilitychange', onView) }
 }

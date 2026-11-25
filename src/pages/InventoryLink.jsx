@@ -177,11 +177,19 @@ export default function InventoryLink() {
         </section>
       )}
 
+      {/* 25 Nov (owner: "everything should load automatically"): items, prices and stock come in by
+          themselves -- Inventory tells the till within seconds, and the till checks every 30 seconds
+          besides. So no big button that suggests otherwise: a quiet one for when someone wants to be sure. */}
       {connected && (
-        <button style={s.primary} disabled={busy}
-          onClick={() => act(syncInventoryItems, (r) => `${r.added} added, ${r.updated} updated${r.switchedOff ? `, ${r.switchedOff} switched off` : ''}.`)}>
-          {busy ? 'Working…' : 'Refresh items from Inventory'}
-        </button>
+        <div style={s.auto}>
+          <p style={s.inkSmall}>Items, prices and stock come in from Inventory by themselves, within seconds of a change there.</p>
+          <button type="button" style={s.quiet} disabled={busy}
+            onClick={() => act(syncInventoryItems, (r) => (r.added || r.updated || r.switchedOff)
+              ? `${r.added} added, ${r.updated} updated${r.switchedOff ? `, ${r.switchedOff} switched off` : ''}.`
+              : 'Up to date. Nothing new in Inventory.')}>
+            {busy ? 'Checking…' : 'Check Inventory now'}
+          </button>
+        </div>
       )}
 
       {/* Bills Inventory ACCEPTED but flagged -- a GST rate that differs, stock it thought it did not
@@ -315,6 +323,7 @@ const s = {
   muted: { color: 'var(--ink-soft)', fontSize: 12, margin: 0 },
   bad: { color: 'var(--bad)' },
   quiet: { justifySelf: 'start', color: 'var(--ink-soft)' },
+  auto: { display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' },
   leave: { display: 'grid', gap: 10, padding: 12, borderRadius: 10, border: '1px solid var(--line)', background: 'var(--panel)' },
   ink: { color: 'var(--ink)' },
   inkSmall: { margin: 0, color: 'var(--ink)', fontSize: 13, lineHeight: 1.5 },
