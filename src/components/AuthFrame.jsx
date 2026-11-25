@@ -1,4 +1,5 @@
 import { AlertCircle } from 'lucide-react'
+import Scene from './AuthScenes.jsx'
 
 /**
  * THE FRAME AROUND SIGNING IN (25 Nov). POS's own look, not Inventory's (owner: "be unique, add the side
@@ -38,8 +39,11 @@ export const afQuiet = {
 /** A problem, above the button: below it, it sits under the thumb and off the bottom of a short window. */
 export function AfProblem({ children }) {
   if (!children) return null
+  return <ProblemBox key={String(children)}>{children}</ProblemBox>
+}
+function ProblemBox({ children }) {
   return (
-    <div role="alert" style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, background: 'var(--bad-tint)', border: '1px solid color-mix(in srgb, var(--bad) 28%, transparent)', color: 'var(--bad)', fontSize: 14, lineHeight: 1.5 }}>
+    <div role="alert" className="af-problem" style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 14px', borderRadius: 12, background: 'var(--bad-tint)', border: '1px solid color-mix(in srgb, var(--bad) 28%, transparent)', color: 'var(--bad)', fontSize: 14, lineHeight: 1.5 }}>
       <AlertCircle size={17} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
       <span style={{ minWidth: 0, overflowWrap: 'anywhere' }}>{children}</span>
     </div>
@@ -70,7 +74,7 @@ function Receipt() {
   )
 }
 
-export default function AuthFrame({ title, subtitle, caption = 'Bills, payments and receipts, right at the counter.', children, footer }) {
+export default function AuthFrame({ title, subtitle, caption = 'Bills, payments and receipts, right at the counter.', scene = 'receipt', children, footer }) {
   return (
     <div className="af-page">
       <style>{`
@@ -143,6 +147,15 @@ export default function AuthFrame({ title, subtitle, caption = 'Bills, payments 
         .af-foot { margin: 0; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
         .af-body input:focus { border-color: var(--brand-deep); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 35%, transparent); outline: none; }
         .af-body .spin { animation: af-spin .9s linear infinite; }
+        /* Motion that answers what someone did: the next view slides in, a problem shakes once, the arrow leans on hover. */
+        .af-col { animation: af-in .34s cubic-bezier(.2,.8,.2,1) both; }
+        @keyframes af-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        .af-problem { animation: af-shake .38s ease-in-out; }
+        @keyframes af-shake { 0%, 100% { transform: none; } 25% { transform: translateX(-6px); } 55% { transform: translateX(5px); } 80% { transform: translateX(-2px); } }
+        .af-go svg:last-child { transition: transform .18s ease; }
+        .af-go:hover:not(:disabled) svg:last-child { transform: translateX(3px); }
+        .af-pop { animation: af-pop .5s .15s cubic-bezier(.3,1.6,.5,1) both; }
+        @keyframes af-pop { from { transform: scale(0); } to { transform: scale(1); } }
         @keyframes af-spin { to { transform: rotate(360deg); } }
 
         /* Big screens: a bigger printer, so it does not float in the panel. */
@@ -165,13 +178,15 @@ export default function AuthFrame({ title, subtitle, caption = 'Bills, payments 
           .af-panel::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 44px; z-index: 2; pointer-events: none;
             background: linear-gradient(to bottom, transparent, var(--brand-deep)); }
           .af-stage { align-self: start; transform: scale(.78); transform-origin: top center; }
+          .af-stage-scene { transform: scale(.62); margin-top: 10px; }
           .af-main { align-content: start; padding: 26px 16px 40px; }
           .af-col { gap: 22px; }
         }
-        @media (max-width: 759px) and (max-height: 640px) { .af-panel { height: 150px; } .af-stage { transform: scale(.64); } }
+        @media (max-width: 759px) and (max-height: 640px) { .af-panel { height: 150px; } .af-stage { transform: scale(.64); } .af-stage-scene { transform: scale(.5); } }
 
         @media (prefers-reduced-motion: reduce) {
-          .af-receipt, .af-stamp, .af-led, .af-body .spin { animation: none; }
+          .af-receipt, .af-stamp, .af-led, .af-body .spin, .af-col, .af-problem, .af-pop { animation: none; }
+          .af-go:hover svg:last-child { transform: none; }
         }
       `}</style>
 
@@ -180,12 +195,12 @@ export default function AuthFrame({ title, subtitle, caption = 'Bills, payments 
           <span className="af-logo" role="img" aria-label="ScaleEzy"><img src="/scaleezy-logo-dark.png" alt="" /></span>
           <span className="af-tag">POS</span>
         </div>
-        <Receipt />
+        {scene === 'receipt' ? <Receipt /> : <Scene kind={scene} />}
         <p className="af-caption">{caption}</p>
       </aside>
 
       <main className="af-main">
-        <div className="af-col">
+        <div className="af-col" key={title}>
           <div>
             <h1 className="af-title">{title}</h1>
             {subtitle && <p className="af-sub">{subtitle}</p>}

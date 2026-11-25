@@ -3,7 +3,7 @@ import { openTill, loadTillStaff, switchPerson, closeThisTill, messageFor, reque
 import { tillOpened, personIn, tillClosed } from '../lib/session.js'
 import { deviceId } from '../lib/device.js'
 import { askYesNo } from './Ask.jsx'
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Mail, MailCheck, Store } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Mail, Store } from 'lucide-react'
 import AuthFrame, { AfProblem, afField, afLabel, afPrimary, afQuiet } from './AuthFrame.jsx'
 
 /**
@@ -77,7 +77,7 @@ export function OpenTill({ onDone }) {
   const resetCaption = 'A new password changes only the password. Your PIN, staff and bills stay as they are.'
 
   if (view === 'forgot') return (
-    <AuthFrame title="Reset your password" subtitle="Enter the email you sign in with. We'll email you a link to choose a new password; your PIN, staff and bills stay as they are." caption={resetCaption}>
+    <AuthFrame scene="mail" title="Reset your password" subtitle="Enter the email you sign in with. We'll email you a link to choose a new password; your PIN, staff and bills stay as they are." caption={resetCaption}>
       <form onSubmit={askLink} aria-label="Reset your password" noValidate style={s.form}>
         <div>
           <label htmlFor="reset-email" style={afLabel}>Email address</label>
@@ -95,9 +95,8 @@ export function OpenTill({ onDone }) {
   )
 
   if (view === 'sent') return (
-    <AuthFrame title="Check your email" subtitle="Open the link in the email to choose a new password, then sign in here with it." caption={resetCaption}>
+    <AuthFrame scene="sent" title="Check your email" subtitle="Open the link in the email to choose a new password, then sign in here with it." caption={resetCaption}>
       <div style={s.form} role="region" aria-label="Check your email">
-        <span style={s.okIcon}><MailCheck size={28} aria-hidden="true" /></span>
         <p style={s.sentText} role="status">If <strong style={s.email}>{sentTo}</strong> signs in to a POS shop as an owner or manager, a link is on its way. It works once, for 30 minutes.</p>
         <p style={s.small}>Not there in a few minutes? Look in spam or promotions, and check the email above is the one you sign in with.</p>
         <button type="button" style={s.again} disabled={busy || wait > 0} onClick={askLink}>
@@ -251,7 +250,6 @@ const s = {
   eye: { position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', width: 44, minHeight: 44, padding: 0, display: 'grid', placeItems: 'center', background: 'none', border: 'none', boxShadow: 'none', color: 'var(--ink-soft)' },
   lead: { margin: 0, color: 'var(--ink-soft)', fontSize: 14.5, lineHeight: 1.6 },
   shop: { ...afField, height: 'auto', minHeight: 52, display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', fontWeight: 600 },
-  okIcon: { justifySelf: 'start', width: 60, height: 60, borderRadius: 999, display: 'grid', placeItems: 'center', background: 'var(--brand-tint)', color: 'var(--brand-deep)', border: '1px solid var(--brand-tint-strong)' },
   sentText: { margin: 0, fontSize: 15, lineHeight: 1.6 },
   email: { overflowWrap: 'anywhere' },
   small: { margin: 0, color: 'var(--ink-soft)', fontSize: 13.5, lineHeight: 1.55 },

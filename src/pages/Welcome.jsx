@@ -57,13 +57,13 @@ export default function Welcome({ mode = 'welcome' }) {
 
   // The frame's words: what this link is for, or why it cannot be used.
   const side = problem && !info
-    ? { title: 'This link cannot be used', subtitle: reset
+    ? { scene: 'shut', caption: 'Each link works once, and only the newest one works.', title: 'This link cannot be used', subtitle: reset
         ? 'Ask for a new link with "Forgot your password?" on the sign-in screen. The newest link is the one that works.'
         : 'If you have set your password already, sign in at the POS. Otherwise ask for a new link.' }
     : reset
-      ? { title: 'Choose a new password', subtitle: info ? `For ${info.name} at ${info.shop.name}. Your PIN, staff and bills stay as they are.` : 'Checking your link…',
+      ? { scene: 'lock', title: 'Choose a new password', subtitle: info ? `For ${info.name} at ${info.shop.name}. Your PIN, staff and bills stay as they are.` : 'Checking your link…',
           caption: 'Tills already open on other devices keep working while you change it.' }
-      : { title: info ? `Welcome, ${info.name}` : 'Welcome', subtitle: info ? `${info.shop.name} is ready on ScaleEzy POS. Choose a password to sign in with, and a PIN for the counter.` : 'Checking your link…',
+      : { scene: 'shop', title: info ? `Welcome, ${info.name}` : 'Welcome', subtitle: info ? `${info.shop.name} is ready on ScaleEzy POS. Choose a password to sign in with, and a PIN for the counter.` : 'Checking your link…',
           caption: 'Your counter is ready. Add your staff later under More → Staff.' }
 
   return (
