@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { BrowserMultiFormatReader } from '@zxing/browser'
 import { BarcodeFormat, DecodeHintType } from '@zxing/library'
-import { X, Flashlight, Check } from 'lucide-react'
+import { X, Flashlight, Check, Undo2 } from 'lucide-react'
 import useEscape from '../lib/useEscape.js'
 
 /**
@@ -24,8 +24,11 @@ import useEscape from '../lib/useEscape.js'
  * The camera is released the moment the sheet closes -- a phone left holding its camera is a phone whose
  * camera app will not open.
  *
- * `onCode(code)` answers { added: true, name } to keep scanning, { added: false, message } to say so and keep
+ * `onCode(code)` answers { added: true, name, id } to keep scanning, { added: false, message } to say so and keep
  * scanning, or { close: true } to close (a choice is needed).
+ *
+ * UNDO (25 Nov, owner: "what if I scanned the wrong one?"): each add is remembered; Undo takes the last one back
+ * off the bill (`onUndo(id)`), and again for the one before -- without leaving the camera.
  */
 const FORMATS_NATIVE = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39']
 const FORMATS_ZXING = [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E, BarcodeFormat.CODE_128, BarcodeFormat.CODE_39]
@@ -46,13 +49,14 @@ function beep() {
   } catch { /* no sound: the buzz and the line on screen still say it */ }
 }
 
-export default function CameraScan({ onCode, onClose }) {
+export default function CameraScan({ onCode, onClose, onUndo }) {
   useEscape(onClose)
   const video = useRef(null)
   const [problem, setProblem] = useState(null)
   const [torch, setTorch] = useState(null)        // null: this camera has none
   const [last, setLast] = useState(null)          // { text, ok }
   const [count, setCount] = useState(0)
+  const [added, setAdded] = useState([])          // what this camera put on the bill, newest last: { id, name }
   const onCodeRef = useRef(onCode)
   onCodeRef.current = onCode
   const trackRef = useRef(null)
@@ -108,7 +112,11 @@ export default function CameraScan({ onCode, onClose }) {
             const answer = await onCodeRef.current(code)
             if (stopped) return
             if (answer?.close) { stopped = true; return }
-            if (answer?.added) { setCount(c => c + 1); setLast({ text: answer.name ? `Added: ${answer.name}` : `Added ${code}`, ok: true }) }
+            if (answer?.added) {
+              setCount(c => c + 1)
+              if (answer.id) setAdded(list => [...list, { id: answer.id, name: answer.name ?? code }])
+              setLast({ text: answer.name ? `Added: ${answer.name}` : `Added ${code}`, ok: true })
+            }
             else setLast({ text: answer?.message ?? `Nothing found for ${code}`, ok: false })
           } else if (code) lastAt = now   // still in view: keep it from being added again
         } catch { /* one bad frame is nothing: the next one is 60 ms away */ }
@@ -159,6 +167,16 @@ export default function CameraScan({ onCode, onClose }) {
     }
   }, [])
 
+  function undo() {
+    const item = added[added.length - 1]
+    if (!item) return
+    onUndo?.(item.id)
+    setAdded(list => list.slice(0, -1))
+    setCount(c => Math.max(0, c - 1))
+    setLast({ text: `Removed: ${item.name}`, ok: true })
+    if (navigator.vibrate) navigator.vibrate([30, 40, 30])
+  }
+
   async function toggleTorch() {
     const t = trackRef.current
     if (!t) return
@@ -189,9 +207,16 @@ export default function CameraScan({ onCode, onClose }) {
             </div>
           </div>
           <div style={s.bottom}>
-            <p style={{ ...s.status, ...(last && !last.ok ? s.statusBad : null) }} role="status" aria-live="polite">
-              {last ? last.text : 'Only the barcode inside the box is read. Keep scanning: each item is added.'}
-            </p>
+            <div style={s.statusRow}>
+              <p style={{ ...s.status, ...(last && !last.ok ? s.statusBad : null) }} role="status" aria-live="polite">
+                {last ? last.text : 'Only the barcode inside the box is read. Keep scanning: each item is added.'}
+              </p>
+              {onUndo && added.length > 0 && (
+                <button type="button" onClick={undo} style={s.undo} aria-label={`Undo: take ${added[added.length - 1].name} off the bill`}>
+                  <Undo2 size={18} aria-hidden="true" /> Undo
+                </button>
+              )}
+            </div>
             <button type="button" onClick={onClose} style={s.done}>
               <Check size={20} aria-hidden="true" /> Done{count ? ` · ${count} added` : ''}
             </button>
@@ -226,7 +251,9 @@ const s = {
     position: 'absolute', left: 0, right: 0, bottom: 0, display: 'grid', gap: 12, justifyItems: 'center',
     padding: '20px 16px calc(18px + env(safe-area-inset-bottom, 0px))', background: 'linear-gradient(transparent, rgba(0,0,0,.75))'
   },
-  status: { margin: 0, textAlign: 'center', fontSize: 15, fontWeight: 600, maxWidth: 420, minHeight: 22 },
+  statusRow: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, width: 'min(420px, 100%)', minHeight: 44 },
+  status: { margin: 0, textAlign: 'center', fontSize: 15, fontWeight: 600, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' },
+  undo: { flex: 'none', minHeight: 44, padding: '0 16px', display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 999, fontWeight: 700, fontSize: 15, background: 'rgba(255,255,255,.16)', color: '#fff', border: '1px solid rgba(255,255,255,.35)', boxShadow: 'none' },
   statusBad: { color: '#ffb4a8' },
   done: { minHeight: 52, width: 'min(420px, 100%)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 17, fontWeight: 700, borderRadius: 14, background: 'var(--brand)', color: 'var(--brand-deep)', border: 'none' },
   problemBox: { position: 'absolute', inset: 0, display: 'grid', placeContent: 'center', gap: 16, padding: 24, textAlign: 'center' },

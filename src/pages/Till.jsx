@@ -757,10 +757,12 @@ export default function Till() {
             <Suspense fallback={null}>
               <CameraScan
                 onClose={() => { setScanning(false); refocus() }}
+                // Undo in the camera: one fewer of what it last added (the line goes when it reaches none).
+                onUndo={(id) => setLines(cur => cur.flatMap(l => (l.id !== id ? [l] : l.qty > 1 ? [{ ...l, qty: l.qty - 1 }] : [])))}
                 onCode={async (code) => {
                   // The camera stays open while items go straight in (25 Nov); a choice on screen closes it.
                   const r = await find(null, code, { quiet: true })
-                  if (r.status === 'added') return { added: true, name: r.item?.name }
+                  if (r.status === 'added') return { added: true, name: r.item?.name, id: r.item?.id }
                   if (r.status === 'none') return { added: false, message: `Nothing found for ${code}` }
                   if (r.status === 'error') return { added: false, message: r.message }
                   setScanning(false)
