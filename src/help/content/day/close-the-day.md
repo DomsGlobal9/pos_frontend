@@ -31,6 +31,12 @@ Its figures are the ones read when it was closed. Anything that lands on that da
 offline that arrives late — shows on its own *since closing* line, instead of quietly changing figures you
 already handed over.
 
+:::note Gift vouchers
+Vouchers sold are money the shop owes in goods, not sales. The day close shows those sold and used today,
+and **Still owed on vouchers, all days**: what is left on every open voucher, read from Inventory, with how many
+run out within 30 days. If Inventory does not answer, that line is left out and the day still closes.
+:::
+
 :::note Inventory's Day Book
 Inventory has its own Day Book for the whole shop. A till bill counts there on the day it was made, even if
 it reached Inventory later. See Inventory's guide:

@@ -184,12 +184,19 @@ export default function DayClose() {
           </section>
 
           {/* Gift vouchers (16 Oct): money in that the shop owes in goods -- not sales, not profit. */}
-          {f.vouchers && (f.vouchers.soldCount > 0 || f.vouchers.usedPaise > 0) && (
+          {f.vouchers && (f.vouchers.soldCount > 0 || f.vouchers.usedPaise > 0 || (f.vouchers.owed?.owedPaise ?? 0) > 0) && (
             <section style={s.block}>
               <h2 style={s.heading}>Gift vouchers</h2>
               {f.vouchers.soldCount > 0 && <Line label={`Sold (${f.vouchers.soldCount})`} value={f.vouchers.soldPaise} />}
               {Object.entries(f.vouchers.soldByMethod).map(([m, v]) => <Line key={m} label={`  paid by ${(METHOD[m] ?? m).toLowerCase()}`} value={v} muted />)}
               {f.vouchers.usedPaise > 0 && <Line label="Used on bills today" value={f.vouchers.usedPaise} />}
+              {/* 25 Nov: what is still owed on every voucher, from Inventory -- before, only its Day Book showed it. */}
+              {f.vouchers.owed && f.vouchers.owed.owedPaise > 0 && (
+                <>
+                  <Line label={`Still owed on vouchers, all days (${f.vouchers.owed.openVouchers})`} value={f.vouchers.owed.owedPaise} strong />
+                  {f.vouchers.owed.expiringIn30Days > 0 && <p style={s.muted}>{f.vouchers.owed.expiringIn30Days === 1 ? '1 voucher runs out' : `${f.vouchers.owed.expiringIn30Days} vouchers run out`} within 30 days.</p>}
+                </>
+              )}
               <p style={s.muted}>Not sales: the shop owes these in goods. GST is on the goods when a voucher is used.</p>
             </section>
           )}
