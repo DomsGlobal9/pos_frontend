@@ -26,7 +26,7 @@ const STEPS = [
   { title: 'Check', Icon: ClipboardCheck }
 ]
 const EMPTY_SHOP = { clientId: '', shopName: '', address: '', gstin: '' }
-const EMPTY_OWNER = { name: '', login: '', password: '', pin: '' }
+const EMPTY_OWNER = { name: '', login: '' }
 const blankPerson = () => ({ name: '', role: 'CASHIER', pin: '', opensTill: false, login: '', password: '' })
 
 // ---- the same rules as the server, so mistakes show on their own step -------------------------
@@ -61,13 +61,12 @@ function ownerProblems(owner) {
   const e = {}
   if (owner.name.trim().length < 2) e.name = 'Their name, as the shop calls them.'
   const l = loginProblem(owner.login, true); if (l) e.login = l
-  if (owner.password.length < 8) e.password = 'At least 8 characters.'
-  const p = pinProblem(owner.pin); if (p) e.pin = p
+  // 25 Nov: no password or PIN here -- the owner chooses both from the welcome link.
   return e
 }
 function staffProblems(staff, owner) {
   const all = staff.map(() => ({}))
-  const pins = new Map([[owner.pin, 'the owner']])
+  const pins = new Map()
   const logins = new Map(owner.login.trim() ? [[owner.login.trim().toLowerCase(), 'the owner']] : [])
   staff.forEach((p, i) => {
     const e = all[i]
@@ -140,7 +139,7 @@ export default function ShopSetup() {
         shopName: shop.shopName.trim(),
         ...(shop.address.trim() ? { address: shop.address.trim() } : {}),
         ...(shop.gstin.trim() ? { gstin: shop.gstin.trim() } : {}),
-        owner: { name: owner.name.trim(), ...loginOf(owner.login), password: owner.password, pin: owner.pin },
+        owner: { name: owner.name.trim(), ...loginOf(owner.login) },
         staff: staff.map(p => ({
           name: p.name.trim(), role: p.role, pin: p.pin,
           ...(p.role !== 'CASHIER' && p.opensTill ? { ...loginOf(p.login), password: p.password } : {})
@@ -215,18 +214,14 @@ export default function ShopSetup() {
 
         {step === 1 && (
           <>
-            <p style={s.lead}>The owner opens the till with the email or phone and password, then works with the PIN.</p>
+            {/* 25 Nov (owner): nobody at ScaleEzy types the owner's password. They get a one-time link, choose a
+                password and a 4-digit PIN themselves, and open the till. */}
+            <p style={s.lead}>The owner gets a one-time sign-in link and chooses their own password and PIN. With an email it is emailed to them; with only a phone, you send it on WhatsApp from the last page.</p>
             <Field label="Name" error={show(1).name}>
               <input value={owner.name} onChange={e => setOwner({ ...owner, name: e.target.value })} aria-label="Owner name" autoFocus />
             </Field>
-            <Field label="Email or 10-digit phone" error={show(1).login}>
+            <Field label="Email or 10-digit phone" hint="Email is best: the link goes there by itself" error={show(1).login}>
               <input value={owner.login} onChange={e => setOwner({ ...owner, login: e.target.value })} aria-label="Owner email or phone" autoComplete="off" />
-            </Field>
-            <Field label="Password" hint="8 or more characters" error={show(1).password}>
-              <Secret value={owner.password} onChange={v => setOwner({ ...owner, password: v })} label="Owner password" />
-            </Field>
-            <Field label="4-digit PIN" error={show(1).pin}>
-              <PinBoxes value={owner.pin} onChange={v => setOwner({ ...owner, pin: v })} label="Owner PIN" />
             </Field>
           </>
         )}
@@ -412,9 +407,15 @@ function PersonRow({ name, role, how }) {
   )
 }
 
-/** The card for the owner. Printable. Never a PIN or a password on it. */
+/** The card for the owner. Printable. Never a PIN or a password on it; the one-time link only on screen. */
 function Ready({ done, onAnother }) {
   const address = window.location.origin
+  const [copied, setCopied] = useState(false)
+  const byPhone = done.signInWith && !String(done.signInWith).includes('@')
+  const copy = async () => { try { await navigator.clipboard.writeText(done.ownerLink); setCopied(true) } catch { setCopied(false) } }
+  const wa = byPhone && done.ownerLink
+    ? `https://wa.me/91${String(done.signInWith).replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(`Your ScaleEzy POS is ready. Open this link to choose your password and PIN (it works once, for 7 days): ${done.ownerLink}`)}`
+    : null
   return (
     <div style={s.page}>
       <section style={s.card} aria-label="Shop ready">
@@ -426,14 +427,32 @@ function Ready({ done, onAnother }) {
           </div>
         </div>
 
+        {done.ownerLink && (
+          <section style={s.linkBox} aria-label="Owner's sign-in link" className="no-print">
+            <b>The owner's sign-in link</b>
+            <span style={s.muted}>
+              {done.ownerLinkEmailed
+                ? <>Emailed to <b>{done.signInWith}</b>. It works once, for 7 days.</>
+                : <>Not emailed{byPhone ? ' (the owner signs in with a phone)' : ''}: send it to them yourself. It works once, for 7 days.</>}
+            </span>
+            <div style={s.nav}>
+              <button type="button" onClick={copy}>{copied ? 'Copied' : 'Copy link'}</button>
+              {wa && <a href={wa} target="_blank" rel="noreferrer" style={s.waLink}>Send on WhatsApp</a>}
+            </div>
+            <span style={s.muted}>Only you see this link. Do not put it in a group chat: whoever opens it first sets the owner's password.</span>
+          </section>
+        )}
+
         <h2 style={s.heading}>Give this to the owner</h2>
         <ol style={s.steps}>
-          <li>Open <b>{address}</b> on the shop's computer, tablet or phone.</li>
-          <li><b>Open the till</b> with <b>{done.signInWith}</b> and the password you were given.</li>
-          <li>Tap your name and type your 4-digit PIN.</li>
+          {done.ownerLink
+            ? <li>Open the sign-in link{done.ownerLinkEmailed ? <> from the email to <b>{done.signInWith}</b></> : ' we sent you'}, choose a password and a 4-digit PIN.</li>
+            : <li>Open <b>{address}</b> and <b>Open the till</b> with <b>{done.signInWith}</b> and your password.</li>}
+          <li>On the shop's computer, tablet or phone, open <b>{address}</b> and <b>Open the till</b> with <b>{done.signInWith}</b>. Then tap your name and type your PIN.</li>
           <li><b>More → Staff</b>: add your managers and cashiers — a name, a role and a PIN each.</li>
-          <li>In Inventory, <b>Settings → Money → POS (billing counter)</b>: create a till key. Then in the POS, <b>More → Settings → Inventory link</b>: paste it, <b>Connect</b>, then <b>Refresh items</b>.</li>
-          <li><b>More → Settings</b>: your UPI ID, so customers see a QR to pay.</li>
+          <li><b>More → Items</b>: add what you sell (name, price, GST, and a barcode if it has one), or import an Excel sheet. Print barcode labels from there too.</li>
+          <li><b>More → Settings</b>: your UPI ID, so customers see a QR to pay, and your logo for the bill.</li>
+          <li>Using ScaleEzy Inventory too? Then items come from there instead: <b>More → Settings → Inventory link</b>.</li>
         </ol>
 
         <h2 style={s.heading}>Who can use the till</h2>
@@ -442,7 +461,7 @@ function Ready({ done, onAnother }) {
             <PersonRow key={i} name={p.name} role={p.role} how={p.opensTillWith ? `opens the till with ${p.opensTillWith}` : 'PIN only'} />
           ))}
         </ul>
-        <p style={s.muted}>Passwords and PINs are not shown here. Tell each person theirs yourself.</p>
+        <p style={s.muted}>Passwords and PINs are not shown here. The owner chooses their own; tell each member of staff their PIN yourself.</p>
 
         <div style={s.nav} className="no-print">
           <button type="button" onClick={() => window.print()}><Printer size={18} aria-hidden="true" /> Print</button>
@@ -454,6 +473,8 @@ function Ready({ done, onAnother }) {
 }
 
 const s = {
+  linkBox: { display: 'grid', gap: 8, padding: 14, borderRadius: 12, background: 'var(--brand-tint)', border: '1px solid var(--brand-tint-strong)' },
+  waLink: { display: 'inline-flex', alignItems: 'center', minHeight: 40, padding: '0 14px', borderRadius: 10, background: 'var(--accent)', color: '#fff', fontWeight: 600, textDecoration: 'none' },
   page: { minHeight: '100vh', background: 'var(--bg)', padding: '24px 16px 40px', display: 'grid', justifyItems: 'center', alignContent: 'start', gap: 18 },
   brandRow: { width: 560, maxWidth: '100%', display: 'flex', alignItems: 'center', gap: 12 },
   brandName: { fontWeight: 800, fontSize: 17 },
